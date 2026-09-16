@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { IMAGES, PACKAGE_COMMANDS, KEYBINDINGS } from '../data/mockData';
 import { PageTab } from '../types';
 import { AnimatedTelemetryBenchmark } from './AnimatedTelemetryBenchmark';
@@ -22,7 +22,9 @@ import {
   CheckCircle2,
   FileCode,
   Apple,
-  Server
+  Server,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 
 interface LandingViewProps {
@@ -42,8 +44,9 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
   // TUI Explorer Tab
   const [activeTuiTab, setActiveTuiTab] = useState<TuiTab>('library');
 
-  // Interactive Carousel step
-  const [carouselStep, setCarouselStep] = useState(0);
+  // Interactive Features Showcase scroll-to-review state & refs
+  const [activeFeatureIdx, setActiveFeatureIdx] = useState(0);
+  const featureItemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Footer Install box
   const [footerPkg, setFooterPkg] = useState<FooterPkgTab>('curl');
@@ -78,7 +81,8 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
       desc: 'Dynamic terminal 24-bit truecolor engine that extracts dominant palettes directly from album artwork in real time. Switch manually with t or enable auto-sync.',
       badge: 'Themes',
       hotkey: 't',
-      img: IMAGES.themesArt
+      img: IMAGES.themesArt,
+      specs: '24-bit TrueColor · CIELAB Extraction · ANSI Fallback'
     },
     {
       step: '02 / Visualizer',
@@ -86,7 +90,8 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
       desc: 'Achieving 120 FPS sub-pixel FFT visualizers without flicker: an analysis of buffer diffing algorithms, terminal escape code congestion, and SIMD-accelerated Braille rendering.',
       badge: 'Audio FFT',
       hotkey: 'v',
-      img: IMAGES.libraryView1
+      img: IMAGES.libraryView1,
+      specs: '60 FPS · 2048 Samples · Hann Windowing · Sub-pixel Braille'
     },
     {
       step: '03 / Lyrics',
@@ -94,7 +99,8 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
       desc: 'Smooth terminal vertical auto-scrolling with microsecond audio clock synchronization and dual-language translation support.',
       badge: 'LRC Engine',
       hotkey: 'L',
-      img: IMAGES.lyricsView1
+      img: IMAGES.lyricsView1,
+      specs: '±0.1ms Clock Sync · Dual-Language · Auto-Fetch LRCLIB'
     },
     {
       step: '04 / Concurrency',
@@ -102,9 +108,46 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
       desc: 'Dual ring-buffer allocation for seamless cross-fades. Lock-free SPSC channel swaps audio buffers in 18.2 nanoseconds without mutex locks.',
       badge: 'Engine',
       hotkey: 'b',
-      img: IMAGES.libraryView2
+      img: IMAGES.libraryView2,
+      specs: '18.2ns Atomic Swap · Symphonia Pipeline · PipeWire / ALSA'
     }
   ];
+
+  // Track active feature card based on page scroll position (reverses when scrolling up)
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const targetThreshold = windowHeight * 0.45;
+
+      let currentIdx = 0;
+      featureItemRefs.current.forEach((el, idx) => {
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= targetThreshold) {
+          currentIdx = idx;
+        }
+      });
+
+      setActiveFeatureIdx(currentIdx);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToFeature = (idx: number) => {
+    const el = featureItemRefs.current[idx];
+    if (el) {
+      const navOffset = 130;
+      const elementPosition = el.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: elementPosition - navOffset,
+        behavior: 'smooth'
+      });
+      setActiveFeatureIdx(idx);
+    }
+  };
 
   const handleCopyHero = () => {
     navigator.clipboard.writeText(PACKAGE_COMMANDS[heroPkg]);
@@ -352,58 +395,161 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
         </div>
       </section>
 
-      {/* FEATURE SHOWCASE */}
+      {/* FEATURE SHOWCASE - SCROLL TO REVIEW STACK */}
       <section 
         id="feature-tour-showcase"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-6"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-6 relative"
       >
         {/* Section Header */}
         <div className="border-b border-hairline-outline pb-3">
           <span className="font-mono text-xs text-secondary font-bold uppercase tracking-wider">
-            Core Capabilities
+            Features
           </span>
           <h2 className="text-2xl sm:text-3xl font-bold font-mono text-text-primary mt-1">
             Terminal-first audio architecture
           </h2>
         </div>
 
-        {/* Feature Card */}
-        <div className="w-full border border-hairline-outline rounded-xl bg-surface-container overflow-hidden p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row items-center gap-6 lg:gap-8">
-          {/* Terminal Screenshot Frame */}
-          <div className="w-full lg:w-[65%] bg-canvas-obsidian border border-hairline-outline rounded-lg overflow-hidden flex items-center justify-center p-2 sm:p-4">
-            <img
-              src={carouselItems[carouselStep].img}
-              alt={carouselItems[carouselStep].title}
-              className="w-full h-auto max-h-[440px] object-contain rounded border border-hairline-subtle block mx-auto"
-            />
+        {/* Sticky Navigation Bar */}
+        <div className="sticky top-16 z-30 bg-surface-container/95 backdrop-blur-md border border-hairline-outline rounded-xl px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 font-mono text-xs shadow-md">
+          {/* Direct jump step pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
+            {carouselItems.map((item, idx) => {
+              const isActive = activeFeatureIdx === idx;
+              return (
+                <button
+                  key={item.badge}
+                  onClick={() => scrollToFeature(idx)}
+                  className={`px-2.5 py-1 rounded transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 text-xs ${
+                    isActive
+                      ? 'bg-surface-elevated text-secondary font-bold border border-secondary/40 shadow-xs'
+                      : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/60'
+                  }`}
+                >
+                  <span className="opacity-60 text-[10px]">0{idx + 1}</span>
+                  <span>{item.badge}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Right Narrative */}
-          <div className="w-full lg:w-[35%] flex flex-col justify-between space-y-6 text-left">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-surface-elevated border border-hairline-outline font-mono text-xs text-secondary">
-                <span>{carouselItems[carouselStep].badge}</span>
-              </div>
-
-              <h3 className="font-mono text-xl sm:text-2xl font-bold text-text-primary leading-tight">
-                {carouselItems[carouselStep].title}
-              </h3>
-
-              <p className="text-sm text-text-muted leading-relaxed font-sans">
-                {carouselItems[carouselStep].desc}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+          {/* Right: Step Counter & Up/Down navigation controls (No 'Scroll independently' label) */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[11px] text-secondary font-bold bg-surface-elevated px-2 py-0.5 rounded border border-hairline-outline">
+              0{activeFeatureIdx + 1} / 0{carouselItems.length}
+            </span>
+            <div className="flex items-center border border-hairline-outline rounded bg-surface-elevated overflow-hidden">
               <button
-                onClick={() => onNavigate('docs')}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded bg-surface-elevated border border-hairline-outline hover:border-secondary hover:text-text-primary text-secondary font-mono text-xs transition-colors cursor-pointer"
+                onClick={() => scrollToFeature(Math.max(0, activeFeatureIdx - 1))}
+                disabled={activeFeatureIdx === 0}
+                className="p-1 text-text-muted hover:text-secondary disabled:opacity-25 disabled:hover:text-text-muted transition-colors cursor-pointer"
+                title="Slide up to previous feature"
+                aria-label="Previous feature"
               >
-                <span>Read docs</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ChevronUp className="w-4 h-4" />
+              </button>
+              <div className="w-[1px] h-3.5 bg-hairline-outline" />
+              <button
+                onClick={() => scrollToFeature(Math.min(carouselItems.length - 1, activeFeatureIdx + 1))}
+                disabled={activeFeatureIdx === carouselItems.length - 1}
+                className="p-1 text-text-muted hover:text-secondary disabled:opacity-25 disabled:hover:text-text-muted transition-colors cursor-pointer"
+                title="Slide down to next feature"
+                aria-label="Next feature"
+              >
+                <ChevronDown className="w-4 h-4" />
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Scroll-to-review stack of feature cards */}
+        <div className="relative space-y-28 sm:space-y-40 pt-2 pb-24">
+          {carouselItems.map((item, idx) => {
+            const isCurrent = activeFeatureIdx === idx;
+            const isPast = activeFeatureIdx > idx;
+
+            return (
+              <div
+                key={item.badge}
+                ref={(el) => { featureItemRefs.current[idx] = el; }}
+                style={{
+                  top: '5.5rem',
+                  zIndex: 10 + idx
+                }}
+                className={`sticky w-full border border-hairline-outline rounded-xl bg-surface-container shadow-2xl p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row items-center gap-6 lg:gap-8 justify-center min-h-[480px] sm:min-h-[520px] transition-all duration-300 ${
+                  isPast ? 'scale-[0.98] opacity-90' : 'scale-100 opacity-100'
+                }`}
+              >
+                {/* Terminal Screenshot Frame */}
+                <div 
+                  className={`w-full lg:w-[65%] bg-canvas-obsidian border border-hairline-outline rounded-lg overflow-hidden flex items-center justify-center p-2 sm:p-4 shadow-inner relative transition-all duration-500 ease-out ${
+                    isCurrent 
+                      ? 'translate-y-0 opacity-100 scale-100' 
+                      : 'translate-y-4 opacity-75 scale-[0.99]'
+                  }`}
+                >
+                  <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container/90 border border-hairline-outline font-mono text-[10px] text-text-muted backdrop-blur-xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
+                    <span>hotkey [{item.hotkey}]</span>
+                  </div>
+                  <img
+                    src={item.img}
+                    alt={item.title}
+                    className="w-full h-auto max-h-[420px] object-contain rounded border border-hairline-subtle block mx-auto transition-transform duration-300"
+                  />
+                </div>
+
+                {/* Right Narrative */}
+                <div 
+                  className={`w-full lg:w-[35%] flex flex-col justify-between space-y-6 text-left transition-all duration-500 delay-75 ease-out ${
+                    isCurrent 
+                      ? 'translate-y-0 opacity-100' 
+                      : 'translate-y-2 opacity-80'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-surface-elevated border border-hairline-outline font-mono text-xs text-secondary">
+                      <span className="font-bold">{item.step}</span>
+                      <span className="text-text-muted">•</span>
+                      <span>{item.badge}</span>
+                    </div>
+
+                    <h3 className="font-mono text-xl sm:text-2xl font-bold text-text-primary leading-tight">
+                      {item.title}
+                    </h3>
+
+                    <p className="text-sm text-text-muted leading-relaxed font-sans">
+                      {item.desc}
+                    </p>
+
+                    {item.specs && (
+                      <div className="pt-1">
+                        <div className="inline-block px-2.5 py-1 rounded bg-code-canvas border border-hairline-outline font-mono text-[11px] text-secondary">
+                          {item.specs}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    <button
+                      onClick={() => onNavigate('docs')}
+                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded bg-surface-elevated border border-hairline-outline hover:border-secondary hover:text-text-primary text-secondary font-mono text-xs transition-colors cursor-pointer"
+                    >
+                      <span>Read docs</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={onOpenKeymap}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-hairline-outline hover:bg-surface-elevated text-text-muted hover:text-text-primary font-mono text-xs transition-colors cursor-pointer"
+                    >
+                      <span>Keybind: [{item.hotkey}]</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 

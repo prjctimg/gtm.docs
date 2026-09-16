@@ -167,3 +167,27 @@
 .token.italic {
   font-style: italic;
 }
+
+/* Feature independent scroll container scrollbar */
+.feature-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #30363d #0d1117;
+  overscroll-behavior-y: auto;
+}
+
+.feature-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.feature-scrollbar::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+
+.feature-scrollbar::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 9999px;
+}
+
+.feature-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #55dad0;
+}
