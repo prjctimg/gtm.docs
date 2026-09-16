@@ -1,0 +1,97 @@
+---
+title: Radio
+description: "Discover and play internet radio stations via the Radio Browser directory."
+sidebar:
+  order: 17
+---
+
+## On this page
+
+- [Discovering stations](#_discovering-stations)
+- [Playing](#_playing)
+- [Custom stations](#_custom-stations)
+- [Station artwork](#_station-artwork)
+- [Limitations](#_limitations)
+
+---
+
+## Discovering stations
+
+Internet radio uses the **Radio Browser** directory through public API
+mirrors:
+
+```text
+all.api.radio-browser.info   (round-robins across servers)
+de1.api.radio-browser.info   (EU fallback)
+nl1.api.radio-browser.info   (NL fallback)
+```
+
+The mirrors are tried in order; the first reachable one wins.
+
+In the TUI:
+
+- `Alt+r` — top-voted stations list
+- `Alt+t` — browse by tag / country (Radio Browse overlay)
+
+CLI:
+
+```bash
+gtm --cli radio search "chill"      # search the directory
+gtm --cli radio top                 # top-voted stations
+gtm --cli radio tags                # most-used tags
+gtm --cli radio countries           # most-used countries
+gtm --cli radio tag <tag>           # stations carrying a tag
+gtm --cli radio country <country>   # stations from a country
+```
+
+All directory lists pass `hidebroken=true`, so stations that no longer
+serve audio never appear.
+
+---
+
+## Playing
+
+```bash
+gtm --cli radio play <station_id> [name]
+```
+
+or select a station in the TUI. Stations are streamed live
+(`radio://<station_id>/<name>` remote paths), decoded through the same
+remote pipeline as other streams — with EQ, reverb, and crossfade all
+applied.
+
+:::note
+Radio is a live transport: seeking is not supported, and the "position"
+shows 0 for the whole session.
+:::
+
+---
+
+## Custom stations
+
+Your own saved stations live in `radios.toml` (see
+[Configuration](/configuration/)). A custom station is just a name and
+a stream URL, and appears in the radio picker alongside directory
+stations.
+
+---
+
+## Station artwork
+
+Radio stations have no album art. Instead the daemon fetches the station's
+**favicon** from the directory and serves it as the queue-facing cover
+image (cached once under `radio:<uuid>`). The now-playing pane shows the
+station logo instead of a blank tile.
+
+---
+
+## Limitations
+
+- Requires connectivity to radio-browser mirrors and the station stream
+  itself.
+- Live transport: no backward seeking.
+- `hidebroken=true` filters stations with dead streams, but occasionally a
+  listed station still fails to connect — the daemon surfaces an audible
+  error rather than hanging.
+- Custom stations must provide a directly playable audio URL (HTTP(S)
+  stream).

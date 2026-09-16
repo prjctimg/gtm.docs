@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-canvas-obsidian: #0d1117;
+  --color-background: #0f141b;
+  --color-surface: #0f141b;
+  --color-surface-dim: #0f141b;
+  --color-surface-bright: #343941;
+  --color-surface-container-lowest: #090f15;
+  --color-surface-container-low: #171c23;
+  --color-surface-container: #161b22;
+  --color-surface-container-high: #252a32;
+  --color-surface-container-highest: #30353d;
+  --color-surface-elevated: #1f242d;
+  --color-surface-variant: #30353d;
+
+  --color-code-canvas: #11151c;
+  --color-selection-surface: #21262d;
+  --color-hairline-outline: #30363d;
+  --color-hairline-subtle: #21262d;
+
+  --color-primary: #a2c9ff;
+  --color-primary-container: #58a6ff;
+  --color-on-primary-container: #003a6b;
+  --color-primary-fixed: #d3e4ff;
+  --color-primary-fixed-dim: #a2c9ff;
+
+  --color-secondary: #55dad0;
+  --color-secondary-container: #00aba1;
+  --color-on-secondary-container: #003834;
+  --color-secondary-fixed: #75f7ec;
+  --color-secondary-fixed-dim: #55dad0;
+
+  --color-tertiary: #aec6ff;
+  --color-tertiary-container: #7aa2f7;
+  --color-on-tertiary-container: #00367d;
+
+  --color-accent-coral: #f7768e;
+  --color-accent-purple: #bb9af7;
+  --color-state-success: #9ece6a;
+  --color-state-warning: #e0af68;
+  --color-state-error: #f7768e;
+
+  --color-text-primary: #f0f6fc;
+  --color-text-body: #c9d1d9;
+  --color-text-muted: #8b949e;
+  --color-text-disabled: #484f58;
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+::-webkit-scrollbar-thumb {
+  background: #21262d;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #30363d;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ==========================================================================
+   Prism Syntax Highlighting - Terminal Obsidian Theme
+   ========================================================================== */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #8b949e;
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: #8b949e;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #f7768e;
+}
+
+.token.boolean,
+.token.number {
+  color: #ff9e64;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #9ece6a;
+}
+
+.token.operator,
+.token.entity,
+.token.url {
+  color: #55dad0;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #bb9af7;
+  font-weight: 500;
+}
+
+.token.function,
+.token.class-name {
+  color: #7aa2f7;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #e0af68;
+}
+
+.token.parameter {
+  color: #a2c9ff;
+}
+
+.token.table,
+.token.key {
+  color: #55dad0;
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+
+.token.italic {
+  font-style: italic;
+}

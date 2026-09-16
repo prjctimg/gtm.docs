@@ -1,0 +1,96 @@
+---
+title: Crossfade
+description: "Gapless-ish transitions between tracks, with a configurable duration."
+sidebar:
+  order: 6
+---
+
+## On this page
+
+- [How it works](#_how-it-works)
+- [Configuration](#_configuration)
+- [Gapless mode](#_gapless-mode)
+- [Limitations](#_limitations)
+
+---
+
+## How it works
+
+Crossfade gives you gapless-ish transitions between tracks. Player code uses
+**two overlapping audio players**:
+
+1. When the current track is close to finishing, the daemon decodes the next
+   queue entry in the background and loads it into a **standby player**.
+2. At the configured `duration_secs` mark (with 0.15 s of slack), it starts a
+   linear crossfade: the outgoing player's volume ramps down while the
+   incoming player's ramps up.
+3. The incoming player becomes the active one.
+
+The state machine exposes a `crossfade` setting as `Option<CrossfadeConfig>`
+— `None` when disabled, `Some { enabled, duration_secs }` when on.
+
+Crossfade is **enabled by default with a 6-second duration**. Durations are
+clamped to a maximum of 30 seconds.
+
+### Countdown
+
+The daemon emits a `CrossfadeCountdown` event about 3 seconds before the
+crossfade begins (plus the configured duration). Clients use it to animate a
+"next up" indicator in the UI and to cue the lyric auto-scroll toward the
+incoming track.
+
+---
+
+## Configuration
+
+### In the TUI
+
+- `Alt+,` → Playback → Crossfade opens a picker with preset durations:
+  **3, 5, 10, 15, 30 seconds**, plus an option to toggle enabled/disabled.
+
+### CLI
+
+```bash
+gtm --cli crossfade on 5      # enable, 5 seconds
+gtm --cli crossfade on 10     # enable, 10 seconds
+gtm --cli crossfade off       # disable
+```
+
+The `crossfade` command takes `enabled` and optional `duration_secs`
+(default 7 when omitted).
+
+The current setting is shown in the `Crossfade` picker and reflected in the
+footer `Playback` module.
+
+---
+
+## Gapless mode
+
+Separate from crossfade, `gapless` controls seamless playback for non-lossy
+transitions. It defaults to **off**.
+
+:::note
+`gapless` is currently only reachable through the daemon IPC
+(`DaemonReq::SetGapless`); there is no CLI command or TUI binding for it yet.
+:::
+
+:::tip
+Use crossfade for a DJ-style blend; gapless is reserved for clean seamless
+transitions on lossless files once exposed.
+:::
+
+---
+
+## Limitations
+
+- Crossfade duration is an integer number of seconds, clamped to 0–30.
+- A zero-duration crossfade is rejected by the state machine's invariants
+  (`enabled && duration_secs == 0`).
+- Crossfade requires the next track to be probed and decoded ahead of time.
+  If decoding fails (corrupt file, interrupted network stream), the daemon
+  falls back to a normal hard transition — it never stalls playback.
+- Remote/live streams (Subsonic, podcasts, radio) use a different pipeline
+  (ring-buffer decoding); crossfade standby is attempted with best effort
+  and skipped when the remote resolve fails.
+- Only one crossfade can be in flight (`crossfade_loaded_for` guards against
+  double-loading).

@@ -1,0 +1,140 @@
+---
+title: Library
+description: "Scanning, favourites, recent tracks, albums, artists, playlists, playlist tools, and metadata."
+sidebar:
+  order: 8
+---
+
+## On this page
+
+- [Scanning](#_scanning)
+- [Categories](#_categories)
+- [Favourites](#_favourites)
+- [Playlists](#_playlists)
+- [Playlist tools](#_playlist-tools)
+- [Metadata](#_metadata)
+- [Deleting tracks](#_deleting-tracks)
+- [Limitations](#_limitations)
+
+---
+
+## Scanning
+
+The daemon scans several locations on startup and on `gtm --cli scan`:
+
+- `$XDG_DATA_HOME/gtm/audio` (default data dir)
+- `~/Music`
+- Termux shared storage (`/sdcard/Music`, etc.)
+
+Extracted metadata is stored in an SQLite database
+(`$XDG_DATA_HOME/gtm/library.db`). Each track is keyed by a SHA-256 hash of
+its contents.
+
+### Browsing
+
+The Library tab lists categories in the sidebar:
+
+| Category | Contents |
+|----------|----------|
+| **All Tracks** | Every track |
+| **Liked** | Tracks you favourited |
+| **Albums** | Grouped by album |
+| **Artists** | Grouped by artist |
+| **Playlists** | Your playlists |
+| **Spotify** | Synced Spotify playlists (when linked) |
+| **Radio** | Custom and discovered stations |
+
+`Alt+S` cycles the sort order of the track list. `/` opens the library
+search picker.
+
+---
+
+## Favourites
+
+- `f` — toggle favourite for the selected/current track
+- The **Liked** category lists favourited tracks
+
+CLI:
+
+```bash
+gtm --cli favourites
+gtm --cli favourite-add <track_id>
+gtm --cli favourite-remove <track_id>
+```
+
+---
+
+## Playlists
+
+Playlists live in the database and are **mirrored as `.m3u8` files**
+alongside them, so they remain editable/portable even without the daemon.
+
+```bash
+gtm --cli playlists                 # list playlists
+gtm --cli create-playlist "My Mix"  # create
+gtm --cli delete-playlist <id>      # delete
+gtm --cli add-to-playlist <pid> <track id>...  # add tracks
+```
+
+### Import / Export
+
+```bash
+gtm --cli import-playlist ./mix.m3u8 --format m3u8
+gtm --cli import-playlist ./mix.pls  --format pls
+gtm --cli export-playlist <id> ./out.m3u8 --format m3u8
+```
+
+Both M3U8 and PLS formats are supported; M3U8 is the default.
+
+---
+
+## Playlist tools
+
+| Command | Purpose |
+|---------|---------|
+| `gtm --cli playlist-dedup <id>` | Remove duplicate track entries |
+| `gtm --cli playlist-doctor <id>` | Drop entries whose audio file is missing on disk |
+| `gtm --cli playlist-sort <id> [--field title\|artist\|album\|date]` | Reorder in place (default: `title`) |
+
+Position gaps in a playlist are renumbered automatically after removals.
+
+---
+
+## Metadata
+
+- `e` in the library — edit the selected track's metadata
+- CLI: `gtm --cli update-metadata <track_id> <field> <value>`
+
+Editable fields: `title`, `artist`, `album`, `genre`, `year`, `track-number`.
+An empty value clears the field.
+
+:::note
+`update-metadata` updates the **library database** — it does not rewrite the
+audio file. File tag write-back happens automatically during metadata
+backfill (see [Metadata sources](/metadata-sources/)), which uses
+`lofty` and supports title, artist, album, genre, year (1000–9999), track
+number (>0), and cover art replacement (PNG/GIF/JPEG).
+:::
+
+---
+
+## Deleting tracks
+
+Removing a track (`d`/`Del`, then confirm) touches the library database. By
+default the daemon is also permitted to **physically delete the audio file**
+and its `.lrc` sidecar (`allow_delete_files`, default `true`).
+
+:::caution
+With the default config, removing a track deletes it from disk — there is no
+trash. `playlist-doctor` only removes *playlist* entries, never files.
+:::
+
+---
+
+## Limitations
+
+- The library is populated by directory scanning; files added to a watched
+  directory are picked up on the next scan.
+- `update-metadata` writes tags into the file; format support depends on the
+  underlying `lofty` support for the container.
+- Year is clamped to 1000–9999; track numbers must be > 0.

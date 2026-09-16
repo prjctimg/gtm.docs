@@ -1,0 +1,118 @@
+---
+title: Lyrics
+description: "How lyrics are resolved: sidecar files, offline caching, and LRCLIB."
+sidebar:
+  order: 9
+---
+
+## On this page
+
+- [Resolution order](#_resolution-order)
+- [Sidecar files](#_sidecar-files)
+- [Offline cache](#_offline-cache)
+- [Timing & sync](#_timing-sync)
+- [Limitations](#_limitations)
+
+---
+
+## Resolution order
+
+When a track starts, the daemon resolves synced lyrics (`.lrc` format) in
+strict priority order:
+
+1. **`.lrc` sidecar** next to the audio file (`.srt` and timed `.json`
+   sidecars are also accepted)
+2. **Offline cache** — previously fetched `.lrc` files persisted on disk
+3. **LRCLIB exact match** — `/api/get` by artist + title
+4. **LRCLIB search** — `/api/search`, fuzzy-matched server-side
+5. **LRCLIB title-only search** — last resort when the artist is unknown
+
+Fuzzy matching uses a Jaro–Winkler similarity of ≥ **0.75**
+(`FUZZY_THRESHOLD`) after normalizing artist/title names.
+
+```
+sidecar (.lrc/.srt/.json)
+  → offline cache
+    → lrclib exact
+      → lrclib search
+        → lrclib title-only
+```
+
+Sources 3–5 hit **LRCLIB** (`https://lrclib.net/api`).
+
+:::note
+An empty or malformed sidecar does **not** shadow the offline cache or the
+network — a broken sidecar falls through instead of blocking lyrics.
+:::
+
+---
+
+## Sidecar files
+
+Name a lyrics file after the audio file and it is picked up automatically:
+
+```text
+track.flac
+track.lrc      ← matched by filename stem
+```
+
+`.srt` and timed `.json` sidecars are also recognized. Char-detection guess
+themselves: the sidecar reader guesses the encoding/text source and falls
+back to a plain-text lookup if that margin is thin.
+
+You can also pass a sidecar explicitly by opening it from the file picker —
+it attaches as synced `.lrc` data for the current track.
+
+---
+
+## Offline cache
+
+Fetched lyrics are written as `.lrc` files so they are available offline on
+future plays. Cache entries are keyed by a sanitized `Artist - Title` slug
+plus a small hash suffix, stored in the XDG cache dir:
+
+```bash
+ls ~/.cache/gtm/lyrics/
+```
+
+The cache is consulted before any network fetch, which is why the second
+play of a track is usually instant.
+
+:::tip
+Point the cover-art cache at the same reasoning: local-first, network only
+when the local copy is missing.
+:::
+
+---
+
+## Timing & sync
+
+- The lyric view auto-scrolls as playback advances, and re-syncs its clock
+  roughly once per second.
+- During crossfade, the lyric auto-scroll cues toward the incoming track.
+
+The daemon broadcasts a `lyrics` event whenever the resolved lyrics change,
+so the TUI view swaps instantly on track changes.
+
+---
+
+## CLI
+
+```bash
+gtm --cli lyrics             # print the current track's synced lyrics
+gtm lyrics "artist - title"  # search LRCLIB and print
+```
+
+The standalone `lyrics` command takes a single `artist - title` query
+string.
+
+---
+
+## Limitations
+
+- Only `.lrc` (and `.srt` / timed `.json`) formats are shown in the now
+  playing pane; plain un-timed lyrics are not diagrammed.
+- Network lookups require LRCLIB reachability; tune in offline and the
+  offline cache is your ceiling.
+- Fuzzy matching thresholds mean very new or obscure releases may miss and
+  fall through without displaying lyrics rather than showing wrong ones.

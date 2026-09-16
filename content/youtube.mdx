@@ -1,0 +1,103 @@
+---
+title: YouTube
+description: "Search YouTube, stream audio, and download tracks with yt-dlp."
+sidebar:
+  order: 12
+---
+
+## On this page
+
+- [Search](#_search)
+- [Streaming](#_streaming)
+- [Downloads](#_downloads)
+- [Cookies](#_cookies)
+- [Limitations](#_limitations)
+
+---
+
+## Search
+
+YouTube is integrated through the **InnerTube API** (the same protocol the
+YouTube client uses), so no API key is needed.
+
+- `Alt+y` — open the YouTube search picker
+
+Results are interleaved (tracks and videos together) and show title,
+duration, and channel. A search that starts with `http://` / `https://`
+performs a direct URL lookup instead of a keyword search.
+
+TUI-only: there is no YouTube CLI subcommand.
+
+:::note
+YouTube search requires the `youtube` cargo feature. It is **compiled out
+on Android / Termux builds**, which cannot host the JS decipher engine
+(rquickjs). Core and daemon backends build fine; only search/stream is
+unavailable.
+:::
+
+---
+
+## Streaming
+
+Pressing `Enter` on a result streams that video's audio directly (the
+pickup pipeline decodes it like any other source). Playlist results are
+resolved and enqueued as a batch.
+
+Search is bounded by a **30-second timeout**, and the search session is
+shared — a new search cancels any in-flight one so results never go stale.
+
+---
+
+## Downloads
+
+- Focus a result and press the download action (footer shows progress)
+
+Downloads are handled by a **yt-dlp subprocess** on the daemon side, so they
+continue even if the TUI closes. Kick-offs happen from the YouTube search
+picker; each download shows a live EMA-smoothed progress in the footer
+`Download` module, and files land in:
+
+```text
+~/Music/gtm/downloads/       # dirs::audio_dir() (usually XDG_MUSIC_DIR)
+```
+
+Downloads are capped at **2 concurrent** (`MAX_CONCURRENT`) via a semaphore;
+the limit is configurable at runtime (`set_max_downloads`). Starting a new
+download cancels the previous one. After download the file is scanned into
+the library like a local file.
+
+:::tip
+`yt-dlp` must be on `$PATH`. The daemon also needs a functioning system
+`openssl`/`ffi` build (used for the decipher step).
+:::
+
+---
+
+## Cookies
+
+Downloads of age-restricted or logged-in-only content work better with a
+cookie file. The daemon is told where to look:
+
+```bash
+mkdir -p ~/.cookies
+# export your youtube.com cookies as Netscape format
+touch ~/.cookies/youtube.txt
+```
+
+Configure the path in the TUI (settings) or pass it to the daemon. The
+suggested default is `~/.cookies/youtube.txt`; unless you set a path, no
+cookies are used.
+
+---
+
+## Limitations
+
+- Requires the `youtube` feature — off for Termux/Android.
+- Needs the `yt-dlp` binary for downloads; stream resolution is native
+  (InnerTube) but downloads delegate to yt-dlp.
+- One active download at a time from the TUI (a new download cancels the
+  in-flight one).
+- Search is limited to a 30-second window and cancels a previous in-flight
+  search.
+- Internet-dependent, obviously — and subject to YouTube's own resistance to
+  third-party clients.

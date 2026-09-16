@@ -1,0 +1,72 @@
+---
+title: Streams
+description: "Playing direct HTTP(S) audio URLs as live remote streams."
+sidebar:
+  order: 18
+---
+
+## On this page
+
+- [What "streams" means](#_what-streams-means)
+- [Playing a URL](#_playing-a-url)
+- [How it plays](#_how-it-plays)
+- [Limitations](#_limitations)
+
+---
+
+## What "streams" means
+
+The daemon recognizes four synthetic remote path schemes:
+
+| Scheme | Provider |
+|--------|----------|
+| `subsonic://<track_id>` | Subsonic/Navidrome server |
+| `podcast://<feed_id>/<index>` | Podcast episode |
+| `radio://<station_id>/<name>` | Internet radio station |
+| **`http://` / `https://` ...** | **Direct stream URL** |
+
+Anything else is treated as a local file. The last case — a plain
+`http://` / `https://` URL — is what a **direct stream** is.
+
+---
+
+## Playing a URL
+
+```bash
+gtm --cli stream "https://example.org/live.ogg"    # play a stream URL
+gtm --cli queue-add "https://example.org/live.ogg" # enqueue it
+gtm --cli play ./song.flac [start_secs]            # local files use play
+```
+
+`stream` also **auto-resolves M3U/PLS playlist URLs** — an HTTP playlist
+containing track/stream entries is expanded and played. Common stream
+targets: icecast-style `/stream`, `.mp3`, `.ogg`, `.m4a`/`.aac` endpoints.
+
+From the TUI, open the stream picker (`Alt+o`) to paste a URL, or use the
+queue-add picker.
+
+---
+
+## How it plays
+
+Stream URLs are opened on a blocking thread with a plain HTTP GET and
+decoded as a continuous live source. Because it's live:
+
+- Position is 0 through the session
+- **No backward seeking** (seek-forward is rate-limited to the live edge)
+- Crossfade standby tries to resolve the remote ahead of the transition,
+  but falls back to a hard switch if the resolve fails
+
+EQ, reverb, volume, and the same mixer path as local files all apply.
+
+---
+
+## Limitations
+
+- Requires the URL to serve audio directly — no playlisting pages, DRM, or
+  redirect-heavy embeds.
+- Live transport: no seeking.
+- No auth/cookie handling for streams (radio uses none by default;
+  podcasts/subsonic handle their own auth).
+- Streams are ephemeral: they are not written to `library.db`, and the
+  crossfade into a stream relies on remote resolve succeeding.

@@ -1,0 +1,155 @@
+---
+title: Audio
+description: "Audio backends, output devices, the equalizer, reverb, and the spectrum visualizer."
+sidebar:
+  order: 7
+---
+
+## On this page
+
+- [Audio backends](#_audio-backends)
+- [Output devices](#_output-devices)
+- [Equalizer](#_equalizer)
+- [Reverb](#_reverb)
+- [Visualizer](#_visualizer)
+- [Limitations](#_limitations)
+
+---
+
+## Audio backends
+
+gtm ships two audio backends behind a common `Mixer` interface:
+
+| Backend | Feature | Notes |
+|---------|---------|-------|
+| **Rodio** | (default) | Cross-platform, ALSA/CoreAudio via cpal |
+| **PulseAudio** | `pulseaudio` | Native PulseAudio streams; auto-selected on Termux |
+
+The backend also owns EQ, reverb, pitch-preserving speed, device switching,
+and crossfade — one code path for every source (local files, Spotify,
+remote streams).
+
+### Selecting the backend
+
+```bash
+gtmd --backend rodio       # explicit
+gtmd --backend pulseaudio  # explicit
+```
+
+Without an explicit `--backend`, Termux builds auto-select PulseAudio so
+audio can be output on Android; other platforms default to Rodio.
+
+### Termux
+
+At runtime on Termux, `gtmd` starts the PulseAudio server automatically.
+If your build lacks the `pulseaudio` feature, a clear error suggests
+rebuilding with `--features pulseaudio`.
+
+---
+
+## Output devices
+
+- `gtm --cli audio-devices` — list available output devices
+- `gtm --cli set-audio-device <name>` — switch output device
+  (`default` restores the system default)
+
+Switching restarts the output and stops playback, then persists the chosen
+device so it survives restart. When a requested device fails to open, the
+daemon falls back to the default.
+
+The active device is shown in the footer `Device` module (and the `Backend`
+module shows Rodio vs PulseAudio).
+
+---
+
+## Equalizer
+
+The equalizer is a **15-band graphic EQ** using ISO 1/3-octave center
+frequencies:
+
+```
+25, 40, 63, 100, 160, 250, 400, 630, 1000, 1600, 2500,
+4000, 6300, 10000, 16000 Hz
+```
+
+Each band is a bell filter (default Q = 1.414, i.e. 1/3-octave bandwidth),
+applied per sample in the audio engine with gains re-checked every 128
+samples to avoid lock contention.
+
+### Presets
+
+16 presets are built in:
+
+| Preset | Preset |
+|--------|--------|
+| Flat | Electronic |
+| Normal | Hip-Hop |
+| Pop | Latin |
+| Rock | Acoustic |
+| Jazz | Podcast |
+| Classical | Dance |
+| Bass Boost | Headphones |
+| Vocal | Speaker |
+
+`Alt+e` opens the equalizer picker with a live mini-plot of each preset's
+frequency response. `Enter` applies the selected preset. The EQ
+on/off toggle lives under `Alt+,` (Settings → Playback). The footer
+`EqPreset` module shows the active preset.
+
+EQ presets are stored in `AudioSettings` (`eq_preset`, `eq_enabled`) and
+persisted with the daemon state.
+
+:::note
+The `EqPreset::Custom([f32; 15])` variant exists in the state model but is
+**not exposed in the TUI** — there is no per-band editing UI yet.
+:::
+
+---
+
+## Reverb
+
+A simple room model is available via `reverb_stereo(room_size, ...)`. It
+defaults to **off**. Current room size default is 0.5. Reverb is applied by
+the daemon and toggled from Settings → Playback.
+
+---
+
+## Visualizer
+
+The visualizer renders live FFT data from the daemon's decoder
+(`audio_levels` — a set of spectrum bins refreshed roughly every 300 ms).
+
+- `Ctrl+V` — toggle the visualizer
+- `Alt+v` — open the preset picker (with a live preview)
+
+### Presets
+
+| Preset | Render style |
+|--------|--------------|
+| **Braille** (default) | Braille grid cells, single color by amplitude |
+| **Blocks** | Full-block columns with fractional heights |
+| **Mirror** | Center-symmetric bars blooming outward |
+| **Gradient** | Braille grid with a 4-step color ramp |
+| **Spectrum** | Block-based spectrum view |
+
+Rendering is frame-rate independent: bars use attack 0.65 / decay 0.45
+(0.8 when idle), and when nothing is playing an idle sine-wave animation
+keeps the view alive.
+
+The visualizer only renders when the terminal is ≥ 80 columns wide.
+
+The client's `visualizer_preset` config key sets the default preset
+(`"braille" | "blocks" | "mirror" | "gradient" | "spectrum"`).
+
+---
+
+## Limitations
+
+- Equalizer is a fixed 15-band ISO 1/3-octave design — band frequencies are
+  not user-configurable.
+- No per-band custom EQ editing in the TUI yet (`EqPreset::Custom` exists
+  in the model only).
+- PulseAudio is Linux/Android-only; macOS and Windows use Rodio.
+- Device switching stops playback and restarts the output.
+- Speed is applied via a time-stretch (pitch-preserving) profile clamped to
+  0.25×–2.0×.

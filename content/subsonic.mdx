@@ -1,0 +1,80 @@
+---
+title: Subsonic
+description: "Stream from your Subsonic / Navidrome server: search, browse, and play."
+sidebar:
+  order: 15
+---
+
+## On this page
+
+- [Connecting](#_connecting)
+- [Searching](#_searching)
+- [Streaming](#_streaming)
+- [Limitations](#_limitations)
+
+---
+
+## Connecting
+
+gtm can stream directly from any **Subsonic-compatible server** — Navidrome
+in particular — using the standard Subsonic REST API
+(`API_VERSION 1.16.1`).
+
+```bash
+gtm --cli subsonic configure <server_url> <username> [password]   # save + validate
+gtm --cli subsonic status      # show saved server & connection state
+gtm --cli subsonic ping        # quick connectivity probe
+gtm --cli subsonic clear       # forget the saved server
+```
+
+Or during guided setup:
+
+```bash
+gtm --cli setup subsonic
+gtm --cli setup navidrome
+```
+
+Credentials are stored in the daemon config dir as `subsonic.json`
+(`subsonic://` synthetic paths resolve through this server). Passwords are
+written with the daemon secrets store.
+
+### Navidrome specifics
+
+`setup navidrome` accepts the Navidrome URL/username/password path and
+writes the same config format — talking to Navidrome is the typical use
+case.
+
+---
+
+## Searching
+
+- `Alt+u` — open the Subsonic search picker
+
+Search hits are grouped by artists / albums / songs. Selecting a result
+streams it.
+
+CLI search returns raw results for scripting:
+
+```bash
+gtm --cli subsonic search "quartet"
+gtm --cli subsonic play <track_id>
+```
+
+---
+
+## Streaming
+
+Played tracks resolve to a live HTTP stream from the server and decode
+through the same remote-source pipeline as radio and podcasts, so EQ,
+reverb, and crossfade all apply. Like all remote feeds, it is a **live
+transport** — no backward seeking.
+
+---
+
+## Limitations
+
+- Requires a running Subsonic/Navidrome server with network access.
+- Live-transport only: you can't seek backward in a subsonic stream.
+- Local library and remote library are separate; subsonic tracks don't
+  enter `library.db`.
+- API compatibility is capped at `1.16.1`.

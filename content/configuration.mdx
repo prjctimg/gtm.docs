@@ -1,0 +1,255 @@
+---
+title: Configuration
+description: "config.toml reference, files layout, environment variables, and CLI args."
+sidebar:
+  order: 4
+---
+
+## On this page
+
+- [Files layout](#_files-layout)
+- [config.toml reference](#_config-toml-reference)
+- [Theme files](#_theme-files)
+- [Footer presets](#_footer-presets)
+- [Custom radio stations](#_custom-radio-stations)
+- [Environment variables](#_environment-variables)
+- [Daemon CLI args](#_daemon-cli-args)
+- [Client CLI flags](#_client-cli-flags)
+- [Limitations](#_limitations)
+
+---
+
+## Files layout
+
+gtm follows XDG conventions. All paths below assume the default XDG base
+directories:
+
+| Path | Contents |
+|------|----------|
+| `~/.config/gtm/config.toml` | TUI preferences |
+| `~/.config/gtm/themes/*.toml` | User theme files |
+| `~/.config/gtm/footer.toml` | Custom footer presets |
+| `~/.config/gtm/radios.toml` | Custom radio stations |
+| `~/.local/share/gtm/state.json` | Persistent daemon state |
+| `~/.local/share/gtm/library.db` | SQLite library database |
+| `~/.local/share/gtm/gtmd.log` | Daemon log |
+| `~/.cache/gtm/covers/` | Cover art cache (max 512 MB on disk) |
+| `~/.cache/gtm/lyrics/` | Offline lyrics cache |
+| `~/.cache/gtm/spotify/` | Spotify sync cache |
+
+:::note
+If `$XDG_CONFIG_HOME` is not set, `~/.config` is used. If `$XDG_DATA_HOME`
+is not set, `~/.local/share` is used. The daemon creates these directories
+automatically on first run.
+:::
+
+---
+
+## config.toml reference
+
+The client reads `$XDG_CONFIG_HOME/gtm/config.toml` (or
+`~/.config/gtm/config.toml`). It is hot-reloaded: changes take effect on
+the next frame without restarting the client.
+
+A default `config.toml` is created automatically on first launch. To open
+it in your editor, run `gtm config`.
+
+```toml
+# ─── Theme ───────────────────────────────────────────────────────────
+theme_name = "Chadrula"          # Built-in or user theme name
+theme_mode = "auto"              # "auto" | "dark" | "light" | "manual"
+transparent_bg = false           # Transparent terminal background
+transparent_pickers = false      # Transparent picker overlays
+reactive_theme = false           # Derive accents from cover art
+reactive_theme_intensity = 0.34  # Background wash strength (0.0–1.0)
+
+# ─── Footer ──────────────────────────────────────────────────────────
+footer_preset_name = "Default"   # Footer layout preset
+hide_footer = false              # Hide the footer bar entirely
+
+# ─── Progress & Visualizer ──────────────────────────────────────────
+progress_style = "true_gradient" # "seek_head" | "classic" | "dots" | "true_gradient"
+visualizer_preset = "braille"    # "braille" | "blocks" | "mirror" | "gradient" | "spectrum"
+
+# ─── Display ─────────────────────────────────────────────────────────
+time_format = "%H:%M"            # strftime format for the clock
+icon_style = "mdi"               # "mdi" (nerd fonts) or "emoji"
+
+# ─── Cover & Lyrics ─────────────────────────────────────────────────
+cover_provider = "auto"          # "auto" | "deezer" | "musicbrainz" | "spotify"
+auto_fetch_lyrics = true         # Auto-fetch lyrics on track change
+
+# ─── Sort ────────────────────────────────────────────────────────────
+track_sort = "recents"           # Default library sort order
+
+# ─── Notifications ──────────────────────────────────────────────────
+[notification_modes]
+playback = "floating"            # "floating" | "footer" | "off"
+nowplaying = "floating"
+library = "floating"
+# ... one entry per notification category
+# (playback, prefs, nowplaying, library, downloads, spotify, subsonic,
+#  podcast, radio, lastfm)
+
+# ─── Keybindings ────────────────────────────────────────────────────
+[keybindings]
+# play_pause = "Space"           # example override
+# quit = "Ctrl+q"
+# open_queue = "Alt+q"
+```
+
+### Field reference
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `theme_name` | string | `"Chadrula"` | Active theme name |
+| `theme_mode` | string | `"auto"` | `auto` follows OS dark/light mode; `manual` uses the named theme |
+| `transparent_bg` | bool | `false` | Use terminal background (no fill) |
+| `transparent_pickers` | bool | `false` | Transparent picker overlays |
+| `reactive_theme` | bool | `false` | Derive accents from cover art |
+| `reactive_theme_intensity` | float | `0.34` | Strength of the background wash |
+| `footer_preset_name` | string | `"Default"` | Active footer preset |
+| `hide_footer` | bool | `false` | Hide the footer bar |
+| `progress_style` | string | `"true_gradient"` | Progress bar render style |
+| `visualizer_preset` | string | `"braille"` | Visualizer render preset |
+| `time_format` | string | `"%H:%M"` | Clock format |
+| `icon_style` | string | `"mdi"` | Icon font: `"mdi"` or `"emoji"` |
+| `cover_provider` | string | `"auto"` | Artwork source preference |
+| `auto_fetch_lyrics` | bool | `true` | Auto-fetch lyrics on track change |
+| `track_sort` | string | `"recents"` | Default sort order |
+| `notification_modes` | table | (all `"floating"`) | Per-category notification mode |
+| `keybindings` | table | (empty) | Key remappings |
+
+---
+
+## Theme files
+
+User themes are TOML files placed in `~/.config/gtm/themes/`. Each file
+defines one theme. User themes replace built-in themes with the same name.
+
+```toml
+name = "My Theme"
+bg = "#1a1b26"
+picker_bg = "#24283b"
+fg = "#c0caf5"
+fg_dim = "#565f89"
+fg_bright = "#a9b1d6"
+accent = "#7aa2f7"
+secondary_accent = "#bb9af7"
+tertiary_accent = "#9ece6a"
+error = "#f7768e"
+warning = "#e0af68"
+success = "#9ece6a"
+selection_fg = "#1a1b26"
+selection_bg = "#7aa2f7"
+border = "#414868"
+border_active = "#7aa2f7"
+volume_low = "#9ece6a"
+volume_medium = "#e0af68"
+volume_high = "#f7768e"
+sidebar_active_border = "#7aa2f7"
+notification_border = "#7aa2f7"
+```
+
+The `light` flag is auto-detected from the background color's luminance if
+omitted. All color fields accept `#rrggbb` hex. If omitted, optional fields
+default to `bg` or `accent`.
+
+---
+
+## Footer presets
+
+Custom footer presets are defined in `~/.config/gtm/footer.toml`:
+
+```toml
+[[preset]]
+name = "My Preset"
+left = ["Playback", "Volume", "EqPreset"]
+right = ["Queue", "Time", "Backend"]
+```
+
+Use any of the module names listed in the [Footer bar](/interface/#footer-bar)
+section. Unknown names are silently dropped.
+
+---
+
+## Custom radio stations
+
+Stations added with `gtm radio add` are stored in
+`~/.config/gtm/radios.toml`:
+
+```toml
+[[station]]
+name = "NTS Radio"
+url = "https://stream-relay-geo.ntslive.net/stream"
+```
+
+Each station is referenced by `custom:N` where `N` is its 1-based index.
+
+---
+
+## Environment variables
+
+| Variable | Used by | Description |
+|----------|---------|-------------|
+| `XDG_CONFIG_HOME` | Client, daemon | Config directory root (default: `~/.config`) |
+| `XDG_DATA_HOME` | Daemon | Data directory root (default: `~/.local/share`) |
+| `XDG_CACHE_HOME` | Daemon | Cache directory root (default: `~/.cache`) |
+| `XDG_RUNTIME_DIR` | Client | Derives default IPC socket path |
+| `GTM_THEME_MODE` | Client | Override theme mode: `dark` / `light` |
+| `GTM_SPOTIFY_PORT` | OAuth flow | Override the OAuth callback port (default: 8990) |
+| `GTM_LASTFM_PORT` | OAuth flow | Override the Last.fm callback port |
+| `NVIM` | Client | Disables cover art rendering (Neovim) |
+| `ZELLIJ` | Client | Disables cover art rendering (Zellij) |
+| `RUST_LOG` | Daemon | Controls log verbosity (`gtm=debug`, etc.) |
+
+---
+
+## Daemon CLI args
+
+```
+gtmd [OPTIONS]
+
+Options:
+  --socket <PATH>      Unix socket path
+  --library <PATH>     Library database path
+  --config <DIR>       Config directory path
+  --backend <BACKEND>  Audio backend: "rodio" or "pulseaudio"
+  -v, --verbose        Enable verbose logging
+  --test-mode          Ephemeral socket, no daemonize
+  -V, --version        Show version
+  -h, --help           Show help
+```
+
+The daemon auto-starts when `gtm` is launched and no daemon is running.
+
+---
+
+## Client CLI flags
+
+```
+gtm [OPTIONS] [COMMAND]
+
+Options:
+  -s, --socket <PATH>  Daemon socket path
+  -c, --cli            CLI mode (no TUI)
+  -j, --json           JSON output (CLI mode only)
+  -v, --verbose        Verbose output
+  -V, --version        Show version
+  -h, --help           Show help
+```
+
+Run `gtm --cli --help` for the full list of CLI commands.
+
+---
+
+## Limitations
+
+- `config.toml` is hot-reloaded per-frame; write it atomically to avoid
+  partial reads.
+- Keybindings changes require the client to re-read the file (happens
+  automatically on the next frame).
+- Unknown TOML keys are silently ignored.
+- `theme_mode = "auto"` depends on `gsettings` (GNOME), `$GTK_THEME`
+  suffix, or Omarchy's `colors.toml`. On systems without these, it falls
+  back to the user-specified theme.

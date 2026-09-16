@@ -1,0 +1,108 @@
+---
+title: Spotify
+description: "Streaming your Spotify library, linking accounts, and syncing playlists."
+sidebar:
+  order: 13
+---
+
+## On this page
+
+- [Linking your account](#_linking-your-account)
+- [Search & streaming](#_search-streaming)
+- [Playlist sync](#_playlist-sync)
+- [The Spotify Web cache](#_the-spotify-web-cache)
+- [Covers from Spotify](#_covers-from-spotify)
+- [Limitations](#_limitations)
+
+---
+
+## Linking your account
+
+Spotify integration uses OAuth PKCE and a local redirect server. Once
+linked, gtm can search, stream, and sync your playlists.
+
+### CLI
+
+```bash
+gtm --cli setup spotify                    # guided setup (TUI chooser or --cli)
+gtm --cli spotify login <client_id>        # browser OAuth flow on port 8990
+gtm --cli spotify login <client_id> --port 9100
+gtm --cli spotify connect <access_token>   # link with an already-obtained token
+gtm --cli spotify status                   # show connection status
+gtm --cli spotify disconnect               # unlink
+```
+
+OAuth details:
+
+- Redirect port **8990** (or `$GTM_SPOTIFY_PORT`) — the server listens on
+  `http://127.0.0.1:8990/login` for the code.
+- Login window is capped at **120 seconds**.
+- Scopes: playback-state, modify-playback-state, currently-playing,
+  private/collaborative playlists, user-library, and user profile.
+- **No `offline_access` scope** — Spotify does not define it for this flow;
+  refresh tokens are handled internally.
+
+### TUI
+
+Open the setup/service picker (`Alt+x`) and choose Spotify; follow the
+prompts. The TUI opens your browser to the Spotify authorization page; when
+you land on the local redirect, the daemon captures the code and exchanges
+it for a token automatically.
+
+---
+
+## Search & streaming
+
+- `Alt+s` — open the Spotify search picker
+
+Search covers tracks, albums (3 results), and artists (3 results), with
+track search backed by the official Search API. Entering a track streams it
+through the Spotify Web/zlib decoder without ever storing the track locally.
+
+Streams use the same EQ, reverb, volume, and crossfade pipeline as local
+files. Position and state are broadcast the same way, so the TUI treats
+them identically.
+
+---
+
+## Playlist sync
+
+```bash
+gtm --cli spotify sync                    # sync all linked playlists to library
+```
+
+Your Spotify playlists appear in the **Library → Spotify** category. Syncing
+is additive and caches the track list so the category is usable offline
+(see below). New playlist edits sync on the next `spotify sync`.
+
+---
+
+## The Spotify Web cache
+
+The daemon maintains `~/.cache/gtm/spotify/` as a persistent cache of the
+Spotify Web session (playlist metadata, refresh tokens, playlist tracks).
+It is created once on first Spotify use and reused across restarts, so a
+linked account does not require re-authorization every launch.
+
+---
+
+## Covers from Spotify
+
+When a Spotify account is linked, a 640×640 original artwork lookup is
+tried **before** the MusicBrainz/Deezer fallback (for the default `Auto`
+cover provider). Covers found this way are cached exactly like any other
+cover. See [Cover Art](/cover-art/).
+
+---
+
+## Limitations
+
+- Requires a Spotify **Premium** account for 320kbps streaming.
+- The `youtube` feature must be enabled for the decipher step used by the
+  Web stream (same restriction as YouTube on Android builds).
+- Search returns a bounded set; album/artist results are capped at 3.
+- Login is time-boxed to 120 seconds.
+- Spotify is not a full music source for *this* account — it syncs your
+  playlists, doesn't sync the whole discography.
+- Scrobbling to Last.fm and Spotify link are separate accounts; see
+  [Metadata sources](/metadata-sources/).

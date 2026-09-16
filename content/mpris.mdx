@@ -1,0 +1,102 @@
+---
+title: MPRIS
+description: "Control gtm from desktop media keys, GNOME, KDE Plasma, and any MPRIS client."
+sidebar:
+  order: 19
+---
+
+## On this page
+
+- [Availability](#_availability)
+- [Bus & object](#_bus-object)
+- [What you can do](#_what-you-can-do)
+- [Desktop integration](#_desktop-integration)
+- [Limitations](#_limitations)
+
+---
+
+## Availability
+
+MPRIS (D-Bus media player interface) is part of the `gtmd` binary behind
+the **`mpris`** cargo feature — **enabled by default**. Uninstall with:
+
+```bash
+cargo build --release --no-default-features --features youtube
+```
+
+On the session bus, media keys, GNOME Shell, KDE Plasma Now Playing, and
+any MPRIS-aware app can control gtm without touching the TUI.
+
+Installation is automatic when the DAEMON is built with the feature: the
+MPRIS server starts on daemon startup and mirrors live playback state.
+
+---
+
+## Bus & object
+
+| Property | Value |
+|----------|-------|
+| Bus | session D-Bus |
+| Bus name | `org.mpris.MediaPlayer2.gtm` |
+| Object | `/org/mpris/MediaPlayer2` |
+| Interfaces | `org.mpris.MediaPlayer2`, `org.mpris.MediaPlayer2.Player` |
+
+There is exactly one MPRIS instance, owned by `gtmd`. If a second instance
+is started while one is live, it is killed so the bus name stays unique.
+
+The MPRIS server subscribes to the daemon's event stream, so callers see
+nothing beyond real gtm — no duplicated state.
+
+---
+
+## What you can do
+
+The `Player` interface, mapped 1:1 to daemon IPC:
+
+| Action | MPRIS method |
+|--------|--------------|
+| Play / Pause / Toggle | `Play`, `Pause`, `PlayPause` |
+| Stop | `Stop` (releases the stream, fires `track_ended` cleanup) |
+| Next / Previous | `Next`, `Previous` |
+| Seek | `Seek(offset_us)` — relative in microseconds |
+| Set position | `SetPosition(track_id, position_us)` (absolute, µs) |
+| Loop | `SetLoopStatus("None"\|"Track"\|"Playlist")` |
+| Volume | `Volume` property |
+| Shuffle | `Shuffle` property |
+| Rate | `Rate` / `MinimumRate` / `MaximumRate` (1.0 — playback speed is not mapped) |
+
+Read-only introspection mirrors gtm state:
+
+- `PlaybackStatus`: `Playing` / `Paused` / `Stopped`
+- `Position`: microseconds, refreshed live from `time_pos`
+- `Metadata`: track id, title, artist, album, length, artwork URL
+- `CanSeek`, `CanControl`, `CanPlay`/`CanPause`, `CanGoNext`/`CanGoPrevious`
+
+`CanPause` is `false` for live streams (radio, podcasts, subsonic), exactly
+like the TUI.
+
+---
+
+## Desktop integration
+
+No configuration needed: any `.desktop` app or GNOME/KDE media controls
+pick up the session-bus name and list gtm alongside other players.
+`playerctl play-pause` works out of the box.
+
+```bash
+playerctl status
+playerctl position
+playerctl play-pause
+playerctl next
+```
+
+---
+
+## Limitations
+
+- Requires a session D-Bus and the `mpris` feature.
+- `set-rate` is a no-op — playback speed stays controlled from the TUI/CLI.
+- `CanPause` is `false` for live streams.
+- Track identity is the daemon track id; `SetPosition` with an unknown
+  track id is ignored.
+- MPRIS is strictly one instance; concurrent `gtmd`s conflict (by design).

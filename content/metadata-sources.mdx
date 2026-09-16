@@ -1,0 +1,111 @@
+---
+title: Metadata Sources
+description: "How metadata and scrobbling sources work: best-effort enrichment from Deezer, Last.fm, and MusicBrainz."
+sidebar:
+  order: 14
+---
+
+## On this page
+
+- [Best-effort enrichment](#_best-effort-enrichment)
+- [Deezer](#_deezer)
+- [MusicBrainz](#_musicbrainz)
+- [Last.fm scrobbling](#_last-fm-scrobbling)
+- [Metadata sync](#_metadata-sync)
+- [Limitations](#_limitations)
+
+---
+
+## Best-effort enrichment
+
+Embedded tags in audio files are not always reliable: artists like "Feat.
+DJB", genres rendered as "unknown", or album names truncated. The daemon
+treats provider lookups as **best-effort enrichment**: any track whose tags
+are missing, partial, or filename-like (e.g. a bare filename with no real
+tags) gets probed when the file is scanned.
+
+Enrichment only *fills gaps* — it never overwrites credible embedded values.
+When a better candidate is found, it is both:
+
+1. Written back into the **audio file tags** (`lofty`: title, artist,
+   album, genre, year 1000–9999, track > 0, cover PNG/GIF/JPEG)
+2. Recorded in the **library database**
+
+A per-track guard prevents hammering providers on every scan.
+
+---
+
+## Deezer
+
+`https://api.deezer.com/search`
+
+- Used for both metadata enrichment and **cover art** (see
+  [Cover Art](/cover-art/))
+- Requests are **rate-limited to one per 200 ms**
+- Quietly degrades: a failed lookup just warns and leaves existing metadata
+
+---
+
+## MusicBrainz
+
+`https://coverartarchive.org` (Cover Art Archive) and the standard
+MusicBrainz web-service endpoints.
+
+- Used for cover art and album metadata
+- Artwork candidates below 300×300px are rejected
+- Lookups are time-boxed (5s per provider) and cached like covers
+
+---
+
+## Last.fm scrobbling
+
+Last.fm integration records your **scrobbles**: what you listen to, as
+`track.scrobble` / `track.updateNowPlaying` per the Last.fm Web API.
+
+### Setting it up
+
+```bash
+gtm --cli setup lastfm
+```
+
+The guided flow:
+
+1. Create an API application at `https://www.last.fm/api/account/create`
+   (API key + secret + callback URL)
+2. Enter the key and secret (stored with the daemon)
+3. The browser opens `https://www.last.fm/api/auth/?api_key=<your-key>` to
+   grant access
+4. The daemon captures the callback token and swaps it for a session
+
+After that, `gtm --cli status` reports scrobbling state. Now-playing
+updates and completed-track scrobbles are pushed automatically.
+
+:::tip
+Scrobbling needs an active last.fm session; `lastfm.status()` shows
+`ready`/`not_ready` and the CLI `setup` flow handles re-auth.
+:::
+
+---
+
+## Metadata sync
+
+```bash
+gtm --cli metadata-sync                       # probe all library tracks
+gtm --cli metadata-sync ~/Music/weird.flac    # probe a single file
+```
+
+Runs the enrichment pass immediately for a file or the entire library —
+handy after adding a file with terrible tags.
+
+---
+
+## Limitations
+
+- Enrichment is best-effort and rate-limited; it cannot fill gaps the
+  providers simply don't have (local releases, small labels).
+- Covers need ≥300px to be accepted.
+- Deezer enforces the 200 ms request interval globally.
+- Last.fm requires manual API-application registration; gtm has no backend
+  of its own.
+- Providers are queried on *scan* — tracks added before a provider becomes
+  reachable should be re-synced with `metadata-sync`.

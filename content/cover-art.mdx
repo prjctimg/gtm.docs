@@ -1,0 +1,120 @@
+---
+title: Cover Art
+description: "Where artwork comes from, provider selection, caching, and the album art viewer."
+sidebar:
+  order: 10
+---
+
+## On this page
+
+- [Resolution order](#_resolution-order)
+- [Providers](#_providers)
+- [Choosing a provider](#_choosing-a-provider)
+- [Caching](#_caching)
+- [Album art viewer](#_album-art-viewer)
+- [Limitations](#_limitations)
+
+---
+
+## Resolution order
+
+For a local track, the daemon serves cover art in this order:
+
+1. **Embedded artwork** already in the audio file (from scan/DB)
+2. **Radio favicon** — for `radio://` URIs, the station's own favicon,
+   fetched once and cached under `radio:<uuid>`
+3. If a **Spotify** account is linked and the provider is `Auto` (default)
+   or `Spotify`, a search of the Spotify API for 640×640 original artwork
+4. The configured **metadata provider(s)** (MusicBrainz then Deezer by
+   default, see below)
+
+Each provider lookup is bounded by a 5-second timeout; the Spotify lookup
+is bounded at 8 seconds. Misses fall through instead of stalling the view.
+
+---
+
+## Providers
+
+| Provider | Source |
+|----------|--------|
+| **MusicBrainz** | Cover Art Archive (`https://coverartarchive.org`) |
+| **Deezer** | `https://api.deezer.com/search` |
+| **Spotify** | Spotify API (requires a linked account; 640×640 originals) |
+
+`CoverProvider::Auto` (the default) starts with MusicBrainz and falls back
+to Deezer. `Deezer` sweeps Deezer first, then MusicBrainz.
+
+:::note
+Spotify is only used as a **cover source with a linked account**. It is
+preferred ahead of the fallback provider when linked and the provider is
+`Auto` or `Spotify`.
+:::
+
+---
+
+## Choosing a provider
+
+Very small and very low-resolution images are rejected — a candidate whose
+width **or** height is below **300px** (`MIN_COVER_DIM`) is discarded in
+favor of the next source.
+
+From the TUI:
+
+- `Alt+,` → Settings → Playback → `Cover Source`
+
+From the CLI:
+
+```bash
+gtm --cli set-cover-provider auto
+gtm --cli set-cover-provider deezer
+gtm --cli set-cover-provider musicbrainz
+gtm --cli set-cover-provider spotify
+```
+
+Or set it in `config.toml`:
+
+```toml
+cover_provider = "deezer"
+```
+
+The daemon accepts a few lossy spellings for resilience: `deezer`,
+`musicbrainz`, `mb`, `musicbrainz/cover-art-archive`, `spotify` — anything
+else falls back to `Auto`. The provider can also be changed at runtime via
+IPC without a restart.
+
+---
+
+## Caching
+
+Covers are cached in two layers:
+
+| Layer | Bound |
+|-------|-------|
+| In-memory LRU | 64 entries, ≤ 8 MiB (artist tiles: 30 entries, ≤ 2 MiB) |
+| Disk (`$XDG_CACHE_HOME/gtm/covers/`) | evicts oldest by mtime above 512 MiB |
+
+Requests are rate-limited to **one per 200 ms** (`RATE_LIMIT_MS`) so a
+long track list does not hammer providers.
+
+The album-art viewer and the album cover tiles in the library both read
+through this same cache, so artwork appears without re-fetching.
+
+---
+
+## Album art viewer
+
+A track cover popup opens when the track pane gains focus, showing the same
+cover the now-playing pane uses. In a normal TUI pane the cover is
+letterboxed to the available height. There is no dedicated keybinding for a
+full-screen artwork viewer.
+
+---
+
+## Limitations
+
+- Requires network for anything not already in cache or embedded.
+- The 300px minimum means tiny or malformed source art is skipped.
+- Deezer is rate-limited to one request per 200 ms.
+- Spotify artwork requires an active linked account.
+- Radio stations use their favicon as a stand-in when the directory lists
+  none.

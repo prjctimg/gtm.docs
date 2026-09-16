@@ -1,0 +1,209 @@
+---
+title: Theming
+description: "Themes, dark/light detection, reactive theming, progress styles, footer presets, and command palette icons."
+sidebar:
+  order: 11
+---
+
+## On this page
+
+- [Built-in themes](#_built-in-themes)
+- [Theme mode & OS detection](#_theme-mode-os-detection)
+- [User themes](#_user-themes)
+- [Reactive theme](#_reactive-theme)
+- [Progress styles](#_progress-styles)
+- [Footer presets](#_footer-presets)
+- [Icons](#_icons)
+- [Limitations](#_limitations)
+
+---
+
+## Built-in themes
+
+16 themes are built in:
+
+| Theme | Type |
+|-------|------|
+| Classic | dark |
+| Chadrula | dark |
+| One Dark | dark |
+| Tokyo Night | dark |
+| Tokyo Night Storm | dark |
+| Catppuccin Mocha | dark |
+| Catppuccin Latte | light |
+| Gruvbox Dark | dark |
+| Nord | dark |
+| Rose Pine | dark |
+| Everforest | dark |
+| Kanagawa | dark |
+| Kanagawa Lotus | light |
+| Solarized Light | light |
+| Solarized Dark | dark |
+| Monochrome | dark |
+
+Switch themes from the theme picker (`Alt+T` cycles through the built-in
+themes in order and sets `theme_mode` to `"manual"`, `Alt+C` opens the full
+picker with live preview) or persist a name:
+
+```toml
+# config.toml
+theme_name = "Tokyo Night Storm"
+```
+
+---
+
+## Theme mode & OS detection
+
+`theme_mode` controls how the starting theme is chosen:
+
+| Value | Behavior |
+|-------|----------|
+| `auto` (default) | Query the OS dark/light preference; pick a matching theme |
+| `dark` | Force a dark theme |
+| `light` | Force a light theme |
+
+In `auto` mode the daemon detects the desktop preference — via `gsettings`
+on the desktop, and via the Omarchy `colors.toml` file as a fallback. A
+`GTK_THEME` env var or `gtm` config override takes precedence.
+
+On startup the auto mode logs the detected theme
+
+```
+gtm[..]: Detected OS theme: dark
+```
+
+Use `tail -f` on the log or `RUST_LOG=gtm=debug` to confirm.
+
+---
+
+## User themes
+
+Drop a TOML file into `~/.config/gtm/themes/` (or
+`$XDG_CONFIG_HOME/gtm/themes/`) and it appears in the picker:
+
+```toml
+# ~/.config/gtm/themes/mytheme.toml
+name = "My Theme"
+light = false
+bg = "#101014"
+pane_bg = "#16161e"
+picker_bg = "#1a1b26"
+elevated_bg = "#1f1f27"
+muted_border = "#2e2e3a"
+fg = "#d0d0d8"
+fg_dim = "#8888a0"
+fg_bright = "#f0f0f8"
+accent = "#7aa2f7"
+secondary_accent = "#bb98ff"
+tertiary_accent = "#9ece6a"
+```
+
+Notes:
+
+- `pane_bg` defaults to `bg` if omitted; `elevated_bg` and `muted_border`
+  are optional back-compat keys.
+- `secondary_accent` / `tertiary_accent` fall back to `accent`.
+- Names must be unique — theme loading validates this.
+
+---
+
+## Reactive theme
+
+```toml
+# config.toml
+reactive_theme = true
+reactive_theme_intensity = 0.35   # 0.0–1.0 blend factor
+```
+
+With reactive theming on, the accent palette is **derived live from the
+currently-played track's cover art**. The daemon extracts a dominant
+palette from the artwork and the client blends it with the base theme (the
+blend factor caps the shift). It degrades gracefully to the base theme when
+no cover is available.
+
+:::note
+Reactive theming applies to the *accent* tones; backgrounds stay on the
+base theme.
+:::
+
+---
+
+## Progress styles
+
+| Style | Description |
+|-------|-------------|
+| **Seek Head** | Chasing tick at the playhead |
+| **Classic** | Plain filled/unfilled bar |
+| **Dots** | Dot matrix bar |
+| **True Gradient** (default) | Each filled cell is color-interpolated through the theme accent |
+
+Pick one the same way you pick cover source: Settings or the picker
+(`Alt+p` for the progress-style picker). It persists in `config.toml`
+(`progress_style`).
+
+The Knight Rider scanner eye and head re-framing are part of Seek Head /
+True Gradient (style rendering is shared by both `render_progress` and the
+now-playing pane).
+
+---
+
+## Footer presets
+
+The footer is split into **left** and **right** module groups. Three
+built-in presets are provided:
+
+| Preset | Modules |
+|--------|---------|
+| **Default** | Playback, Repeat, Shuffle, Volume, Speed, LowPower, Device, EqPreset, KeyAction, Notification, SleepTimer, Download (right: Queue, Time, System, Multiselect) |
+| **Minimal** | Playback, Volume, KeyAction, SleepTimer (right: Time, System) — for Termux/small viewports |
+| **Full** | Playback, Title, Repeat, Shuffle, Volume, EqPreset, Progress, KeyAction, SleepTimer (right: Queue, Time, System, Multiselect) |
+
+Add your own in `~/.config/gtm/footer.toml` (or
+`$XDG_CONFIG_HOME/gtm/footer.toml`):
+
+```toml
+# ~/.config/gtm/footer.toml
+[[preset]]
+name = "My Footer"
+left = ["Playback", "Title", "Volume", "Speed", "EqPreset", "Device"]
+right = ["Time", "System"]
+```
+
+A legacy `middle` alias is accepted. Unknown module names are ignored and
+malformed files are skipped entirely.
+
+Modules available:
+
+```
+Playback Title Volume Speed Repeat Shuffle Progress Queue KeyAction
+Backend System EqPreset SleepTimer LowPower Device Notification Time
+Multiselect Download
+```
+
+- `Alt+,` → Settings → Footer Preset opens the preset chooser, where you
+  can also toggle individual modules on and off
+
+The chosen preset persists; modules are rendered left-to-right with each
+module's own color set built from the active theme.
+
+---
+
+## Icons
+
+The command palette supports two icon styles:
+
+```toml
+# config.toml
+icon_style = "mdi"    # Material Design Icons (default)
+icon_style = "emoji"
+```
+
+---
+
+## Limitations
+
+- User theme files must be valid TOML and parse to the schema above;
+  unparseable files are skipped.
+- Reactive intensity is bounded; very pale covers shift accents less.
+- Footer module names are fixed — arbitrary custom modules are not
+  supported, only the listed ones.

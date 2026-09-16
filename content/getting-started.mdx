@@ -1,0 +1,121 @@
+---
+title: Getting Started
+description: "Install gtm, build from source, and play your first track."
+sidebar:
+  order: 2
+---
+
+## On this page
+
+- [Prerequisites](#_prerequisites)
+- [Install](#_install)
+- [Build from source](#_build-from-source)
+- [Termux (Android)](#_termux-android)
+- [First run](#_first-run)
+- [Limitations](#_limitations)
+
+## Prerequisites
+
+gtm is tested on Linux and macOS.
+
+- **Linux (ALSA):** `libasound2-dev` (Debian/Ubuntu) or `alsa-lib-devel`
+  (Fedora) for the Rodio backend.
+- **Linux (PulseAudio):** the `pulseaudio` feature enables the PulseAudio
+  backend; `libpulse-dev` is required.
+- **Termux (Android):** PulseAudio support is compiled in automatically by the
+  Termux build target.
+- **Rust toolchain:** 1.81+ (edition 2024).
+
+---
+
+## Install
+
+The fastest way is the install script, which downloads the latest release
+binary:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/prjctimg/gtm.rs/main/install.sh | bash
+```
+
+For nightly builds (released on every push to `main`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/prjctimg/gtm.rs/main/install.sh | bash -s -- --nightly
+```
+
+The script installs the `gtm` and `gtmd` binaries, shell completions, and
+man pages.
+
+---
+
+## Build from source
+
+```bash
+git clone https://github.com/prjctimg/gtm.rs
+cd gtm.rs
+
+cargo build --release
+
+# Installs binaries, completions, and man pages
+sudo make install
+```
+
+By default this produces a **nightly** build. To build a tagged release,
+check out the tag first (`git checkout v0.2.83`).
+
+### Cargo features
+
+The daemon has these optional features:
+
+| Feature | Default | What it enables |
+|---------|---------|-----------------|
+| `mpris` | ✅ | D-Bus MPRIS media controls |
+| `youtube` | ✅ | YouTube search via `innertube-rs` (disabled on Android) |
+| `pulseaudio` | ❌ | PulseAudio audio backend |
+
+To build without YouTube or MPRIS:
+
+```bash
+cargo build --release --no-default-features --features pulseaudio
+```
+
+---
+
+## Termux (Android)
+
+```bash
+pkg install rust clang pkg-config pulseaudio make
+
+make termux
+```
+
+The build script auto-detects Termux and picks the PulseAudio backend. At
+runtime `gtmd` starts the PulseAudio server automatically — no manual
+`pulseaudio --start` is needed.
+
+---
+
+## First run
+
+```bash
+# Start the TUI (gtmd spawns automatically in the background)
+gtm
+```
+
+1. Press `1` to open the **Library** tab.
+2. Press `Enter` on a category to drill down into a track list.
+3. Press `Enter` on a track to play it.
+4. Press `Space` to pause/resume; `n`/`p` for next/previous.
+
+The daemon writes its log to `$XDG_DATA_HOME/gtm/gtmd.log` (or
+`~/.local/share/gtm/gtmd.log`). It persists queue, volume, repeat mode, and
+crossfade settings across restarts in `state.json`.
+
+---
+
+## Limitations
+
+- **macOS:** audio works via Rodio. PulseAudio support is Linux-only.
+- **Windows:** not officially supported or tested.
+- **YouTube search** requires the `youtube` feature, which is disabled on
+  Android/Termux builds because `rquickjs` does not ship Android bindings.

@@ -1,0 +1,71 @@
+---
+title: Podcasts
+description: "Subscribe to RSS/Atom feeds, play episodes, and manage downloads."
+sidebar:
+  order: 16
+---
+
+## On this page
+
+- [Subscribing](#_subscribing)
+- [Browsing & playback](#_browsing-playback)
+- [Storage](#_storage)
+- [Limitations](#_limitations)
+
+---
+
+## Subscribing
+
+Add a podcast by its **RSS/Atom feed URL**:
+
+- Open the Podcast Feeds picker from the picker list to add a feed by URL
+  (note `Alt+p` is already mapped to the Progress Style picker)
+- CLI manages subscriptions:
+
+```bash
+gtm --cli podcast add <feed-url>
+gtm --cli podcast list
+gtm --cli podcast remove <feed_id>
+gtm --cli podcast episodes <feed_id>
+gtm --cli podcast refresh            # refresh all feeds
+gtm --cli podcast refresh <feed_id>  # refresh one feed
+gtm --cli podcast play <feed_id> <episode_index>
+gtm --cli podcast status
+```
+
+Feeds are parsed by the daemon and their episodes listed in the podcast
+category of the library.
+
+Feed constraints:
+
+- **30-second** fetch timeout (`FETCH_TIMEOUT`)
+- **8 MiB** maximum feed body (`MAX_FEED_BYTES`) — larger feeds are
+  rejected as suspicious
+
+Subscription state persists in `podcast.json` in the daemon config dir, so
+feeds survive restarts.
+
+---
+
+## Browsing & playback
+
+Episode lists show title, date, and duration. Episodes play like any other
+remote source (`podcast://<feed_id>/<index>`); the stream is decoded
+through the same remote pipeline.
+
+---
+
+## Storage
+
+Episodes are streamed on demand — the daemon does not silently download
+every episode. Downloaded episodes (from queue/streams you pull) land in
+the audio library and are indexed there.
+
+---
+
+## Limitations
+
+- Needs a reachable feed server; feeds that fail to fetch in 30s or exceed
+  8 MiB are rejected.
+- Remote stream transport: live playback without backward seeking.
+- Episode artwork falls back through the regular cover pipeline.

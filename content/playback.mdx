@@ -1,0 +1,182 @@
+---
+title: Playback
+description: "Queue, repeat, shuffle, seek, volume, speed, sleep timer, and low-power mode."
+sidebar:
+  order: 5
+---
+
+## On this page
+
+- [Volume & mute](#_volume-mute)
+- [Seeking](#_seeking)
+- [Playback speed](#_playback-speed)
+- [Queue](#_queue)
+- [Repeat & shuffle](#_repeat-shuffle)
+- [Sleep timer](#_sleep-timer)
+- [Low-power mode](#_low-power-mode)
+- [Limitations](#_limitations)
+
+---
+
+## How playback is structured
+
+The daemon keeps two sources of tracks:
+
+1. **The user queue** — tracks you explicitly play or enqueue. The
+   currently-playing entry sits at index 0 and is removed once it finishes or
+   you press Next.
+2. **The default list** — the whole library (title-sorted or shuffled). When
+   the user queue is exhausted, the daemon continues with the default list.
+
+Clearing the queue (`D`) disables the default list fallback until you
+explicitly play or enqueue again.
+
+---
+
+## Volume & mute
+
+- `+` / `=` — volume up
+- `-` — volume down
+- `m` — toggle mute
+
+Volume range is 0–100 and is persisted across restarts. The CLI equivalents
+are `gtm --cli volume <vol>` and `gtm --cli mute`.
+
+---
+
+## Seeking
+
+- `.` — seek forward
+- `,` — seek backward
+
+CLI: `gtm --cli seek <seconds>`. Seek granularity is per-second; the daemon
+re-anchors client clocks roughly once per second so the TUI position never
+drifts by more than a fraction of a second.
+
+:::note
+Live streams (radio, internet radio) do not support seeking back. Seeking
+forward to the live edge is generally safe.
+:::
+
+---
+
+## Playback speed
+
+- `>` / `<` — speed up / down (pitch-preserving)
+
+Speed is pitch-preserving (time-stretch, not resample) and clamped to
+**0.25×–2.0×**. The `speed` CLI command reports or sets the rate:
+
+```bash
+gtm --cli speed          # print current rate
+gtm --cli speed 1.5      # set to 1.5x
+```
+
+Notice that `>` maps to `>`. In US layouts `>` is Shift+`.` which clashes
+with seek-forward `.`. The seek keys require no modifier, so pressing `>` is
+necessary to speed up. If your layout makes `>` awkward, bind `speed_up` /
+`speed_down` in `config.toml`.
+
+---
+
+## Queue
+
+The queue is a picker overlay opened with `Alt+q`. From the queue you can:
+
+- `d`/`Del` — remove an entry
+- `Ctrl+J` / `Ctrl+K` — move an entry (in queue-move mode)
+- `Enter` — confirm a move
+- `Esc` — cancel a move
+
+CLI:
+
+```bash
+gtm --cli queue                         # print the queue
+gtm --cli queue-add ~/Music/song.flac   # add to queue
+gtm --cli queue-remove 0                # remove by index
+gtm --cli queue-move 0 2                # move entry
+gtm --cli queue-clear                   # clear the queue
+gtm --cli queue-set ~/Music/*.flac 0    # replace the queue and start at index 0
+```
+
+Adding directories recursively scans for audio files.
+
+---
+
+## Repeat & shuffle
+
+- `r` / `R` — cycle repeat: Off → One → All
+- `S` — toggle shuffle (note: lowercase `s` is Stop)
+
+Repeat modes:
+
+| Mode | Behavior |
+|------|----------|
+| **Off** | Play through the queue once, then stop |
+| **One** | Repeat the current track |
+| **All** | Repeat the whole queue |
+
+Shuffle affects both the user queue and the default library list. The order
+is randomized in place; you cannot "un-shuffle" back to a previous order.
+
+CLI: `gtm --cli repeat off|one|all`, `gtm --cli shuffle`.
+
+---
+
+## Sleep timer
+
+The sleep timer counts down a set number of minutes, then **stops playback**
+(silences the mixer, cancels any Spotify Web stream, and clears crossfade
+standby).
+
+- `Alt+z` — open the Sleep Timer picker (quick options 5, 10, 15, 30, 60,
+  90, 120 min, or manual entry)
+- CLI: `gtm --cli sleep-timer <minutes>`
+- CLI: `gtm --cli cancel-sleep-timer`
+
+The remaining time is shown in the footer `SleepTimer` module and ticked
+once per second. Arming a new timer replaces the old one; cancel bumps an
+internal generation counter so a stale countdown cannot stop playback.
+
+:::note
+The sleep timer hard-stops output — it does **not** fade out gradually.
+:::
+
+---
+
+## Low-power mode
+
+- `z` — toggle low-power mode
+
+Enabling low-power pauses playback and eases up on background work (it also
+cancels any armed sleep timer). Disabling just clears the flag so you can
+play again.
+
+CLI: `gtm --cli low-power` (toggles), `gtm --cli low-power --set on|off`.
+
+---
+
+## State persistence
+
+The daemon persists the following to `state.json` on every change:
+
+- Queue and cursor
+- Volume, mute
+- Repeat mode, shuffle
+- Crossfade configuration
+- Audio settings (EQ preset, speed, device, reverb, loudness)
+- Gapless flag
+
+The current track and position **are** persisted and resumed on restart; the
+sleep timer and low-power mode are not.
+
+---
+
+## Limitations
+
+- Speed is clamped to 0.25×–2.0×.
+- Volume is an integer 0–100.
+- Shuffle cannot be reversed to a prior order.
+- The sleep timer does not fade — it stops abruptly.
+- The queue is persisted, and playback resumes at the saved position after
+  a daemon restart.

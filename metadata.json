@@ -1,0 +1,6 @@
+{
+  "name": "gtm Documentation",
+  "description": "High-fidelity audio playback documentation, architecture guides, benchmarks, and engineering devlog for the gtm terminal music player in Rust.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

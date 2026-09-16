@@ -1,0 +1,281 @@
+---
+title: Interface
+description: "TUI layout, keybindings, command palette, help buffer, overlays, mouse, and footer bar."
+sidebar:
+  order: 3
+---
+
+## On this page
+
+- [Layout](#_layout)
+- [Keybindings](#_keybindings)
+- [Custom keybindings](#_custom-keybindings)
+- [Command palette](#_command-palette)
+- [Help buffer](#_help-buffer)
+- [Picker overlays](#_picker-overlays)
+- [Mouse](#_mouse)
+- [Footer bar](#_footer-bar)
+- [Limitations](#_limitations)
+
+---
+
+## Layout
+
+The TUI has a single workspace split into panes:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  NOW PLAYING (top third)        ┌────────┐  ┌────────┐  │
+│  cover art · title · progress   │        │  │ lyrics │  │
+│                                 │ visual.│  │(≥100w) │  │
+├──────────┬──────────────────────┤        │  └────────┘  │
+│  sidebar │  results             │        │              │
+│  (left)  │  (centre)            │        │              │
+│          │                      └────────┘              │
+├──────────┴──────────────────────────────────────────────┤
+│  footer bar                                              │
+└──────────────────────────────────────────────────────────┘
+```
+
+- **Now Playing** — cover art, animated marquee title, progress bar. Height
+  adapts: `min(area_height / 3, 14)`.
+- **Sidebar** — categories: All Tracks, Liked, Albums, Artists, Playlists,
+  Spotify, Radio. Shows item counts.
+- **Results pane** — tracks, albums, or artists depending on the selected
+  category.
+- **Visualizer** — shown right of Now Playing when enabled and terminal width
+  ≥ 80 columns.
+- **Lyrics pane** — shown when lyrics are loaded and terminal width ≥ 100
+  columns.
+
+### Narrow terminals
+
+When the terminal is narrower than 60 columns, the sidebar and results
+collapses into a single pane. Focus is switched with `[` and `]`.
+
+---
+
+## Keybindings
+
+Keybindings are split into three contexts:
+
+| Context | When active |
+|---------|------------|
+| **Global** | Always active (quit, help, play/pause, next/prev) |
+| **Normal** | Default mode (tab switching, cursor, volume, overlays) |
+| **List** | When a list widget has focus (navigation, selection, deletion) |
+
+The first matching binding wins.
+
+### Global keys
+
+| Key | Action |
+|-----|--------|
+| `Space` | Play / Pause |
+| `n` | Next track |
+| `p` | Previous track |
+| `q` | Quit |
+| `Q` | Quit and stop daemon |
+| `?` | Toggle help buffer |
+
+### Normal / List keys
+
+| Key | Action |
+|-----|--------|
+| `Tab` / `Shift+Tab` | Next / previous pane |
+| `j` / `k` or `↑` / `↓` | Move up / down |
+| `PgUp` / `PgDn` or `Ctrl+U` / `Ctrl+D` | Page up / down |
+| `Home` / `End` or `gg` / `G` | Jump to top / bottom |
+| `Enter` | Select / drill down |
+| `Backspace` | Go back |
+| `d` / `Del` | Remove item from list |
+| `s` | Stop |
+| `+` / `=` / `-` | Volume up / down |
+| `>` / `<` | Speed up / down (pitch-preserving) |
+| `r` / `R` | Cycle repeat mode |
+| `S` | Toggle shuffle |
+| `m` | Toggle mute |
+| `.` / `,` | Seek forward / backward |
+| `z` | Toggle low-power mode |
+| `f` | Toggle favourite |
+| `D` | Clear queue |
+| `v` | Toggle multiselect mode |
+| `a` | Add selected to queue |
+| `A` | Add to playlist |
+| `x` | Delete from list |
+| `l` | Fetch lyrics for current track |
+| `e` | Edit metadata |
+| `Ctrl+V` | Toggle visualizer |
+| `Alt+T` | Cycle theme |
+| `Alt+S` | Cycle library sort |
+| `Ctrl+H` | Toggle help bar |
+| `/` | Open library search picker |
+| `:` | Open command palette |
+| `[` / `]` | Focus left / right pane |
+
+### Overlay shortcuts (Alt+key)
+
+| Key | Overlay |
+|-----|---------|
+| `Alt+q` | Queue |
+| `Alt+y` | YouTube search |
+| `Alt+s` | Spotify search |
+| `Alt+u` | Subsonic search |
+| `Alt+o` | Load stream URL |
+| `Alt+r` | Top radio stations |
+| `Alt+t` | Radio browse |
+| `Alt+e` | Equalizer |
+| `Alt+p` | Progress style |
+| `Alt+v` | Visualizer preset |
+| `Alt+c` | Theme picker |
+| `Alt+z` | Sleep timer |
+| `Alt+n` | Notifications |
+| `Alt+x` | Setup wizard |
+| `Alt+a` | About |
+| `Alt+,` | Settings |
+
+---
+
+## Custom keybindings
+
+You can remap any binding in `config.toml` under the `[keybindings]` table.
+Action names and key syntax are listed in the help buffer (`?` →
+Keybindings section).
+
+```toml
+[keybindings]
+play_pause = "Space"
+volume_up = "Up"
+open_queue = "Alt+q"
+quit = "Ctrl+q"
+```
+
+Available action names include: `play_pause`, `next`, `prev`, `stop`,
+`volume_up`, `volume_down`, `speed_up`, `speed_down`, `seek_forward`,
+`seek_backward`, `toggle_shuffle`, `cycle_repeat`, `toggle_mute`,
+`toggle_favourite`, `clear_queue`, `toggle_visualizer`, `toggle_theme`,
+`cycle_sort`, `toggle_low_power`, `quit`, `quit_daemon`, `toggle_help`,
+`hide_help_bar`, `open_queue`, `open_yt_search`, `open_search`,
+`open_settings`, `open_spotify_search`, `open_equalizer`,
+`open_progress_style`, `open_visualizer_preset`, `open_theme_picker`,
+`open_about`, `open_sleep_timer`, `open_command_palette`, `open_setup`,
+`open_notifications`, `open_radio`, `open_radio_browse`, `open_podcast`,
+`open_subsonic_search`, and more.
+
+:::note
+User bindings bind in Normal + List contexts only. Global keys (`q`, `?`,
+`Space`) are checked first and cannot be overridden via config.
+:::
+
+---
+
+## Command palette
+
+Press `:` to open the command palette. It lists every action with an icon
+(Material Design Icons by default, emoji via `icon_style = "emoji"`).
+Type to filter, then press `Enter` to execute.
+
+---
+
+## Help buffer
+
+Press `?` to open a full-screen help buffer. It covers:
+
+- All keybindings grouped by topic (Playback, Navigation, View, Queue,
+  System).
+- Configuration reference.
+- Setup instructions.
+
+The help buffer supports vim motions (`j`/`k`, `gg`/`G`,
+`Home`/`End`), search (`/`), and next/previous match (`n`/`N`). Close it
+with `Esc` or `q`.
+
+---
+
+## Picker overlays
+
+When a picker is open (Queue, YouTube Search, Equalizer, Theme Picker, etc.):
+
+- `j` / `k` or `↑` / `↓` — navigate
+- `Enter` — select
+- `Esc` — close
+- Type to filter (where supported)
+
+The Sleep Timer picker offers quick options (5, 10, 15, 30, 60, 90, 120 min)
+and manual numeric input. The Crossfade picker offers 3, 5, 10, 15, and 30
+second presets.
+
+---
+
+## Mouse
+
+Mouse support is provided by the TUI runtime:
+
+- **Single click** — select item in a list
+- **Double click** (within 400 ms) — play selected track
+- **Scroll** — navigate in list widgets
+
+Mouse capture follows the terminal's alt-screen state. When a picker overlay
+is open, clicking outside the picker closes it.
+
+---
+
+## Footer bar
+
+The footer bar sits at the bottom and shows status modules arranged in two
+groups (left and right). Modules are small colored badges with accent
+backgrounds.
+
+### Available modules
+
+| Module | Shows |
+|--------|-------|
+| `Playback` | Play / Pause / Stop icon |
+| `Title` | Current track title (marquee) |
+| `Volume` | Volume percentage |
+| `Speed` | Current playback rate |
+| `Repeat` | Repeat mode (Off / One / All) |
+| `Shuffle` | Shuffle on/off |
+| `Progress` | Mini progress bar |
+| `Queue` | Queue length |
+| `KeyAction` | Last key pressed |
+| `Backend` | Audio backend (Rodio / PulseAudio) |
+| `System` | Daemon uptime |
+| `EqPreset` | Current EQ preset name |
+| `SleepTimer` | Remaining sleep time |
+| `LowPower` | Low-power mode indicator |
+| `Device` | Active audio device |
+| `Notification` | Notification badge |
+| `Time` | Clock |
+| `Multiselect` | Selection count |
+| `Download` | Download progress |
+
+### Footer presets
+
+Three built-in presets are shipped: **Default**, **Minimal**, and **Full**.
+
+You can define custom presets in `~/.config/gtm/footer.toml`:
+
+```toml
+[[preset]]
+name = "My Preset"
+left = ["Playback", "Volume"]
+right = ["Time", "Backend"]
+```
+
+User presets replace built-in presets with the same name. Unknown module
+names are silently dropped so typos never break the bar.
+
+Toggle the bottom help/hint bar on/off with `Ctrl+H`.
+
+---
+
+## Limitations
+
+- **Visualizer** requires terminal width ≥ 80 columns.
+- **Lyrics third pane** requires terminal width ≥ 100 columns.
+- **Terminals under 20×6** show a size warning and may not render correctly.
+- **Image cover art** is disabled in Neovim (`$NVIM`) and Zellij (`$ZELLIJ`)
+  terminals due to incompatible alternate-screen protocols.
+- Keybindings are hot-reloaded: the client re-reads `config.toml` on the
+  next frame, so edits apply without a restart.

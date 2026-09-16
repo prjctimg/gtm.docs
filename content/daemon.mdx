@@ -1,0 +1,149 @@
+---
+title: The gtm Daemon
+description: "gtmd: the always-running playback engine, its sockets, logs, and data files."
+sidebar:
+  order: 20
+---
+
+## On this page
+
+- [Architecture](#_architecture)
+- [Starting & stopping](#_starting-stopping)
+- [Unix sockets](#_unix-sockets)
+- [Data files](#_data-files)
+- [Logs](#_logs)
+- [CLI reference](#_cli-reference)
+- [Limitations](#_limitations)
+
+---
+
+## Architecture
+
+gtm is two processes:
+
+| Process | Binary | Role |
+|---------|--------|------|
+| **Daemon** | `gtmd` | Decodes audio, drives the state machine, owns the mixer/EQ/crossfade, and all integrations (Spotify, Last.fm, covers, lyrics, subsonic, podcasts, radio, MPRIS) |
+| **Client** | `gtm` | TUI/CLI that talks to the daemon over a Unix socket |
+
+The daemon keeps playing even when the TUI closes. The client auto-starts
+it on first connection.
+
+---
+
+## Starting & stopping
+
+The client starts the daemon automatically. For an explicit start:
+
+```bash
+gtmd                  # attach to a terminal
+gtmd --test-mode      # ephemeral socket, no daemonize (debugging)
+gtmd -v               # verbose logging
+```
+
+Orderly stop from a client:
+
+```bash
+gtm --cli quit
+gtm --cli check-health
+gtm --cli ping
+```
+
+---
+
+## Unix sockets
+
+The daemon listens on a command socket. A `gtmd.pulse` sidecar socket carries
+the PulseAudio bridge. Socket path resolution order:
+
+1. `$XDG_RUNTIME_DIR/gtm/gtmd.sock`
+2. `/tmp/gtm-$USER/gtm/gtmd.sock`
+3. `$TMPDIR/gtm/gtmd.sock`
+4. Termux: `$PREFIX/tmp/gtm/gtmd.sock`
+5. `$HOME/.gtm/gtm/gtmd.sock`
+
+Override with `gtmd --socket <path>`. Both the command socket and its
+`<socket>.pulse` twin derive from that path. A stale socket is removed at
+startup.
+
+IPC is protobuf-length-prefixed JSON over the Unix socket, one request ↔
+one typed response. Thematic subtypes (`DaemonReq`/`DaemonRes`) keep the
+protocol forward-compatible. Multiple clients (TUI + `gtm --cli` +
+playerctl) can attach; each gets its own event subscription on a separate
+Pulse socket.
+
+---
+
+## Data files
+
+Under the XDG data dir (`~/.local/share/gtm/`):
+
+| File / dir | Purpose |
+|------------|---------|
+| `library.db` | SQLite metadata for scanned tracks |
+| `state.json` | Persisted settings: queue, volume, mute, repeat, shuffle, crossfade, audio settings, gapless |
+| `gtmd.log` | Daemon log (when log capture is on) |
+| `audio/` | Default library audio dir |
+
+Cache dir (`~/.cache/gtm/`):
+
+| File / dir | Purpose |
+|------------|---------|
+| `covers/` | On-disk cover cache (capped at 512 MiB, evicts oldest by mtime) |
+| `artist_covers/` | Artist-tile cover cache |
+| `lyrics/` | Fetched `.lrc` cache |
+| `spotify/` | Spotify Web session/playlist cache |
+
+Downloads: `dirs::audio_dir()/gtm/downloads` (usually `~/Music/gtm/downloads`).
+
+Config dir (`~/.config/gtm/`):
+
+| File | Purpose |
+|------|---------|
+| `config.toml` | Client settings incl. `cover_provider` |
+| `footer.toml` | Footer presets |
+| `themes/*.toml` | User themes |
+| `subsonic.json` | Subsonic/Navidrome credentials |
+| `podcast.json` | Podcast subscriptions |
+| `radios.toml` | Custom radio stations |
+
+---
+
+## Logs
+
+`gtmd.log` lives next to `library.db` in the data dir and is appended while
+logging capture is on. `RUST_LOG` (env-filter) tunes verbosity:
+
+```bash
+RUST_LOG=gtmd=debug gtm
+RUST_LOG=gtm=info,gtmd=warn gtm
+```
+
+---
+
+## CLI reference
+
+```bash
+gtmd [OPTIONS]
+
+Options:
+  --socket <PATH>     Unix socket path
+  --library <PATH>    Library database path
+  --config <DIR>      Daemon config/data directory
+  -v, --verbose       Verbose logging
+  --test-mode         Ephemeral socket, no daemonize
+  --backend <BACKEND> Audio backend: rodio | pulseaudio
+```
+
+---
+
+## Limitations
+
+- One daemon per user/session — a second `gtmd` replaces the first.
+- State JSON is saved atomically (temp file + rename) on every change, so a
+  crash cannot produce a half-written file.
+- `state.json` persists the current track, position, and the resume flag, so
+  playback resumes where it left off after a restart.
+- The socket is local-only (Unix); no TCP control surface.
+- `--config` overrides *both* config and data dirs, so it also relocates
+  the sqlite database and log.
