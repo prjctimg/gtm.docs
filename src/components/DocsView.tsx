@@ -45,7 +45,7 @@ const DEFAULT_FALLBACK_DOC: DocItem = {
     { id: 'how-it-works', text: 'How it works', level: 2 },
     { id: 'features', text: 'Features', level: 2 },
   ],
-  category: 'Getting Started',
+  category: 'Introduction & Setup',
 };
 
 export const DocsView: React.FC<DocsViewProps> = ({
@@ -111,11 +111,53 @@ export const DocsView: React.FC<DocsViewProps> = ({
     }
   }, [activeSection, currentDocId]);
 
+  // Scroll spy to track current active heading in viewport
+  useEffect(() => {
+    const headings = activeDoc?.headings || [];
+    if (headings.length === 0) {
+      setActiveHeadingId('');
+      return;
+    }
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const offset = 140; // Navbar (56px) + sticky mobile TOC (~60px) + buffer
+      let currentId = headings[0]?.id || '';
+
+      for (const h of headings) {
+        const el = document.getElementById(h.id) || document.getElementById(`_${h.id}`);
+        if (el) {
+          const top = el.getBoundingClientRect().top + scrollY;
+          if (scrollY >= top - offset) {
+            currentId = h.id;
+          }
+        }
+      }
+
+      setActiveHeadingId(currentId);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [activeDoc?.id, activeDoc?.headings]);
+
+  const activeHeading = useMemo(() => {
+    return (activeDoc?.headings || []).find(h => h.id === activeHeadingId);
+  }, [activeDoc?.headings, activeHeadingId]);
+
+  const currentHeadingText = activeHeading ? activeHeading.text : (activeDoc?.headings?.[0]?.text || activeDoc?.title);
+
   const scrollToHeading = (id: string) => {
     setActiveHeadingId(id);
     const el = document.getElementById(id) || document.getElementById(`_${id}`);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+      const navOffset = 135;
+      const elementPosition = el.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: Math.max(0, elementPosition - navOffset),
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -218,30 +260,60 @@ export const DocsView: React.FC<DocsViewProps> = ({
 
         {/* CENTER CANVAS: Active Doc Article */}
         <main className="flex-1 min-w-0 px-4 sm:px-8 py-8 max-w-4xl mx-auto space-y-8">
-          {/* Mobile Document Selector Dropdown */}
-          <div className="lg:hidden pb-4 border-b border-hairline-outline">
+          {/* Mobile Sticky Table of Contents & Navigation */}
+          <div className="xl:hidden sticky top-14 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-5 sm:pt-6 pb-2.5 bg-canvas-obsidian/95 backdrop-blur-md border-b border-hairline-outline shadow-sm space-y-2">
+            <div className="flex items-center justify-between gap-2 text-xs font-mono">
+              <div className="flex items-center gap-1.5 min-w-0 text-text-muted">
+                <ListTree className="w-3.5 h-3.5 text-secondary shrink-0" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted shrink-0">On this page:</span>
+                <span className="text-secondary font-semibold truncate text-xs">
+                  {currentHeadingText}
+                </span>
+              </div>
+            </div>
+
             <select
               id="mobile-doc-selector"
-              aria-label="Select documentation page"
-              value={currentDocId}
-              onChange={(e) => handleSelectDoc(e.target.value)}
-              className="w-full bg-surface-container border border-hairline-outline text-text-primary font-mono text-xs rounded px-3 py-2.5 focus:outline-none focus:border-primary-container cursor-pointer"
+              aria-label="Table of contents and document selector"
+              value={activeHeadingId ? `heading:${activeHeadingId}` : `doc:${currentDocId}`}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val.startsWith('heading:')) {
+                  scrollToHeading(val.replace('heading:', ''));
+                } else if (val.startsWith('doc:')) {
+                  handleSelectDoc(val.replace('doc:', ''));
+                }
+              }}
+              className="w-full bg-surface-container border border-hairline-outline text-text-primary font-mono text-xs rounded px-3 py-2 focus:outline-none focus:border-primary-container cursor-pointer"
             >
-              {DOC_CATEGORIES.map((cat) => (
-                <optgroup key={cat} label={cat}>
-                  {(DOCS_BY_CATEGORY[cat] || []).map((doc) => (
-                    <option key={doc.id} value={doc.id}>
-                      {String(doc.order).padStart(2, '0')} - {doc.title}
+              {(activeDoc?.headings || []).length > 0 && (
+                <optgroup label={`On this page — ${activeDoc?.title}`}>
+                  {activeDoc?.headings.map((h) => (
+                    <option key={h.id} value={`heading:${h.id}`}>
+                      {h.level === 3 ? '   └ ' : '• '}{h.text}
                     </option>
                   ))}
                 </optgroup>
-              ))}
+              )}
+              <optgroup label="All Documentation Pages">
+                {DOC_CATEGORIES.map((cat) => (
+                  (DOCS_BY_CATEGORY[cat] || []).map((doc) => (
+                    <option key={doc.id} value={`doc:${doc.id}`}>
+                      📄 {String(doc.order).padStart(2, '0')} - {doc.title}
+                    </option>
+                  ))
+                ))}
+              </optgroup>
             </select>
           </div>
 
-          {/* Breadcrumb Header & Top Edit Link */}
+          {/* Breadcrumb Header */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <nav className="flex items-center gap-1.5 text-xs font-mono text-text-muted">
+            <nav
+              id="docs-breadcrumb-nav"
+              aria-label="Breadcrumbs"
+              className="flex items-center gap-1.5 text-xs font-mono text-text-muted flex-wrap"
+            >
               <button
                 type="button"
                 onClick={() => handleSelectDoc(ALL_DOCS[0]?.id || 'overview')}
@@ -250,18 +322,7 @@ export const DocsView: React.FC<DocsViewProps> = ({
               >
                 Docs
               </button>
-              <ChevronRight className="w-3.5 h-3.5 text-hairline-outline shrink-0" />
-              <button
-                type="button"
-                onClick={() => {
-                  const firstInCat = (DOCS_BY_CATEGORY[activeDoc?.category || ''] || [])[0]?.id;
-                  if (firstInCat) handleSelectDoc(firstInCat);
-                }}
-                className="hover:text-text-primary hover:underline transition-colors cursor-pointer"
-                title={`Go to ${activeDoc?.category}`}
-              >
-                {activeDoc?.category}
-              </button>
+
               <ChevronRight className="w-3.5 h-3.5 text-hairline-outline shrink-0" />
               <button
                 type="button"
@@ -272,18 +333,6 @@ export const DocsView: React.FC<DocsViewProps> = ({
                 {activeDoc?.title}
               </button>
             </nav>
-
-            <a
-              href={`https://github.com/prjctimg/gtm.rs/blob/main/content/${activeDoc?.id || 'overview'}.mdx`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono text-text-muted hover:text-text-primary bg-surface-container hover:bg-surface-elevated border border-hairline-outline rounded transition-colors group cursor-pointer"
-              title={`Edit ${activeDoc?.id || 'overview'}.mdx on GitHub`}
-            >
-              <Github className="w-3.5 h-3.5 text-text-muted group-hover:text-secondary transition-colors" />
-              <span>Edit on GitHub</span>
-              <ArrowUpRight className="w-3 h-3 text-text-disabled group-hover:text-text-primary transition-colors" />
-            </a>
           </div>
 
           {/* Document Title Header */}
@@ -307,12 +356,15 @@ export const DocsView: React.FC<DocsViewProps> = ({
           </article>
 
           {/* Page Footer Action: Edit on GitHub */}
-          <div className="pt-6 border-t border-hairline-outline flex items-center justify-between font-mono text-xs">
+          <div className="pt-6 border-t border-hairline-outline flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-mono text-xs">
+            <p className="text-text-muted text-xs font-sans">
+              See an error or typo? Make this page better by editing it on GitHub.
+            </p>
             <a
               href={`https://github.com/prjctimg/gtm.rs/blob/main/content/${activeDoc?.id || 'overview'}.mdx`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono text-text-muted hover:text-text-primary bg-surface-container hover:bg-surface-elevated border border-hairline-outline rounded transition-colors group cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-text-muted hover:text-text-primary bg-surface-container hover:bg-surface-elevated border border-hairline-outline rounded transition-colors group cursor-pointer shrink-0"
               title={`Edit ${activeDoc?.id || 'overview'}.mdx on GitHub`}
               id="edit-on-github-button"
             >
@@ -323,7 +375,7 @@ export const DocsView: React.FC<DocsViewProps> = ({
           </div>
 
           {/* Pagination Controls (Prev / Next) */}
-          <div className="border-t border-hairline-outline pt-8 mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-xs">
+          <div className="pt-6 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-xs">
             {prevDoc ? (
               <button
                 onClick={() => handleSelectDoc(prevDoc.id)}
@@ -386,18 +438,6 @@ export const DocsView: React.FC<DocsViewProps> = ({
           )}
 
           <div className="mt-8 pt-6 border-t border-hairline-outline space-y-2.5">
-            <a
-              href={`https://github.com/prjctimg/gtm.rs/blob/main/content/${activeDoc?.id || 'overview'}.mdx`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono text-text-muted hover:text-text-primary bg-surface-container hover:bg-surface-elevated border border-hairline-outline rounded transition-colors group cursor-pointer w-full justify-center"
-              title={`Edit ${activeDoc?.id || 'overview'}.mdx on GitHub`}
-            >
-              <Github className="w-3.5 h-3.5 text-text-muted group-hover:text-secondary transition-colors" />
-              <span>Edit on GitHub</span>
-              <ArrowUpRight className="w-3 h-3 text-text-disabled group-hover:text-text-primary transition-colors" />
-            </a>
-
             <button
               onClick={handleCopyDocUrl}
               className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors text-xs cursor-pointer w-full text-left"

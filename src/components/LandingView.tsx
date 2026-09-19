@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { IMAGES, PACKAGE_COMMANDS, KEYBINDINGS } from '../data/mockData';
 import { PageTab } from '../types';
 import { AnimatedTelemetryBenchmark } from './AnimatedTelemetryBenchmark';
@@ -15,26 +16,21 @@ import {
   Layers, 
   Volume2, 
   Radio, 
-  ArrowRight,
-  Disc,
-  Search,
-  Settings,
-  CheckCircle2,
-  FileCode,
-  Apple,
-  Server,
-  ChevronUp,
-  ChevronDown
+  ArrowRight, 
+  Disc, 
+  Search, 
+  CheckCircle2, 
+  FileCode 
 } from 'lucide-react';
+import { SiLinux, SiAndroid, SiApple } from 'react-icons/si';
 
 interface LandingViewProps {
-  onNavigate: (tab: PageTab, sectionId?: string) => void;
+  onNavigate: (tab: PageTab, docOrSectionId?: string, sectionId?: string) => void;
   onOpenKeymap: () => void;
 }
 
 type TuiTab = 'library' | 'lyrics' | 'fft' | 'search';
 type PkgTab = 'curl' | 'cargo' | 'brew' | 'aur' | 'nix';
-type FooterPkgTab = 'curl' | 'cargo' | 'brew' | 'aur' | 'nix';
 
 export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeymap }) => {
   // Hero package switcher
@@ -49,7 +45,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
   const featureItemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Footer Install box
-  const [footerPkg, setFooterPkg] = useState<FooterPkgTab>('curl');
+  const [footerPkg, setFooterPkg] = useState<PkgTab>('curl');
   const [footerCopied, setFooterCopied] = useState(false);
 
   // Animated spectrum bars
@@ -82,7 +78,8 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
       badge: 'Themes',
       hotkey: 't',
       img: IMAGES.themesArt,
-      specs: '24-bit TrueColor · CIELAB Extraction · ANSI Fallback'
+      specs: '24-bit TrueColor · CIELAB Extraction · ANSI Fallback',
+      docId: 'theming'
     },
     {
       step: '02 / Visualizer',
@@ -91,7 +88,9 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
       badge: 'Audio FFT',
       hotkey: 'v',
       img: IMAGES.libraryView1,
-      specs: '60 FPS · 2048 Samples · Hann Windowing · Sub-pixel Braille'
+      specs: '60 FPS · 2048 Samples · Hann Windowing · Sub-pixel Braille',
+      docId: 'audio',
+      sectionId: '_visualizer'
     },
     {
       step: '03 / Lyrics',
@@ -100,7 +99,8 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
       badge: 'LRC Engine',
       hotkey: 'L',
       img: IMAGES.lyricsView1,
-      specs: '±0.1ms Clock Sync · Dual-Language · Auto-Fetch LRCLIB'
+      specs: '±0.1ms Clock Sync · Dual-Language · Auto-Fetch LRCLIB',
+      docId: 'lyrics'
     },
     {
       step: '04 / Concurrency',
@@ -109,7 +109,8 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
       badge: 'Engine',
       hotkey: 'b',
       img: IMAGES.libraryView2,
-      specs: '18.2ns Atomic Swap · Symphonia Pipeline · PipeWire / ALSA'
+      specs: '18.2ns Atomic Swap · Symphonia Pipeline · PipeWire / ALSA',
+      docId: 'crossfade'
     }
   ];
 
@@ -155,23 +156,8 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
     setTimeout(() => setHeroCopied(false), 2000);
   };
 
-  const getFooterCommand = () => {
-    switch (footerPkg) {
-      case 'curl':
-        return 'curl -fsSL https://getgtm.dev/install.sh | sh';
-      case 'cargo':
-        return 'cargo install gtm --locked';
-      case 'brew':
-        return 'brew install gtm';
-      case 'aur':
-        return 'yay -S gtm-bin';
-      case 'nix':
-        return 'nix-env -iA nixpkgs.gtm';
-    }
-  };
-
   const handleCopyFooter = () => {
-    navigator.clipboard.writeText(getFooterCommand());
+    navigator.clipboard.writeText(PACKAGE_COMMANDS[footerPkg]);
     setFooterCopied(true);
     setTimeout(() => setFooterCopied(false), 2000);
   };
@@ -179,7 +165,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
   return (
     <div className="w-full flex flex-col font-sans space-y-16 sm:space-y-24">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden w-full pt-6 md:pt-14 pb-8 md:pb-12 px-4 rounded-2xl border border-hairline-outline/40 bg-canvas-obsidian/60 shadow-inner">
+      <section className="relative overflow-hidden w-full pt-6 md:pt-14 pb-8 md:pb-12 px-4 rounded-2xl border border-hairline-outline/40 bg-canvas-obsidian/25 sm:bg-canvas-obsidian/60 shadow-inner">
         {/* Doodled Musical Background with musical symbols, notes & instruments */}
         <MusicalDoodleBackground />
 
@@ -197,13 +183,13 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
           <div className="max-w-xl mx-auto pt-2">
             <div className="bg-surface-container/90 backdrop-blur-md border border-hairline-outline rounded-xl p-3 shadow-2xl">
               {/* Package Selector Tabs */}
-              <div className="flex items-center justify-between border-b border-hairline-outline pb-2 px-1 font-mono text-xs">
-                <div className="flex items-center gap-1">
+              <div className="flex items-center justify-start border-b border-hairline-outline pb-2 px-1 font-mono text-xs overflow-x-auto scrollbar-none">
+                <div className="flex items-center gap-1 whitespace-nowrap min-w-max">
                   {(['curl', 'cargo', 'brew', 'aur', 'nix'] as PkgTab[]).map(pkg => (
                     <button
                       key={pkg}
                       onClick={() => setHeroPkg(pkg)}
-                      className={`px-3 py-1 rounded transition-colors cursor-pointer ${
+                      className={`px-3 py-1 rounded transition-colors cursor-pointer whitespace-nowrap ${
                         heroPkg === pkg
                           ? 'bg-surface-elevated text-text-primary font-bold border border-hairline-outline text-secondary'
                           : 'text-text-muted hover:text-text-primary'
@@ -212,9 +198,6 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
                       {pkg}
                     </button>
                   ))}
-                </div>
-                <div className="text-text-muted text-[11px] hidden sm:inline-block">
-                  SHA-256 verified
                 </div>
               </div>
 
@@ -412,53 +395,46 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
 
         {/* Sticky Navigation Bar */}
         <div className="sticky top-16 z-30 bg-surface-container/95 backdrop-blur-md border border-hairline-outline rounded-xl px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 font-mono text-xs shadow-md">
-          {/* Direct jump step pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
+          {/* Active slide display with snap transition - other slide titles hidden */}
+          <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeFeatureIdx}
+                initial={{ opacity: 0, y: 8, filter: 'blur(3px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, y: -8, filter: 'blur(3px)' }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="flex items-center gap-2.5 min-w-0"
+              >
+                <div className="bg-surface-elevated text-secondary font-bold border border-secondary/40 shadow-xs px-2.5 py-1 rounded text-xs flex items-center gap-1.5 shrink-0">
+                  <span className="opacity-60 text-[10px]">0{activeFeatureIdx + 1}</span>
+                  <span>{carouselItems[activeFeatureIdx].badge}</span>
+                </div>
+                <span className="text-text-primary text-xs sm:text-sm font-semibold truncate font-sans">
+                  {carouselItems[activeFeatureIdx].title}
+                </span>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Minimal slide step indicators to jump between slides */}
+          <div className="flex items-center gap-1.5 shrink-0 pl-2 sm:pl-3 border-l border-hairline-outline/50">
             {carouselItems.map((item, idx) => {
               const isActive = activeFeatureIdx === idx;
               return (
                 <button
                   key={item.badge}
                   onClick={() => scrollToFeature(idx)}
-                  className={`px-2.5 py-1 rounded transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 text-xs ${
-                    isActive
-                      ? 'bg-surface-elevated text-secondary font-bold border border-secondary/40 shadow-xs'
-                      : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/60'
+                  aria-label={`Jump to slide 0${idx + 1} - ${item.badge}`}
+                  title={`0${idx + 1} ${item.badge}: ${item.title}`}
+                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                    isActive 
+                      ? 'w-5 bg-secondary' 
+                      : 'w-2 bg-hairline-outline hover:bg-text-muted'
                   }`}
-                >
-                  <span className="opacity-60 text-[10px]">0{idx + 1}</span>
-                  <span>{item.badge}</span>
-                </button>
+                />
               );
             })}
-          </div>
-
-          {/* Right: Step Counter & Up/Down navigation controls (No 'Scroll independently' label) */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] text-secondary font-bold bg-surface-elevated px-2 py-0.5 rounded border border-hairline-outline">
-              0{activeFeatureIdx + 1} / 0{carouselItems.length}
-            </span>
-            <div className="flex items-center border border-hairline-outline rounded bg-surface-elevated overflow-hidden">
-              <button
-                onClick={() => scrollToFeature(Math.max(0, activeFeatureIdx - 1))}
-                disabled={activeFeatureIdx === 0}
-                className="p-1 text-text-muted hover:text-secondary disabled:opacity-25 disabled:hover:text-text-muted transition-colors cursor-pointer"
-                title="Slide up to previous feature"
-                aria-label="Previous feature"
-              >
-                <ChevronUp className="w-4 h-4" />
-              </button>
-              <div className="w-[1px] h-3.5 bg-hairline-outline" />
-              <button
-                onClick={() => scrollToFeature(Math.min(carouselItems.length - 1, activeFeatureIdx + 1))}
-                disabled={activeFeatureIdx === carouselItems.length - 1}
-                className="p-1 text-text-muted hover:text-secondary disabled:opacity-25 disabled:hover:text-text-muted transition-colors cursor-pointer"
-                title="Slide down to next feature"
-                aria-label="Next feature"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </button>
-            </div>
           </div>
         </div>
 
@@ -488,10 +464,6 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
                       : 'translate-y-4 opacity-75 scale-[0.99]'
                   }`}
                 >
-                  <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container/90 border border-hairline-outline font-mono text-[10px] text-text-muted backdrop-blur-xs">
-                    <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-                    <span>hotkey [{item.hotkey}]</span>
-                  </div>
                   <img
                     src={item.img}
                     alt={item.title}
@@ -508,12 +480,6 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
                   }`}
                 >
                   <div className="space-y-3">
-                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-surface-elevated border border-hairline-outline font-mono text-xs text-secondary">
-                      <span className="font-bold">{item.step}</span>
-                      <span className="text-text-muted">•</span>
-                      <span>{item.badge}</span>
-                    </div>
-
                     <h3 className="font-mono text-xl sm:text-2xl font-bold text-text-primary leading-tight">
                       {item.title}
                     </h3>
@@ -521,29 +487,15 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
                     <p className="text-sm text-text-muted leading-relaxed font-sans">
                       {item.desc}
                     </p>
-
-                    {item.specs && (
-                      <div className="pt-1">
-                        <div className="inline-block px-2.5 py-1 rounded bg-code-canvas border border-hairline-outline font-mono text-[11px] text-secondary">
-                          {item.specs}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 pt-2">
                     <button
-                      onClick={() => onNavigate('docs')}
+                      onClick={() => onNavigate('docs', item.docId, item.sectionId)}
                       className="inline-flex items-center gap-2 px-3.5 py-2 rounded bg-surface-elevated border border-hairline-outline hover:border-secondary hover:text-text-primary text-secondary font-mono text-xs transition-colors cursor-pointer"
                     >
                       <span>Read docs</span>
                       <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={onOpenKeymap}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-hairline-outline hover:bg-surface-elevated text-text-muted hover:text-text-primary font-mono text-xs transition-colors cursor-pointer"
-                    >
-                      <span>Keybind: [{item.hotkey}]</span>
                     </button>
                   </div>
                 </div>
@@ -553,112 +505,9 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
         </div>
       </section>
 
-      {/* ARCHITECTURE & SPECS BENTO GRID */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="font-mono text-xs text-secondary font-bold uppercase tracking-wider">
-              Architecture &amp; Specs
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold font-mono text-text-primary mt-1">
-              Engineered for precision and minimum latency
-            </h2>
-          </div>
-          <div className="font-mono text-xs text-text-muted hidden sm:block">
-            Rust 2024 Edition
-          </div>
-        </div>
-
-        {/* 4 Bento Spec Cards with animated figures */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-surface-container border border-hairline-outline p-5 rounded-xl flex flex-col justify-between space-y-3 hover:border-secondary/50 transition-colors">
-            <div className="space-y-1">
-              <div className="font-mono text-3xl font-bold text-secondary flex items-center gap-2">
-                <span>0ms</span>
-                <span className="w-2 h-2 rounded-full bg-state-success animate-pulse inline-block" />
-              </div>
-              <div className="font-bold text-text-primary text-base">Gapless Audio</div>
-            </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              Pre-decoded ringbuffer avoids inter-track acoustic stutter on 24-bit/192kHz studio masters.
-            </p>
-          </div>
-
-          <div className="bg-surface-container border border-hairline-outline p-5 rounded-xl flex flex-col justify-between space-y-3 hover:border-primary-container/50 transition-colors">
-            <div className="space-y-1">
-              <div className="font-mono text-3xl font-bold text-primary-container flex items-center gap-2">
-                <span>&lt; 14.2MB</span>
-                <span className="text-xs font-mono text-text-muted font-normal">RSS</span>
-              </div>
-              <div className="font-bold text-text-primary text-base">RAM Footprint</div>
-            </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              Zero-allocation async iterators via Tokio + Rodio engine with jemalloc profile-guided optimizations.
-            </p>
-          </div>
-
-          <div className="bg-surface-container border border-hairline-outline p-5 rounded-xl flex flex-col justify-between space-y-3 hover:border-accent-purple/50 transition-colors">
-            <div className="space-y-1">
-              <div className="font-mono text-3xl font-bold text-accent-purple flex items-center gap-2">
-                <span>.lrc</span>
-                <span className="text-xs font-mono text-secondary font-normal">[sync 0.2ms]</span>
-              </div>
-              <div className="font-bold text-text-primary text-base">Live Lyrics</div>
-            </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              Sub-millisecond timestamp sync rendered directly in the Ratatui split viewport column.
-            </p>
-          </div>
-
-          <div className="bg-surface-container border border-hairline-outline p-5 rounded-xl flex flex-col justify-between space-y-3 hover:border-secondary/50 transition-colors">
-            <div className="space-y-1">
-              <div className="font-mono text-3xl font-bold text-secondary flex items-center gap-2">
-                <span>Dual</span>
-                <span className="text-xs font-mono text-state-success font-normal">24-bit / 192k</span>
-              </div>
-              <div className="font-bold text-text-primary text-base">Local + Spotify</div>
-            </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              Seamless fallback between local high-resolution FLACs and remote librespot streams without Electron.
-            </p>
-          </div>
-        </div>
-
-        {/* Lower Bento: TOML Config & Benchmarks */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
-          {/* TOML Preview */}
-          <div className="lg:col-span-5 bg-surface-container border border-hairline-outline rounded-xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-hairline-outline pb-3">
-              <div className="flex items-center gap-2 font-mono text-xs text-text-muted">
-                <Settings className="w-4 h-4 text-secondary" />
-                <span>~/.config/gtm/config.toml</span>
-              </div>
-              <span className="font-mono text-xs text-secondary">Declarative TOML</span>
-            </div>
-
-            <div className="bg-code-canvas rounded-lg p-4 font-mono text-xs border border-hairline-outline overflow-x-auto text-text-body space-y-1 leading-relaxed">
-              <div className="text-text-muted"># gtm configuration file</div>
-              <div><span className="text-accent-coral">[audio]</span></div>
-              <div>backend = <span className="text-state-success">"pipewire"</span> <span className="text-text-muted"># auto | alsa | coreaudio | pulse</span></div>
-              <div>gapless = <span className="text-secondary font-bold">true</span></div>
-              <div>resampler_quality = <span className="text-state-success">"extreme"</span></div>
-              <div>buffer_frames = <span className="text-secondary font-bold">256</span></div>
-              <br />
-              <div><span className="text-accent-coral">[library]</span></div>
-              <div>path = <span className="text-state-success">"~/Music"</span></div>
-              <div>watch_filesystem = <span className="text-secondary font-bold">true</span></div>
-              <div>scan_threads = <span className="text-secondary font-bold">8</span></div>
-              <br />
-              <div><span className="text-accent-coral">[ui]</span></div>
-              <div>layout = <span className="text-state-success">"split_lyrics"</span></div>
-              <div>track_format = <span className="text-state-success">"&#123;artist&#125; - &#123;title&#125;"</span></div>
-              <div>visualizer = <span className="text-secondary font-bold">false</span></div>
-            </div>
-          </div>
-
-          {/* Performance Benchmarks & Dynamic Visualizations (div:nth-of-type(2)) */}
-          <AnimatedTelemetryBenchmark className="lg:col-span-7" />
-        </div>
+      {/* LIVE CI & TELEMETRY BENCHMARK */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <AnimatedTelemetryBenchmark className="w-full" />
       </section>
 
 
@@ -667,9 +516,6 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
       <section id="install" className="max-w-4xl mx-auto px-4 sm:px-6 w-full pb-20 sm:pb-32">
         <div className="border border-hairline-outline rounded-xl bg-surface-container p-8 md:p-12 text-center space-y-6 shadow-2xl">
           <div className="space-y-2">
-            <span className="font-mono text-xs text-secondary font-bold uppercase tracking-wider">
-              Get Started
-            </span>
             <h2 className="text-2xl sm:text-3xl font-mono font-bold text-text-primary">
               Install gtm in seconds
             </h2>
@@ -680,47 +526,46 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
 
           {/* Big Terminal Install Box with tabs */}
           <div className="max-w-2xl mx-auto bg-surface-container border border-hairline-outline rounded-xl p-3 space-y-2 text-left">
-            <div className="flex items-center justify-between border-b border-hairline-outline pb-2 px-2">
-              <div className="flex items-center gap-1 font-mono text-xs flex-wrap">
-                {(['curl', 'cargo', 'brew', 'aur', 'nix'] as FooterPkgTab[]).map(t => (
+            {/* Package Selector Tabs */}
+            <div className="flex items-center justify-start border-b border-hairline-outline pb-2 px-1 font-mono text-xs overflow-x-auto scrollbar-none">
+              <div className="flex items-center gap-1 whitespace-nowrap min-w-max">
+                {(['curl', 'cargo', 'brew', 'aur', 'nix'] as PkgTab[]).map(t => (
                   <button
                     key={t}
                     onClick={() => setFooterPkg(t)}
-                    className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                    className={`px-3 py-1 rounded transition-colors cursor-pointer whitespace-nowrap ${
                       footerPkg === t
-                        ? 'text-text-primary bg-surface-elevated font-medium border border-hairline-outline'
+                        ? 'bg-surface-elevated text-text-primary font-bold border border-hairline-outline text-secondary'
                         : 'text-text-muted hover:text-text-primary'
                     }`}
                   >
-                    {t === 'curl' ? 'curl (default)' : t}
+                    {t}
                   </button>
                 ))}
               </div>
-              <span className="text-text-muted font-mono text-[11px] hidden sm:inline-block">
-                POSIX Shell
-              </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3 py-2.5 bg-code-canvas rounded-lg font-mono text-xs">
-              <div className="flex items-center gap-3 overflow-x-auto w-full sm:w-auto">
-                <span className="text-secondary select-none font-bold">$</span>
+            {/* Command Display + Copy */}
+            <div className="flex items-center justify-between px-3.5 py-2.5 bg-code-canvas rounded-lg mt-2 font-mono text-xs">
+              <div className="flex items-center gap-2.5 overflow-x-auto min-w-0">
+                <span className="text-secondary font-bold select-none">$</span>
                 <span className="text-text-primary select-all font-medium truncate">
-                  {getFooterCommand()}
+                  {PACKAGE_COMMANDS[footerPkg]}
                 </span>
               </div>
               <button
                 onClick={handleCopyFooter}
-                className="w-full sm:w-auto bg-primary-container text-on-primary-container font-mono text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 active:opacity-80 transition-opacity flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-sm"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-hairline-outline text-text-muted hover:text-primary-container hover:border-primary-container transition-all text-xs shrink-0 ml-3 cursor-pointer bg-surface-elevated"
               >
                 {footerCopied ? (
                   <>
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Copied!</span>
+                    <Check className="w-3.5 h-3.5 text-state-success" />
+                    <span className="text-state-success font-bold">copied!</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" />
-                    <span>Copy Command</span>
+                    <span>copy</span>
                   </>
                 )}
               </button>
@@ -728,24 +573,23 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
           </div>
 
           {/* Platform Badges */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-1 font-mono text-xs">
-            <span className="text-text-muted uppercase tracking-wider text-[11px] mr-1 select-none">
+          <div className="flex flex-col items-center justify-center gap-2 pt-1 font-mono text-xs">
+            <span className="text-text-muted uppercase tracking-wider text-[11px] select-none">
               Available on:
             </span>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-hairline-outline bg-surface-elevated text-text-primary hover:border-secondary/60 transition-colors">
-              <Terminal className="w-3.5 h-3.5 text-secondary shrink-0" />
-              <span className="font-semibold text-xs">Linux</span>
-              <span className="text-text-disabled text-[10px] hidden sm:inline">(PipeWire / ALSA)</span>
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-hairline-outline bg-surface-elevated text-text-primary hover:border-secondary/60 transition-colors">
-              <Apple className="w-3.5 h-3.5 text-text-primary shrink-0" />
-              <span className="font-semibold text-xs">macOS</span>
-              <span className="text-text-disabled text-[10px] hidden sm:inline">(Apple Silicon / Intel)</span>
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-hairline-outline bg-surface-elevated text-text-primary hover:border-secondary/60 transition-colors">
-              <Server className="w-3.5 h-3.5 text-accent-coral shrink-0" />
-              <span className="font-semibold text-xs">FreeBSD</span>
-              <span className="text-text-disabled text-[10px] hidden sm:inline">(OSS)</span>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-hairline-outline bg-surface-elevated text-text-primary hover:border-secondary/60 transition-colors">
+                <SiLinux className="w-3.5 h-3.5 text-secondary shrink-0" />
+                <span className="font-semibold text-xs">Linux</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-hairline-outline bg-surface-elevated text-text-primary hover:border-secondary/60 transition-colors">
+                <SiAndroid className="w-3.5 h-3.5 text-state-success shrink-0" />
+                <span className="font-semibold text-xs">Android</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-hairline-outline bg-surface-elevated text-text-primary hover:border-secondary/60 transition-colors">
+                <SiApple className="w-3.5 h-3.5 text-text-primary shrink-0" />
+                <span className="font-semibold text-xs">macOS</span>
+              </div>
             </div>
           </div>
         </div>

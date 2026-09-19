@@ -35,7 +35,7 @@ const INSTALL_METHODS: InstallMethod[] = [
     name: 'Standalone Script (Recommended)',
     label: 'Standalone Script (curl | bash)',
     os: 'Linux & macOS',
-    command: 'curl -fsSL https://raw.githubusercontent.com/prjctimg/gtm.rs/main/install.sh | bash',
+    command: 'curl -fsSL https://gtmd.dev/install.sh | bash',
     description: 'Auto-detects your OS, CPU architecture (x86_64, aarch64), and libc (glibc/musl). Downloads the latest verified release binary, unpacks gtm and gtmd into ~/.local/bin, and configures permissions.',
     notes: 'Requires curl and tar. Installs binaries, shell completions, and man pages.'
   },
@@ -44,7 +44,7 @@ const INSTALL_METHODS: InstallMethod[] = [
     name: 'Nightly Script',
     label: 'Nightly Script (Latest commits on main)',
     os: 'Linux & macOS',
-    command: 'curl -fsSL https://raw.githubusercontent.com/prjctimg/gtm.rs/main/install.sh | bash -s -- --nightly',
+    command: 'curl -fsSL https://gtmd.dev/install.sh | bash -s -- --nightly',
     description: 'Downloads the automated bleeding-edge build compiled directly from the latest commit on main.',
     notes: 'Recommended if you want early access to newly committed audio codecs or UI features.'
   },

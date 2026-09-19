@@ -20,11 +20,41 @@ const rawDocs = import.meta.glob<string>('../../content/*.mdx', {
 
 // Helper to assign categories based on order or slug
 function getDocCategory(order: number, id: string): string {
-  if (order <= 4) return 'Getting Started';
-  if (order <= 8) return 'Core Features';
-  if (order <= 11) return 'Audio & Personalization';
-  if (order <= 18) return 'Streaming & Integrations';
-  return 'System & Advanced';
+  switch (id) {
+    case 'overview':
+    case 'getting-started':
+      return 'Introduction & Setup';
+    case 'interface':
+    case 'configuration':
+      return 'Interface & Configuration';
+    case 'playback':
+    case 'crossfade':
+    case 'audio':
+      return 'Audio & Playback';
+    case 'library':
+    case 'lyrics':
+    case 'cover-art':
+    case 'theming':
+      return 'Library & Media';
+    case 'youtube':
+    case 'spotify':
+    case 'metadata-sources':
+    case 'subsonic':
+    case 'podcasts':
+    case 'radio':
+    case 'streams':
+      return 'Streaming & Integrations';
+    case 'mpris':
+    case 'daemon':
+      return 'System & Daemon';
+    default:
+      if (order <= 2) return 'Introduction & Setup';
+      if (order <= 4) return 'Interface & Configuration';
+      if (order <= 7) return 'Audio & Playback';
+      if (order <= 11) return 'Library & Media';
+      if (order <= 18) return 'Streaming & Integrations';
+      return 'System & Daemon';
+  }
 }
 
 // Parse frontmatter and headings

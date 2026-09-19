@@ -173,11 +173,11 @@ export const KEYBINDINGS: KeybindingItem[] = [
 ];
 
 export const PACKAGE_COMMANDS = {
-  curl: 'curl -fsSL https://getgtm.dev/install.sh | sh',
-  cargo: 'cargo install gtm --locked --features pipewire,mpris',
-  brew: 'brew tap gtm/tap && brew install gtm',
+  curl: 'curl -fsSL https://gtmd.dev/install.sh | sh',
+  cargo: 'cargo install gtm --locked',
+  brew: 'brew tap prjctimg/gtm && brew install gtm',
   aur: 'paru -S gtm-bin',
-  nix: 'nix-env -iA nixpkgs.gtm'
+  nix: 'nix profile install github:prjctimg/gtm.rs'
 };
 
 export const TOML_CONFIG_CODE = `# Audio backend parameters

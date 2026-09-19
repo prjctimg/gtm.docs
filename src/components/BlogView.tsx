@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BlogPost } from '../types';
-import { BLOG_POSTS } from '../data/mockData';
+import { BLOG_POSTS, PACKAGE_COMMANDS } from '../data/mockData';
 import { 
   ArrowRight, 
   Terminal, 
@@ -27,12 +27,12 @@ export const BlogView: React.FC<BlogViewProps> = ({
   const [emailInput, setEmailInput] = useState('');
   const [subStatus, setSubStatus] = useState<'idle' | 'success'>('idle');
   const [copiedBanner, setCopiedBanner] = useState(false);
-  const [bannerPkg, setBannerPkg] = useState<'curl' | 'cargo' | 'brew'>('curl');
+  const [bannerPkg, setBannerPkg] = useState<'curl' | 'cargo' | 'brew' | 'aur' | 'nix'>('curl');
 
-  const bannerCommands = {
-    curl: 'curl -fsSL https://getgtm.dev/install.sh | sh',
-    cargo: 'cargo install gtm --locked',
-    brew: 'brew install gtm'
+  const handleCopyBanner = () => {
+    navigator.clipboard.writeText(PACKAGE_COMMANDS[bannerPkg]);
+    setCopiedBanner(true);
+    setTimeout(() => setCopiedBanner(false), 2000);
   };
 
   const categories = ['All', 'Engineering', 'Releases', 'Audio Architecture', 'TUI & Ratatui'];
@@ -52,12 +52,6 @@ export const BlogView: React.FC<BlogViewProps> = ({
       setEmailInput('');
       setSubStatus('idle');
     }, 4000);
-  };
-
-  const handleCopyBanner = () => {
-    navigator.clipboard.writeText(bannerCommands[bannerPkg]);
-    setCopiedBanner(true);
-    setTimeout(() => setCopiedBanner(false), 2000);
   };
 
   return (
@@ -353,7 +347,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
             <div className="mt-3 flex items-center gap-4 font-mono text-xs text-text-muted">
               <button 
                 onClick={() => {
-                  navigator.clipboard.writeText("https://getgtm.dev/rss.xml");
+                  navigator.clipboard.writeText("https://gtmd.dev/rss.xml");
                   setSubStatus('success');
                   setTimeout(() => setSubStatus('idle'), 2500);
                 }}
@@ -364,7 +358,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
               <span>•</span>
               <button 
                 onClick={() => {
-                  navigator.clipboard.writeText("https://getgtm.dev/atom.xml");
+                  navigator.clipboard.writeText("https://gtmd.dev/atom.xml");
                   setSubStatus('success');
                   setTimeout(() => setSubStatus('idle'), 2500);
                 }}
@@ -401,57 +395,43 @@ export const BlogView: React.FC<BlogViewProps> = ({
           </div>
 
           <div className="flex flex-col gap-2 shrink-0 w-full md:w-auto">
-            <div className="flex items-center gap-1 font-mono text-xs">
-              <span className="text-text-muted text-[11px] mr-1">Method:</span>
-              <button
-                onClick={() => setBannerPkg('curl')}
-                className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
-                  bannerPkg === 'curl'
-                    ? 'bg-[#1e2633] text-[#38bdae] font-bold border border-[#2b3342]'
-                    : 'text-[#8b949e] hover:text-[#c9d1d9]'
-                }`}
-              >
-                curl (script)
-              </button>
-              <button
-                onClick={() => setBannerPkg('cargo')}
-                className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
-                  bannerPkg === 'cargo'
-                    ? 'bg-[#1e2633] text-[#38bdae] font-bold border border-[#2b3342]'
-                    : 'text-[#8b949e] hover:text-[#c9d1d9]'
-                }`}
-              >
-                cargo
-              </button>
-              <button
-                onClick={() => setBannerPkg('brew')}
-                className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
-                  bannerPkg === 'brew'
-                    ? 'bg-[#1e2633] text-[#38bdae] font-bold border border-[#2b3342]'
-                    : 'text-[#8b949e] hover:text-[#c9d1d9]'
-                }`}
-              >
-                brew
-              </button>
+            <div className="flex items-center gap-1 font-mono text-xs overflow-x-auto scrollbar-none pb-1">
+              <span className="text-text-muted text-[11px] mr-1 select-none">Method:</span>
+              <div className="flex items-center gap-1 whitespace-nowrap min-w-max">
+                {(['curl', 'cargo', 'brew', 'aur', 'nix'] as const).map(pkg => (
+                  <button
+                    key={pkg}
+                    onClick={() => setBannerPkg(pkg)}
+                    className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer whitespace-nowrap ${
+                      bannerPkg === pkg
+                        ? 'bg-surface-elevated text-text-primary font-bold border border-hairline-outline text-secondary'
+                        : 'text-text-muted hover:text-text-primary'
+                    }`}
+                  >
+                    {pkg}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex items-stretch bg-[#101620] border border-[#2b3342] rounded-md overflow-hidden shadow-2xl">
-              <div className="px-4 py-3 font-mono text-xs sm:text-sm text-[#c9d1d9] flex items-center gap-2 select-all overflow-x-auto">
-                <span className="text-[#38bdae] font-bold select-none">$</span> {bannerCommands[bannerPkg]}
+            <div className="flex items-center justify-between px-3.5 py-2.5 bg-code-canvas border border-hairline-outline rounded-lg font-mono text-xs shadow-2xl">
+              <div className="flex items-center gap-2 select-all overflow-x-auto min-w-0">
+                <span className="text-secondary font-bold select-none">$</span>
+                <span className="text-text-primary font-medium truncate">{PACKAGE_COMMANDS[bannerPkg]}</span>
               </div>
               <button
                 onClick={handleCopyBanner}
-                className="px-4 py-3 bg-[#58a6ff] hover:bg-[#79c0ff] text-[#090d16] font-mono text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-hairline-outline text-text-muted hover:text-primary-container hover:border-primary-container transition-all text-xs shrink-0 ml-3 cursor-pointer bg-surface-elevated"
               >
                 {copiedBanner ? (
                   <>
-                    <Check className="w-3.5 h-3.5" />
-                    <span>COPIED!</span>
+                    <Check className="w-3.5 h-3.5 text-state-success" />
+                    <span className="text-state-success font-bold">copied!</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" />
-                    <span>Copy</span>
+                    <span>copy</span>
                   </>
                 )}
               </button>
