@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { PageTab } from '../types';
-import { Search, Menu, X, ArrowUpRight, Github } from 'lucide-react';
+import { Search, Github } from 'lucide-react';
 
 interface TopNavProps {
   currentTab: PageTab;
@@ -17,33 +17,37 @@ export const TopNav: React.FC<TopNavProps> = ({
   onOpenKeymap,
   onScrollToInstall
 }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const handleMobileNav = (tab: PageTab) => {
-    onSelectTab(tab);
-    setIsMobileMenuOpen(false);
-  };
-
-  const handleMobileKeymap = () => {
-    setIsMobileMenuOpen(false);
-    onOpenKeymap();
+  const handleInstallClick = () => {
+    if (onScrollToInstall) {
+      onScrollToInstall();
+    } else {
+      onSelectTab('home');
+      setTimeout(() => {
+        const el = document.getElementById('install');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
   };
 
   return (
     <header className="w-full border-b border-hairline-outline bg-canvas-obsidian sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
         {/* Brand & Desktop Links */}
-        <div className="flex items-center gap-6 sm:gap-8">
+        <div className="flex items-center gap-5 sm:gap-8">
           <button
+            id="nav-brand-button"
             onClick={() => onSelectTab('home')}
             className="font-mono text-base sm:text-lg text-secondary tracking-tight font-bold flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer text-left"
           >
             <span>&gt; gtm</span>
           </button>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 font-mono text-xs">
+          {/* Navigation Links */}
+          <nav className="flex items-center gap-4 sm:gap-6 font-mono text-xs">
             <button
+              id="nav-docs-link"
               onClick={() => onSelectTab('docs')}
               className={`py-1 cursor-pointer transition-colors ${
                 currentTab === 'docs'
@@ -54,6 +58,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               Docs
             </button>
             <button
+              id="nav-install-link"
               onClick={() => onSelectTab('install')}
               className={`py-1 cursor-pointer transition-colors ${
                 currentTab === 'install'
@@ -64,8 +69,9 @@ export const TopNav: React.FC<TopNavProps> = ({
               Install
             </button>
             <button
+              id="nav-keymap-link"
               onClick={onOpenKeymap}
-              className="text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+              className="py-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
             >
               Keymap
             </button>
@@ -98,61 +104,8 @@ export const TopNav: React.FC<TopNavProps> = ({
           >
             <Github className="w-4 h-4" />
           </a>
-
-          {/* Mobile Hamburger Toggle Button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-text-muted hover:text-text-primary border border-hairline-outline rounded bg-surface-container cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Toggle Navigation Menu"
-          >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
       </div>
-
-      {/* Mobile Drawer Navigation */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-hairline-outline bg-surface-container px-4 py-4 space-y-3 font-mono text-sm animate-in fade-in slide-in-from-top-2 duration-150">
-          <button
-            onClick={() => handleMobileNav('docs')}
-            className={`block w-full text-left py-2.5 px-3 rounded transition-colors ${
-              currentTab === 'docs'
-                ? 'bg-surface-elevated text-secondary font-bold'
-                : 'text-text-muted hover:text-text-primary'
-            }`}
-          >
-            Docs
-          </button>
-          <button
-            onClick={() => handleMobileNav('install')}
-            className={`block w-full text-left py-2.5 px-3 rounded transition-colors ${
-              currentTab === 'install'
-                ? 'bg-surface-elevated text-secondary font-bold'
-                : 'text-text-muted hover:text-text-primary'
-            }`}
-          >
-            Install
-          </button>
-          <button
-            onClick={handleMobileKeymap}
-            className="block w-full text-left py-2.5 px-3 rounded text-text-muted hover:text-text-primary transition-colors"
-          >
-            Keymap Cheatsheet
-          </button>
-          <a
-            href="https://github.com/prjctimg/gtm.rs"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-between w-full py-2.5 px-3 rounded text-text-muted hover:text-text-primary transition-colors"
-          >
-            <span className="flex items-center gap-2">
-              <Github className="w-4 h-4" />
-              <span>GitHub</span>
-            </span>
-            <ArrowUpRight className="w-4 h-4 text-text-disabled" />
-          </a>
-        </div>
-      )}
     </header>
   );
 };

@@ -1,4 +1,5 @@
 export type PageTab = 'home' | 'docs' | 'blog' | 'install';
+export type Theme = 'dark' | 'light';
 
 export interface BlogPost {
   id: string;

@@ -40,13 +40,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   // Build searchable items
   const installItems: SearchItem[] = [
-    { title: 'Install gtm (All Methods: curl, cargo, brew, aur, nix, deb, rpm)', category: 'Installation', tab: 'install' },
-    { title: 'Cargo Install (Build with native PipeWire & MPRIS)', category: 'Installation // Cargo', tab: 'install' },
-    { title: 'Homebrew Formula (macOS Apple Silicon & Intel)', category: 'Installation // Brew', tab: 'install' },
+    { title: 'Install gtm (All Methods: curl, cargo, source, aur, brew, nix, termux)', category: 'Installation', tab: 'install' },
+    { title: 'Quick Install Script (Stable & Nightly curl script)', category: 'Installation // Script', tab: 'install' },
+    { title: 'Cargo Install (Build from crates.io with locked deps)', category: 'Installation // Cargo', tab: 'install' },
+    { title: 'Build from Source (git clone & make install)', category: 'Installation // Source', tab: 'install' },
+    { title: 'Homebrew Formula (macOS Apple Silicon & Linux)', category: 'Installation // Brew', tab: 'install' },
     { title: 'Arch Linux AUR (paru -S gtm-bin / yay)', category: 'Installation // AUR', tab: 'install' },
-    { title: 'Debian / Ubuntu (.deb Package)', category: 'Installation // Debian', tab: 'install' },
-    { title: 'Fedora / openSUSE (.rpm Package)', category: 'Installation // RPM', tab: 'install' },
-    { title: 'Precompiled Musl Static Binaries', category: 'Installation // Binaries', tab: 'install' }
+    { title: 'Termux Android Build (make termux)', category: 'Installation // Termux', tab: 'install' },
+    { title: 'Nix Flake (nix profile install github:prjctimg/gtm.rs)', category: 'Installation // Nix', tab: 'install' }
   ];
 
   // Dynamic Docs from all 20 live MDX content files

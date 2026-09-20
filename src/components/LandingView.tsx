@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, type Variants } from 'motion/react';
 import { IMAGES, PACKAGE_COMMANDS, KEYBINDINGS } from '../data/mockData';
 import { PageTab } from '../types';
 import { AnimatedTelemetryBenchmark } from './AnimatedTelemetryBenchmark';
@@ -56,6 +56,19 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
 
   // Interactive fuzzy search simulation
   const [searchQuery, setSearchQuery] = useState('kendrick to pimp a butterfly');
+
+  // Scroll animation variants
+  const scrollSectionVariants: Variants = {
+    hidden: { opacity: 0, y: 36 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.7,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
 
   useEffect(() => {
     if (!isPlayingFft) return;
@@ -165,22 +178,42 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
   return (
     <div className="w-full flex flex-col font-sans space-y-16 sm:space-y-24">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden w-full pt-6 md:pt-14 pb-8 md:pb-12 px-4 rounded-2xl border border-hairline-outline/40 bg-canvas-obsidian/25 sm:bg-canvas-obsidian/60 shadow-inner">
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+        className="relative overflow-hidden w-full pt-6 md:pt-14 pb-8 md:pb-12 px-4 rounded-t-none rounded-b-2xl border border-hairline-outline/40 bg-canvas-obsidian/25 sm:bg-canvas-obsidian/60 shadow-inner"
+      >
         {/* Doodled Musical Background with musical symbols, notes & instruments */}
         <MusicalDoodleBackground />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
           {/* Main Title */}
-          <h1 className="font-mono text-3xl sm:text-5xl lg:text-6xl font-extrabold text-text-primary tracking-tight leading-tight max-w-4xl mx-auto">
+          <motion.h1
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="font-mono text-3xl sm:text-5xl lg:text-6xl font-extrabold text-text-primary tracking-tight leading-tight max-w-4xl mx-auto"
+          >
             The missing terminal audio player.
-          </h1>
+          </motion.h1>
 
-          <p className="text-sm sm:text-base text-text-muted max-w-2xl mx-auto leading-relaxed">
+          <motion.p
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="text-sm sm:text-base text-text-muted max-w-2xl mx-auto leading-relaxed"
+          >
             Switching to your audio player should be a keybinding away at most, and more importantly it has to look stunning.
-          </p>
+          </motion.p>
 
           {/* Multi-package manager install widget */}
-          <div className="max-w-xl mx-auto pt-2">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="max-w-xl mx-auto pt-2"
+          >
             <div className="bg-surface-container/90 backdrop-blur-md border border-hairline-outline rounded-xl p-3 shadow-2xl">
               {/* Package Selector Tabs */}
               <div className="flex items-center justify-start border-b border-hairline-outline pb-2 px-1 font-mono text-xs overflow-x-auto scrollbar-none">
@@ -227,12 +260,18 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* INTERACTIVE TUI EXPLORER / PLAYGROUND */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1, margin: "0px 0px -50px 0px" }}
+        variants={scrollSectionVariants}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full"
+      >
         <div className="border border-hairline-outline rounded-xl bg-surface-container overflow-hidden shadow-2xl">
           {/* Terminal Body Viewports */}
           <div className="w-full bg-canvas-obsidian relative flex flex-col justify-center px-2 sm:px-4 md:px-6 py-3">
@@ -376,11 +415,15 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
             )}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* FEATURE SHOWCASE - SCROLL TO REVIEW STACK */}
-      <section 
+      <motion.section 
         id="feature-tour-showcase"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.08, margin: "0px 0px -50px 0px" }}
+        variants={scrollSectionVariants}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-6 relative"
       >
         {/* Section Header */}
@@ -394,31 +437,9 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
         </div>
 
         {/* Sticky Navigation Bar */}
-        <div className="sticky top-16 z-30 bg-surface-container/95 backdrop-blur-md border border-hairline-outline rounded-xl px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 font-mono text-xs shadow-md">
-          {/* Active slide display with snap transition - other slide titles hidden */}
-          <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeFeatureIdx}
-                initial={{ opacity: 0, y: 8, filter: 'blur(3px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, y: -8, filter: 'blur(3px)' }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="flex items-center gap-2.5 min-w-0"
-              >
-                <div className="bg-surface-elevated text-secondary font-bold border border-secondary/40 shadow-xs px-2.5 py-1 rounded text-xs flex items-center gap-1.5 shrink-0">
-                  <span className="opacity-60 text-[10px]">0{activeFeatureIdx + 1}</span>
-                  <span>{carouselItems[activeFeatureIdx].badge}</span>
-                </div>
-                <span className="text-text-primary text-xs sm:text-sm font-semibold truncate font-sans">
-                  {carouselItems[activeFeatureIdx].title}
-                </span>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
+        <div className="sticky top-20 z-30 bg-surface-container/95 backdrop-blur-md border border-hairline-outline rounded-xl px-4 py-2 flex items-center justify-center gap-2 font-mono text-xs shadow-md mx-auto w-fit">
           {/* Minimal slide step indicators to jump between slides */}
-          <div className="flex items-center gap-1.5 shrink-0 pl-2 sm:pl-3 border-l border-hairline-outline/50">
+          <div className="flex items-center gap-2 shrink-0">
             {carouselItems.map((item, idx) => {
               const isActive = activeFeatureIdx === idx;
               return (
@@ -429,7 +450,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
                   title={`0${idx + 1} ${item.badge}: ${item.title}`}
                   className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
                     isActive 
-                      ? 'w-5 bg-secondary' 
+                      ? 'w-6 bg-secondary' 
                       : 'w-2 bg-hairline-outline hover:bg-text-muted'
                   }`}
                 />
@@ -449,7 +470,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
                 key={item.badge}
                 ref={(el) => { featureItemRefs.current[idx] = el; }}
                 style={{
-                  top: '5.5rem',
+                  top: '7.5rem',
                   zIndex: 10 + idx
                 }}
                 className={`sticky w-full border border-hairline-outline rounded-xl bg-surface-container shadow-2xl p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row items-center gap-6 lg:gap-8 justify-center min-h-[480px] sm:min-h-[520px] transition-all duration-300 ${
@@ -503,17 +524,28 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
             );
           })}
         </div>
-      </section>
+      </motion.section>
 
       {/* LIVE CI & TELEMETRY BENCHMARK */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.12, margin: "0px 0px -50px 0px" }}
+        variants={scrollSectionVariants}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full"
+      >
         <AnimatedTelemetryBenchmark className="w-full" />
-      </section>
-
-
+      </motion.section>
 
       {/* CLOSING INSTALL CALL TO ACTION */}
-      <section id="install" className="max-w-4xl mx-auto px-4 sm:px-6 w-full pb-20 sm:pb-32">
+      <motion.section
+        id="install"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.15, margin: "0px 0px -50px 0px" }}
+        variants={scrollSectionVariants}
+        className="max-w-4xl mx-auto px-4 sm:px-6 w-full pb-20 sm:pb-32 scroll-mt-20"
+      >
         <div className="border border-hairline-outline rounded-xl bg-surface-container p-8 md:p-12 text-center space-y-6 shadow-2xl">
           <div className="space-y-2">
             <h2 className="text-2xl sm:text-3xl font-mono font-bold text-text-primary">
@@ -593,7 +625,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 };

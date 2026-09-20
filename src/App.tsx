@@ -73,7 +73,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas-obsidian text-text-primary flex flex-col font-sans selection:bg-secondary/30 selection:text-secondary">
+    <div className="min-h-screen bg-canvas-obsidian text-text-primary flex flex-col font-sans selection:bg-secondary/30 selection:text-secondary transition-colors duration-200">
       {/* Top Navigation */}
       <TopNav
         currentTab={currentTab}
@@ -95,12 +95,7 @@ export default function App() {
               setActiveDocId(docId);
               setActiveSection(secId);
             }}
-          />
-        )}
-
-        {currentTab === 'install' && (
-          <InstallView
-            onNavigateToDocs={(sectionId) => handleNavigate('docs', 'getting-started', sectionId)}
+            onNavigateInstall={() => handleNavigate('install')}
           />
         )}
 
@@ -108,6 +103,13 @@ export default function App() {
           <BlogView
             onOpenWhitepaper={(post) => setSelectedWhitepaper(post)}
             onNavigateToDocs={(sectionId) => handleNavigate('docs', 'overview', sectionId)}
+          />
+        )}
+
+        {currentTab === 'install' && (
+          <InstallView
+            onNavigate={handleNavigate}
+            onOpenKeymap={() => setIsKeymapOpen(true)}
           />
         )}
 

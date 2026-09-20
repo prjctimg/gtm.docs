@@ -21,7 +21,12 @@ import {
   ChevronRight,
   ListTree,
   Github,
-  ArrowUpRight
+  ArrowUpRight,
+  Menu,
+  X,
+  BookOpen,
+  ChevronDown,
+  PanelLeft
 } from 'lucide-react';
 
 interface DocsViewProps {
@@ -30,6 +35,7 @@ interface DocsViewProps {
   activeDocId?: string;
   activeSection?: string;
   onNavigateDoc?: (docId: string, sectionId?: string) => void;
+  onNavigateInstall?: () => void;
 }
 
 const DEFAULT_FALLBACK_DOC: DocItem = {
@@ -53,7 +59,8 @@ export const DocsView: React.FC<DocsViewProps> = ({
   onOpenKeymap,
   activeDocId = 'overview',
   activeSection,
-  onNavigateDoc
+  onNavigateDoc,
+  onNavigateInstall
 }) => {
   // Current active doc
   const [currentDocId, setCurrentDocId] = useState<string>(() => {
@@ -62,6 +69,28 @@ export const DocsView: React.FC<DocsViewProps> = ({
 
   const [activeHeadingId, setActiveHeadingId] = useState<string>('');
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+
+  // Close drawer on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileDrawerOpen) {
+        setIsMobileDrawerOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileDrawerOpen]);
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (isMobileDrawerOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [isMobileDrawerOpen]);
 
   // Sync state if prop changes
   useEffect(() => {
@@ -146,8 +175,6 @@ export const DocsView: React.FC<DocsViewProps> = ({
     return (activeDoc?.headings || []).find(h => h.id === activeHeadingId);
   }, [activeDoc?.headings, activeHeadingId]);
 
-  const currentHeadingText = activeHeading ? activeHeading.text : (activeDoc?.headings?.[0]?.text || activeDoc?.title);
-
   const scrollToHeading = (id: string) => {
     setActiveHeadingId(id);
     const el = document.getElementById(id) || document.getElementById(`_${id}`);
@@ -174,7 +201,7 @@ export const DocsView: React.FC<DocsViewProps> = ({
     <div className="w-full flex flex-col font-sans">
       <div className="max-w-7xl mx-auto flex w-full">
         {/* LEFT SIDEBAR: Document List & Categories (Desktop) */}
-        <aside className="w-72 shrink-0 border-r border-hairline-outline bg-canvas-obsidian p-4 hidden lg:block sticky top-14 self-start max-h-[calc(100vh-56px)] overflow-y-auto font-mono text-xs">
+        <aside className="w-72 shrink-0 border-r border-hairline-outline bg-canvas-obsidian px-4 pt-6 pb-6 hidden lg:block sticky top-14 self-start max-h-[calc(100vh-56px)] overflow-y-auto font-mono text-xs">
           {/* Search Trigger */}
           <div className="relative mb-5">
             <button
@@ -204,25 +231,31 @@ export const DocsView: React.FC<DocsViewProps> = ({
                     {docsInCat.map((doc) => {
                       const isActive = currentDocId === doc.id;
                       return (
-                        <li key={doc.id}>
-                          <button
-                            onClick={() => handleSelectDoc(doc.id)}
-                            className={`w-full text-left py-1.5 px-2 rounded text-xs cursor-pointer transition-colors flex items-center justify-between gap-1.5 ${
-                              isActive
-                                ? 'bg-surface-elevated text-secondary font-bold border border-secondary/30'
-                                : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/40'
-                            }`}
-                          >
-                            <span className="truncate">{doc.title}</span>
-                            <span
-                              className={`font-mono text-[10px] shrink-0 ${
-                                isActive ? 'text-secondary font-bold' : 'text-text-disabled'
+                        <React.Fragment key={doc.id}>
+                          <li>
+                            <button
+                              onClick={() => handleSelectDoc(doc.id)}
+                              className={`w-full text-left py-1.5 px-2 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 ${
+                                isActive
+                                  ? 'bg-surface-elevated text-secondary font-bold border border-secondary/30'
+                                  : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/40'
                               }`}
                             >
-                              {String(doc.order).padStart(2, '0')}
-                            </span>
-                          </button>
-                        </li>
+                              <span className="truncate">{doc.title}</span>
+                            </button>
+                          </li>
+                          {category === 'Introduction & Setup' && doc.id === 'overview' && (
+                            <li>
+                              <button
+                                type="button"
+                                onClick={() => onNavigateInstall?.()}
+                                className="w-full text-left py-1.5 px-2 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 text-text-muted hover:text-text-primary hover:bg-surface-elevated/40"
+                              >
+                                <span className="truncate">Installation</span>
+                              </button>
+                            </li>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                   </ul>
@@ -261,50 +294,46 @@ export const DocsView: React.FC<DocsViewProps> = ({
         {/* CENTER CANVAS: Active Doc Article */}
         <main className="flex-1 min-w-0 px-4 sm:px-8 py-8 max-w-4xl mx-auto space-y-8">
           {/* Mobile Sticky Table of Contents & Navigation */}
-          <div className="xl:hidden sticky top-14 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-5 sm:pt-6 pb-2.5 bg-canvas-obsidian/95 backdrop-blur-md border-b border-hairline-outline shadow-sm space-y-2">
-            <div className="flex items-center justify-between gap-2 text-xs font-mono">
-              <div className="flex items-center gap-1.5 min-w-0 text-text-muted">
-                <ListTree className="w-3.5 h-3.5 text-secondary shrink-0" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted shrink-0">On this page:</span>
-                <span className="text-secondary font-semibold truncate text-xs">
-                  {currentHeadingText}
-                </span>
-              </div>
-            </div>
+          <div className="xl:hidden sticky top-14 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-5 sm:pt-6 pb-3 bg-canvas-obsidian/95 backdrop-blur-md border-b border-hairline-outline shadow-sm flex items-center gap-2 relative">
+            {/* Mobile Side Drawer Toggle Icon on the left */}
+            <button
+              type="button"
+              onClick={() => setIsMobileDrawerOpen(true)}
+              className="lg:hidden p-2 rounded-lg bg-surface-container hover:bg-surface-elevated border border-hairline-outline hover:border-secondary/40 text-secondary transition-colors cursor-pointer shrink-0 flex items-center justify-center min-h-[38px] min-w-[38px]"
+              title="Documentation Pages Index"
+              aria-label="Toggle documentation side drawer"
+            >
+              <PanelLeft className="w-4 h-4 text-secondary" />
+            </button>
 
             <select
               id="mobile-doc-selector"
-              aria-label="Table of contents and document selector"
-              value={activeHeadingId ? `heading:${activeHeadingId}` : `doc:${currentDocId}`}
+              aria-label="Current document table of contents"
+              value={activeHeadingId}
               onChange={(e) => {
                 const val = e.target.value;
-                if (val.startsWith('heading:')) {
-                  scrollToHeading(val.replace('heading:', ''));
-                } else if (val.startsWith('doc:')) {
-                  handleSelectDoc(val.replace('doc:', ''));
+                if (val) {
+                  scrollToHeading(val);
+                } else {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setActiveHeadingId('');
                 }
               }}
-              className="w-full bg-surface-container border border-hairline-outline text-text-primary font-mono text-xs rounded px-3 py-2 focus:outline-none focus:border-primary-container cursor-pointer"
+              className="flex-1 min-w-0 appearance-none bg-surface-container hover:bg-surface-elevated/70 border border-hairline-outline hover:border-secondary/40 focus:border-secondary focus:ring-1 focus:ring-secondary/30 text-text-primary font-mono text-xs rounded-lg px-3.5 py-2.5 pr-10 focus:outline-none transition-all cursor-pointer shadow-xs min-h-[38px]"
             >
-              {(activeDoc?.headings || []).length > 0 && (
-                <optgroup label={`On this page — ${activeDoc?.title}`}>
-                  {activeDoc?.headings.map((h) => (
-                    <option key={h.id} value={`heading:${h.id}`}>
-                      {h.level === 3 ? '   └ ' : '• '}{h.text}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-              <optgroup label="All Documentation Pages">
-                {DOC_CATEGORIES.map((cat) => (
-                  (DOCS_BY_CATEGORY[cat] || []).map((doc) => (
-                    <option key={doc.id} value={`doc:${doc.id}`}>
-                      📄 {String(doc.order).padStart(2, '0')} - {doc.title}
-                    </option>
-                  ))
-                ))}
-              </optgroup>
+              <option value="" className="bg-canvas-obsidian text-text-primary font-mono">
+                {activeDoc?.title} (Top)
+              </option>
+              {(activeDoc?.headings || []).map((h) => (
+                <option key={h.id} value={h.id} className="bg-canvas-obsidian text-text-primary font-mono">
+                  {h.level === 3 ? '   └ ' : '• '}{h.text}
+                </option>
+              ))}
             </select>
+
+            <div className="pointer-events-none absolute right-7 sm:right-11 top-1/2 -translate-y-1/2 mt-1 sm:mt-1.5 flex items-center text-secondary/70">
+              <ChevronDown className="w-4 h-4" />
+            </div>
           </div>
 
           {/* Breadcrumb Header */}
@@ -409,7 +438,7 @@ export const DocsView: React.FC<DocsViewProps> = ({
         </main>
 
         {/* RIGHT SIDEBAR: On This Page Table of Contents (Desktop) */}
-        <aside className="w-60 shrink-0 border-l border-hairline-outline bg-canvas-obsidian p-6 hidden xl:block sticky top-14 self-start max-h-[calc(100vh-56px)] overflow-y-auto font-mono text-xs">
+        <aside className="w-60 shrink-0 border-l border-hairline-outline bg-canvas-obsidian px-6 pt-6 pb-6 hidden xl:block sticky top-14 self-start max-h-[calc(100vh-56px)] overflow-y-auto font-mono text-xs">
           <div className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
             <ListTree className="w-3.5 h-3.5 text-secondary" />
             <span>On this page</span>
@@ -457,6 +486,134 @@ export const DocsView: React.FC<DocsViewProps> = ({
           </div>
         </aside>
       </div>
+
+      {/* MOBILE SIDE DRAWER: Document List & Categories */}
+      {isMobileDrawerOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-xs transition-opacity"
+            onClick={() => setIsMobileDrawerOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Drawer Sheet */}
+          <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-canvas-obsidian border-r border-hairline-outline shadow-2xl flex flex-col font-mono text-xs z-10 animate-in slide-in-from-left duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-hairline-outline bg-surface-container/50">
+              <div className="flex items-center gap-2 text-secondary font-bold text-xs">
+                <BookOpen className="w-4 h-4 text-secondary" />
+                <span>Documentation Pages</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileDrawerOpen(false)}
+                className="p-1 text-text-muted hover:text-text-primary rounded hover:bg-surface-elevated transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+                aria-label="Close documentation drawer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Search Trigger inside Drawer */}
+            <div className="p-3.5 border-b border-hairline-outline bg-surface-container/30">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileDrawerOpen(false);
+                  onOpenSearch();
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 bg-code-canvas border border-hairline-outline hover:border-secondary/50 rounded text-text-muted text-xs transition-colors cursor-pointer text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Search className="w-3.5 h-3.5 text-secondary" />
+                  <span>Search {ALL_DOCS.length} topics...</span>
+                </div>
+                <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-[10px] text-text-muted">
+                  /
+                </kbd>
+              </button>
+            </div>
+
+            {/* Document Navigation Tree */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {DOC_CATEGORIES.map((category) => {
+                const docsInCat = DOCS_BY_CATEGORY[category] || [];
+                return (
+                  <div key={category} className="space-y-1.5">
+                    <div className="text-[11px] font-bold text-text-muted tracking-wider uppercase flex items-center gap-1.5 px-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                      <span>{category}</span>
+                    </div>
+
+                    <ul className="space-y-0.5 border-l border-hairline-subtle ml-2 pl-2">
+                      {docsInCat.map((doc) => {
+                        const isActive = currentDocId === doc.id;
+                        return (
+                          <React.Fragment key={doc.id}>
+                            <li>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleSelectDoc(doc.id);
+                                  setIsMobileDrawerOpen(false);
+                                }}
+                                className={`w-full text-left py-2 px-2.5 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 ${
+                                  isActive
+                                    ? 'bg-surface-elevated text-secondary font-bold border border-secondary/30'
+                                    : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/40'
+                                }`}
+                              >
+                                <span className="truncate">{doc.title}</span>
+                              </button>
+                            </li>
+                            {category === 'Introduction & Setup' && doc.id === 'overview' && (
+                              <li>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onNavigateInstall?.();
+                                    setIsMobileDrawerOpen(false);
+                                  }}
+                                  className="w-full text-left py-2 px-2.5 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 text-text-muted hover:text-text-primary hover:bg-surface-elevated/40"
+                                >
+                                  <span className="truncate">Installation</span>
+                                </button>
+                              </li>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                );
+              })}
+
+              {/* Quick Tools Box */}
+              <div className="pt-3 border-t border-hairline-outline space-y-2">
+                <div className="text-[11px] font-bold text-text-muted tracking-wider uppercase flex items-center gap-2 px-1">
+                  <Keyboard className="w-3 h-3 text-state-warning" />
+                  <span>Quick Tools</span>
+                </div>
+                <ul className="space-y-1 border-l border-hairline-subtle ml-2 pl-2">
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileDrawerOpen(false);
+                        onOpenKeymap();
+                      }}
+                      className="block w-full text-left py-1.5 px-2 text-secondary hover:underline text-xs cursor-pointer"
+                    >
+                      Keybindings Cheatsheet →
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

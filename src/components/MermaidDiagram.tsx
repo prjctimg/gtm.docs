@@ -1,49 +1,73 @@
 import React, { useEffect, useState, useId } from 'react';
 import mermaid from 'mermaid';
 import { Check, Copy, AlertCircle, RefreshCw } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 interface MermaidDiagramProps {
   code: string;
 }
 
-let isMermaidInitialized = false;
+let lastInitializedTheme: 'dark' | 'light' | null = null;
 
-function initializeMermaid() {
-  if (isMermaidInitialized) return;
+function initializeMermaid(theme: 'dark' | 'light') {
+  if (lastInitializedTheme === theme) return;
   try {
+    const isLight = theme === 'light';
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'dark',
+      theme: isLight ? 'default' : 'dark',
       securityLevel: 'loose',
       fontFamily: 'JetBrains Mono, monospace, sans-serif',
-      themeVariables: {
-        darkMode: true,
-        background: '#11151c',
-        primaryColor: '#161b22',
-        primaryTextColor: '#f0f6fc',
-        primaryBorderColor: '#55dad0',
-        lineColor: '#58a6ff',
-        secondaryColor: '#1f242d',
-        tertiaryColor: '#171c23',
-        mainBkg: '#161b22',
-        nodeBorder: '#30363d',
-        textColor: '#f0f6fc',
-        titleColor: '#55dad0',
-        edgeLabelBackground: '#1f242d',
-        actorBorder: '#55dad0',
-        actorBkg: '#161b22',
-        actorTextColor: '#f0f6fc',
-        signalColor: '#58a6ff',
-        signalTextColor: '#f0f6fc',
-      },
+      themeVariables: isLight
+        ? {
+            darkMode: false,
+            background: '#ffffff',
+            primaryColor: '#f1f5f9',
+            primaryTextColor: '#0f172a',
+            primaryBorderColor: '#0d9488',
+            lineColor: '#0284c7',
+            secondaryColor: '#ffffff',
+            tertiaryColor: '#f8fafc',
+            mainBkg: '#f1f5f9',
+            nodeBorder: '#cbd5e1',
+            textColor: '#0f172a',
+            titleColor: '#0d9488',
+            edgeLabelBackground: '#ffffff',
+            actorBorder: '#0d9488',
+            actorBkg: '#f1f5f9',
+            actorTextColor: '#0f172a',
+            signalColor: '#0284c7',
+            signalTextColor: '#0f172a',
+          }
+        : {
+            darkMode: true,
+            background: '#11151c',
+            primaryColor: '#161b22',
+            primaryTextColor: '#f0f6fc',
+            primaryBorderColor: '#55dad0',
+            lineColor: '#58a6ff',
+            secondaryColor: '#1f242d',
+            tertiaryColor: '#171c23',
+            mainBkg: '#161b22',
+            nodeBorder: '#30363d',
+            textColor: '#f0f6fc',
+            titleColor: '#55dad0',
+            edgeLabelBackground: '#1f242d',
+            actorBorder: '#55dad0',
+            actorBkg: '#161b22',
+            actorTextColor: '#f0f6fc',
+            signalColor: '#58a6ff',
+            signalTextColor: '#f0f6fc',
+          },
     });
-    isMermaidInitialized = true;
+    lastInitializedTheme = theme;
   } catch (err) {
     console.error('Failed to initialize mermaid:', err);
   }
 }
 
 export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
+  const { theme } = useTheme();
   const uniqueId = useId().replace(/[^a-zA-Z0-9]/g, '');
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +78,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
 
   useEffect(() => {
     let isMounted = true;
-    initializeMermaid();
+    initializeMermaid(theme);
 
     async function renderDiagram() {
       setLoading(true);
@@ -85,7 +109,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
     return () => {
       isMounted = false;
     };
-  }, [cleanCode, uniqueId]);
+  }, [cleanCode, uniqueId, theme]);
 
   const handleCopy = () => {
     if (navigator?.clipboard?.writeText) {

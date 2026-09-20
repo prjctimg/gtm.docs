@@ -9,6 +9,8 @@ import {
   Hash 
 } from 'lucide-react';
 import { CodeBlock } from './CodeBlock';
+import { GifPreview } from './GifPreview';
+import { EmbeddedAudioPlayer } from './EmbeddedAudioPlayer';
 
 interface MarkdownRendererProps {
   content: string;
@@ -35,10 +37,23 @@ function slugify(text: string): string {
     .replace(/\s+/g, '-');
 }
 
-// Chunks content into markdown segments and :::note/tip/caution callout blocks
+// Helper to parse key-values from directives like title="..." src="..." or key=value
+function parseAttributes(text: string): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  const regex = /(\w+)=["']([^"']*)["']|(\w+)=([^\s]+)/g;
+  let m;
+  while ((m = regex.exec(text)) !== null) {
+    const key = m[1] || m[3];
+    const val = m[2] !== undefined ? m[2] : m[4];
+    if (key) attrs[key.toLowerCase()] = val;
+  }
+  return attrs;
+}
+
+// Chunks content into markdown segments and :::note/tip/caution/audio/sound/gif blocks
 interface ContentSegment {
-  type: 'markdown' | 'callout';
-  calloutType?: 'note' | 'tip' | 'caution' | 'warning';
+  type: 'markdown' | 'callout' | 'audio' | 'gif';
+  calloutType?: string;
   body: string;
 }
 
@@ -50,7 +65,7 @@ function parseContentSegments(rawContent: string): ContentSegment[] {
   );
 
   const segments: ContentSegment[] = [];
-  const calloutRegex = /:::(note|tip|caution|warning)\s*([\s\S]*?):::/g;
+  const calloutRegex = /:::(note|tip|caution|warning|audio|sound|gif)\s*([\s\S]*?):::/g;
   let lastIndex = 0;
   let match;
 
@@ -67,12 +82,26 @@ function parseContentSegments(rawContent: string): ContentSegment[] {
     }
 
     // Callout segment
-    const calloutType = match[1].toLowerCase() as 'note' | 'tip' | 'caution' | 'warning';
-    segments.push({
-      type: 'callout',
-      calloutType,
-      body: match[2].trim(),
-    });
+    const tag = match[1].toLowerCase();
+    if (tag === 'audio' || tag === 'sound') {
+      segments.push({
+        type: 'audio',
+        calloutType: tag,
+        body: match[2].trim(),
+      });
+    } else if (tag === 'gif') {
+      segments.push({
+        type: 'gif',
+        calloutType: tag,
+        body: match[2].trim(),
+      });
+    } else {
+      segments.push({
+        type: 'callout',
+        calloutType: tag,
+        body: match[2].trim(),
+      });
+    }
 
     lastIndex = end;
   }
@@ -191,7 +220,47 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             </ol>
           ),
           li: ({ children }) => <li className="pl-1">{children}</li>,
+          img: ({ src, alt }) => {
+            if (!src) return null;
+            const isGif = src.toLowerCase().includes('.gif') || (alt && alt.toLowerCase().includes('[gif]'));
+            if (isGif) {
+              const cleanAlt = alt?.replace(/\[gif\]/gi, '').trim();
+              return <GifPreview src={src} alt={cleanAlt || 'Animated Demonstration'} />;
+            }
+            return (
+              <figure className="my-6 rounded-xl border border-hairline-outline bg-surface-container overflow-hidden shadow-sm">
+                <img src={src} alt={alt || 'Image'} className="w-full h-auto object-contain max-h-[500px]" />
+                {alt && (
+                  <figcaption className="px-3.5 py-2 text-center text-xs font-mono text-text-muted bg-surface-elevated/70 border-t border-hairline-subtle">
+                    {alt}
+                  </figcaption>
+                )}
+              </figure>
+            );
+          },
           a: ({ href, children }) => {
+            const isAudioFile = href && (
+              /\.(mp3|wav|ogg|flac|m4a|aac)(\?.*)?$/i.test(href) ||
+              href.startsWith('audio:') ||
+              href.startsWith('sound:') ||
+              href.startsWith('synth:') ||
+              href.startsWith('demo:')
+            );
+
+            if (isAudioFile && href) {
+              const cleanSrc = href.replace(/^(audio|sound):/, '');
+              const titleText = extractText(children) || 'Audio Sample';
+              return (
+                <div className="my-3">
+                  <EmbeddedAudioPlayer
+                    src={cleanSrc}
+                    title={titleText}
+                    artist="gtm.rs Audio Engine"
+                  />
+                </div>
+              );
+            }
+
             const isExternal = href?.startsWith('http://') || href?.startsWith('https://');
             return (
               <a
@@ -209,6 +278,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           pre: ({ children }) => <>{children}</>,
           code: ({ className, children, ...props }) => {
             const match = /language-(\w+)/.exec(className || '');
+            const lang = match ? match[1].toLowerCase() : '';
             const isInline = !match && !String(children).includes('\n');
 
             if (isInline) {
@@ -223,9 +293,51 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
               );
             }
 
+            const rawContent = String(children).trim();
+
+            // Embedded Audio codeblock: ```audio ... ```
+            if (lang === 'audio' || lang === 'sound') {
+              const attrs = parseAttributes(rawContent);
+              const lines = rawContent.split('\n');
+              const firstLine = lines[0] || '';
+              const desc = lines.slice(1).join('\n').trim();
+              const audioSrc = attrs['src'] || (firstLine.includes('/') ? firstLine.trim() : '/samples/audio-equalizer-sample.wav');
+              const audioTitle = attrs['title'] || 'Audio Preview';
+              const audioArtist = attrs['artist'] || 'gtm Audio Engine';
+              const audioFormat = attrs['format'] || undefined;
+
+              return (
+                <EmbeddedAudioPlayer
+                  src={audioSrc}
+                  title={audioTitle}
+                  artist={audioArtist}
+                  format={audioFormat}
+                  description={desc || undefined}
+                />
+              );
+            }
+
+            // Embedded GIF codeblock: ```gif ... ```
+            if (lang === 'gif') {
+              const attrs = parseAttributes(rawContent);
+              const lines = rawContent.split('\n');
+              const firstLine = lines[0] || '';
+              const desc = lines.slice(1).join('\n').trim();
+              const gifSrc = attrs['src'] || firstLine.trim();
+              const gifCaption = attrs['caption'] || attrs['alt'] || desc || undefined;
+
+              return (
+                <GifPreview
+                  src={gifSrc}
+                  alt={gifCaption || 'Animated GIF Preview'}
+                  caption={gifCaption}
+                />
+              );
+            }
+
             return (
               <CodeBlock
-                language={match ? match[1] : ''}
+                language={lang}
                 value={String(children).replace(/\n$/, '')}
               />
             );
@@ -267,6 +379,46 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       >
         {mdText}
       </ReactMarkdown>
+    );
+  };
+
+  const renderAudio = (body: string) => {
+    const lines = body.split('\n');
+    const firstLine = lines[0] || '';
+    const attrs = parseAttributes(firstLine);
+    const desc = lines.slice(1).join('\n').trim();
+
+    const audioSrc = attrs['src'] || (firstLine.includes('/') || firstLine.startsWith('http') || firstLine.startsWith('demo:') || firstLine.startsWith('synth:') ? firstLine.trim() : '/samples/audio-equalizer-sample.wav');
+    const audioTitle = attrs['title'] || 'Audio Preview';
+    const audioArtist = attrs['artist'] || 'gtm.rs Daemon';
+    const audioFormat = attrs['format'] || undefined;
+
+    return (
+      <EmbeddedAudioPlayer
+        src={audioSrc}
+        title={audioTitle}
+        artist={audioArtist}
+        format={audioFormat}
+        description={desc || undefined}
+      />
+    );
+  };
+
+  const renderGif = (body: string) => {
+    const lines = body.split('\n');
+    const firstLine = lines[0] || '';
+    const attrs = parseAttributes(firstLine);
+    const desc = lines.slice(1).join('\n').trim();
+
+    const gifSrc = attrs['src'] || firstLine.trim();
+    const gifCaption = attrs['caption'] || attrs['alt'] || desc || undefined;
+
+    return (
+      <GifPreview
+        src={gifSrc}
+        alt={gifCaption || 'Animated Preview'}
+        caption={gifCaption}
+      />
     );
   };
 
@@ -324,6 +476,10 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         <React.Fragment key={idx}>
           {seg.type === 'callout'
             ? renderCallout(seg.calloutType || 'note', seg.body)
+            : seg.type === 'audio'
+            ? renderAudio(seg.body)
+            : seg.type === 'gif'
+            ? renderGif(seg.body)
             : renderMarkdownComponent(seg.body)}
         </React.Fragment>
       ))}

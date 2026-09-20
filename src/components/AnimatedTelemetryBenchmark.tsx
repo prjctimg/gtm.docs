@@ -9,7 +9,6 @@ import {
   GitPullRequest,
   ExternalLink,
   Activity,
-  ArrowUpRight,
   FileCode2
 } from 'lucide-react';
 
@@ -337,7 +336,7 @@ export const AnimatedTelemetryBenchmark: React.FC<AnimatedTelemetryBenchmarkProp
 
             {/* Real Git Commit Message */}
             <p
-              className="font-mono text-xs sm:text-sm text-text-primary font-medium leading-snug break-words"
+              className="font-mono text-xs sm:text-sm text-text-primary font-medium leading-snug truncate"
               title={primaryRun.commitMessage}
             >
               "{primaryRun.commitMessage}"
@@ -422,31 +421,33 @@ export const AnimatedTelemetryBenchmark: React.FC<AnimatedTelemetryBenchmarkProp
 
         {/* Bottom Summary Bar */}
         <div className="flex items-center justify-between pt-2 border-t border-hairline-outline/60 font-mono text-xs text-text-muted">
-          <div className="flex items-center gap-2 text-[11px] flex-wrap">
+          <div className="flex items-center gap-2.5 text-[11px] flex-wrap">
             {inProgressCount > 0 && (
-              <span className="text-amber-400 font-bold">{inProgressCount} Running</span>
+              <span className="text-amber-400 font-bold flex items-center gap-1" title={`${inProgressCount} Running`}>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>{inProgressCount}</span>
+              </span>
             )}
             {passedCount > 0 && (
-              <span className="text-state-success font-medium">{passedCount} Passing</span>
+              <span className="text-state-success font-medium flex items-center gap-1" title={`${passedCount} Passing`}>
+                <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.2]" />
+                <span>{passedCount}</span>
+              </span>
             )}
             {failedCount > 0 && (
-              <span className="text-accent-coral font-medium">{failedCount} Failing</span>
+              <span className="text-accent-coral font-medium flex items-center gap-1" title={`${failedCount} Failing`}>
+                <XCircle className="w-3.5 h-3.5 stroke-[2.2]" />
+                <span>{failedCount}</span>
+              </span>
             )}
             {skippedCount > 0 && (
-              <span className="text-text-muted">{skippedCount} Skipped</span>
+              <span className="text-text-muted flex items-center gap-1" title={`${skippedCount} Skipped`}>
+                <MinusCircle className="w-3.5 h-3.5" />
+                <span>{skippedCount}</span>
+              </span>
             )}
             <span>• {formatRelativeTime(primaryRun.updatedAt)}</span>
           </div>
-          <a
-            href={`https://github.com/${REPO_NAME}/actions`}
-            target="_blank"
-            rel="noreferrer"
-            className="text-text-muted hover:text-secondary flex items-center gap-1 transition-colors text-[11px]"
-            title="View GitHub Actions runs"
-          >
-            <span>GitHub Actions</span>
-            <ArrowUpRight className="w-3 h-3" />
-          </a>
         </div>
       </div>
     </div>

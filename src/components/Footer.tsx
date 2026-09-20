@@ -1,6 +1,7 @@
 import React from 'react';
 import { PageTab } from '../types';
-import { Github } from 'lucide-react';
+import { Github, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 interface FooterProps {
   onNavigate: (tab: PageTab, sectionId?: string) => void;
@@ -14,25 +15,28 @@ export const Footer: React.FC<FooterProps> = ({
   onScrollToInstall 
 }) => {
   const currentYear = new Date().getFullYear();
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <footer className="w-full border-t border-hairline-outline bg-canvas-obsidian py-8 px-4 sm:px-6 md:px-12 font-mono text-xs">
+    <footer className="w-full border-t border-hairline-outline bg-canvas-obsidian py-8 px-4 sm:px-6 md:px-12 font-mono text-xs transition-colors duration-200">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Brand & Leading Header matching hero */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div className="flex items-center gap-3">
-            <button 
-              type="button"
-              onClick={() => onNavigate('home')}
-              className="text-base sm:text-lg text-secondary font-bold cursor-pointer hover:opacity-90 tracking-tight"
-            >
-              &gt; gtm
-            </button>
-            <span className="text-text-muted/30">|</span>
-            <span className="text-text-muted text-xs">
-              The missing terminal audio player.
-            </span>
-          </div>
+        {/* Theme Switcher Header */}
+        <div className="flex items-center justify-center">
+          {/* Dedicated Theme Toggle Control */}
+          <button
+            type="button"
+            id="theme-toggle-button"
+            onClick={toggleTheme}
+            className="flex items-center justify-center p-2 rounded-lg border border-hairline-outline bg-surface-container hover:bg-surface-elevated text-text-muted hover:text-text-primary transition-all cursor-pointer shadow-xs group"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-state-warning group-hover:rotate-45 transition-transform" />
+            ) : (
+              <Moon className="w-4 h-4 text-primary group-hover:-rotate-12 transition-transform" />
+            )}
+          </button>
         </div>
 
         {/* Footer Links inline with Copyright */}
@@ -60,13 +64,7 @@ export const Footer: React.FC<FooterProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => {
-                if (onScrollToInstall) {
-                  onScrollToInstall();
-                } else {
-                  onNavigate('install');
-                }
-              }}
+              onClick={() => onNavigate('install')}
               className="hover:text-text-primary transition-colors cursor-pointer"
             >
               Install
@@ -96,4 +94,5 @@ export const Footer: React.FC<FooterProps> = ({
     </footer>
   );
 };
+
 
