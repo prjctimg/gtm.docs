@@ -129,7 +129,11 @@ async function main() {
   const port = server.address().port;
   const origin = `http://127.0.0.1:${port}`;
 
-  const browser = await chromium.launch();
+  // --no-sandbox + --disable-dev-shm-usage are required in containerized
+  // build images (Vercel runs the build as root with a small /dev/shm).
+  const browser = await chromium.launch({
+    args: ['--no-sandbox', '--disable-dev-shm-usage'],
+  });
   const page = await browser.newPage();
   // Capture the app's own DOM deterministically: block anything off-origin
   // (the GitHub releases call for the version badge, webfonts) so the result
