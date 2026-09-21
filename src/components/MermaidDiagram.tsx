@@ -73,6 +73,8 @@ function initializeMermaid(theme: 'dark' | 'light') {
  * into a ref-owned host div that React never re-renders, and `mermaid.render`
  * cleans its own temporary DOM — the previous version tried to remove mermaid
  * "strays" itself and ended up deleting the very SVG it had just inserted.
+ * Render attempts use escalating timeouts + backoff (the flowchart renderer is
+ * a lazily imported chunk, so cold-start chunk fetches can hiccup transiently).
  */
 export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
   const { theme } = useTheme();
@@ -92,11 +94,11 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
 
     // Render one diagram, but never wait forever: mermaid can wedge on some
     // syntaxes, and a hung promise must not block this diagram's retry.
-    async function renderOne(renderId: string) {
+    async function renderOne(renderId: string, timeoutMs: number) {
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
         const timeout = new Promise<never>((_, reject) => {
-          timer = setTimeout(() => reject(new Error('Mermaid render timed out')), 6000);
+          timer = setTimeout(() => reject(new Error('Mermaid render timed out')), timeoutMs);
         });
         return await Promise.race([mermaid.render(renderId, cleanCode), timeout]);
       } finally {
@@ -105,21 +107,42 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
     }
 
     async function renderDiagram() {
-      // One render can lose a cold-start race with mermaid's lazy-loaded
-      // diagram chunks; retry once before surfacing an error box.
+      // The flowchart renderer is itself a lazily dynamic-imported chunk, so
+      // the first attempt can lose a cold-start race (slow network, cold
+      // browser cache, or a transiently failed chunk fetch). Retry with
+      // escalating timeouts and backoff — a chunk/network failure is
+      // transient, while a syntax error always fails identically — and only
+      // surface the error box once every attempt has exhausted its wait.
       let lastError: unknown = null;
-      for (let attempt = 0; attempt < 2; attempt++) {
+      const attempts = [
+        { timeout: 7000, backoff: 400 },
+        { timeout: 10000, backoff: 1500 },
+        { timeout: 14000, backoff: 4000 },
+        { timeout: 18000, backoff: 0 },
+      ];
+      for (let attempt = 0; attempt < attempts.length; attempt++) {
         const renderId = `mermaid-${uniqueId}-${Date.now().toString(36)}`;
         try {
-          const renderResult = await renderOne(renderId);
+          const renderResult = await renderOne(renderId, attempts[attempt].timeout);
           if (isMounted && hostRef.current) {
             hostRef.current.innerHTML = renderResult.svg;
           }
           return;
         } catch (err) {
           lastError = err;
-          if (attempt === 0) {
-            await new Promise((r) => setTimeout(r, 150));
+          const isChunkFailure =
+            typeof err === 'object' &&
+            err !== null &&
+            /dynamically imported module|failed to fetch|failed to load resource|import/i.test(
+              Object.prototype.toString.call(err) === '[object Error]' ? (err as Error).message : String(err)
+            );
+          if (isChunkFailure) {
+            // Chunk fetches are transient: give them the long backoff so the
+            // browser can retry the download before we burn further attempts.
+            console.warn('[mermaid] lazy chunk load hiccup, retrying:', err);
+          }
+          if (attempt < attempts.length - 1) {
+            await new Promise((r) => setTimeout(r, isChunkFailure ? attempts[attempt].backoff * 2 : attempts[attempt].backoff));
           }
         }
       }
