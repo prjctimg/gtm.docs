@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Link } from 'react-router';
 import { 
   ExternalLink, 
   Info, 
@@ -14,7 +15,6 @@ import { EmbeddedAudioPlayer } from './EmbeddedAudioPlayer';
 
 interface MarkdownRendererProps {
   content: string;
-  onNavigateDoc?: (docId: string, anchorId?: string) => void;
 }
 
 // Helper to extract text from React children
@@ -123,35 +123,8 @@ function parseContentSegments(rawContent: string): ContentSegment[] {
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   content,
-  onNavigateDoc,
 }) => {
   const segments = parseContentSegments(content);
-
-  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href?: string) => {
-    if (!href) return;
-
-    // Internal doc links: e.g. /getting-started/ or /configuration/#time_format or #_volume-mute
-    if (href.startsWith('#')) {
-      e.preventDefault();
-      const targetId = href.replace(/^#/, '');
-      const el = document.getElementById(targetId) || document.getElementById(`_${targetId}`) || document.getElementById(targetId.replace(/^_/, ''));
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
-      return;
-    }
-
-    if (href.startsWith('/')) {
-      e.preventDefault();
-      // Parse out docId and optional hash
-      const [path, hash] = href.split('#');
-      const docId = path.replace(/^\//, '').replace(/\/$/, '');
-      if (onNavigateDoc && docId) {
-        onNavigateDoc(docId, hash);
-      }
-      return;
-    }
-  };
 
   const renderMarkdownComponent = (mdText: string) => {
     return (
@@ -169,7 +142,6 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                   <span>{children}</span>
                   <a
                     href={`#${slug}`}
-                    onClick={(e) => handleLinkClick(e, `#${slug}`)}
                     className="opacity-0 group-hover:opacity-100 text-text-muted hover:text-secondary transition-opacity"
                     title="Direct link"
                   >
@@ -189,7 +161,6 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                   <span>{children}</span>
                   <a
                     href={`#${slug}`}
-                    onClick={(e) => handleLinkClick(e, `#${slug}`)}
                     className="opacity-0 group-hover:opacity-100 text-text-muted hover:text-secondary transition-opacity"
                     title="Direct link"
                   >
@@ -262,10 +233,38 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             }
 
             const isExternal = href?.startsWith('http://') || href?.startsWith('https://');
+
+            // Internal doc links like /configuration/ or /configuration/#time_format
+            if (href?.startsWith('/')) {
+              const [path, hash] = href.split('#');
+              const docId = path.replace(/^\//, '').replace(/\/$/, '');
+              if (docId) {
+                return (
+                  <Link
+                    to={`/docs/${docId}${hash ? `#${hash}` : ''}`}
+                    className="text-secondary hover:text-primary transition-colors underline decoration-secondary/40 underline-offset-2 inline-flex items-center gap-0.5"
+                  >
+                    <span>{children}</span>
+                  </Link>
+                );
+              }
+            }
+
+            // In-page anchor links (#section)
+            if (href?.startsWith('#')) {
+              return (
+                <a
+                  href={href}
+                  className="text-secondary hover:text-primary transition-colors underline decoration-secondary/40 underline-offset-2 inline-flex items-center gap-0.5"
+                >
+                  <span>{children}</span>
+                </a>
+              );
+            }
+
             return (
               <a
                 href={href}
-                onClick={(e) => handleLinkClick(e, href)}
                 target={isExternal ? '_blank' : undefined}
                 rel={isExternal ? 'noreferrer' : undefined}
                 className="text-secondary hover:text-primary transition-colors underline decoration-secondary/40 underline-offset-2 inline-flex items-center gap-0.5"

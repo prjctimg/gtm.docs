@@ -1,18 +1,19 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router';
 import { BlogPost } from '../types';
 import { X, Cpu, CheckCircle2, Terminal, ArrowRight, ExternalLink } from 'lucide-react';
 
 interface WhitepaperModalProps {
   post: BlogPost | null;
   onClose: () => void;
-  onNavigateToDocs: (sectionId?: string) => void;
 }
 
 export const WhitepaperModal: React.FC<WhitepaperModalProps> = ({
   post,
-  onClose,
-  onNavigateToDocs
+  onClose
 }) => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -124,7 +125,7 @@ export const WhitepaperModal: React.FC<WhitepaperModalProps> = ({
           <button
             onClick={() => {
               onClose();
-              onNavigateToDocs('architecture');
+              navigate('/docs/daemon#architecture');
             }}
             className="text-secondary hover:text-primary transition-colors flex items-center gap-1.5 cursor-pointer"
           >

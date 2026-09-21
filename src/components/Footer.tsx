@@ -1,18 +1,14 @@
 import React from 'react';
-import { PageTab } from '../types';
+import { Link } from 'react-router';
 import { Github, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 interface FooterProps {
-  onNavigate: (tab: PageTab, sectionId?: string) => void;
   onOpenKeymap?: () => void;
-  onScrollToInstall?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ 
-  onNavigate, 
-  onOpenKeymap, 
-  onScrollToInstall 
+  onOpenKeymap
 }) => {
   const currentYear = new Date().getFullYear();
   const { theme, toggleTheme } = useTheme();
@@ -55,20 +51,18 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Navigation links matching the navbar */}
           <nav className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 text-xs">
-            <button
-              type="button"
-              onClick={() => onNavigate('docs')}
-              className="hover:text-text-primary transition-colors cursor-pointer"
+            <Link
+              to="/docs/overview"
+              className="hover:text-text-primary transition-colors"
             >
               Docs
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('install')}
-              className="hover:text-text-primary transition-colors cursor-pointer"
+            </Link>
+            <Link
+              to="/install"
+              className="hover:text-text-primary transition-colors"
             >
               Install
-            </button>
+            </Link>
             {onOpenKeymap && (
               <button
                 type="button"
@@ -94,5 +88,3 @@ export const Footer: React.FC<FooterProps> = ({
     </footer>
   );
 };
-
-

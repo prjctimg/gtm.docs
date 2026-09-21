@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { PageTab, BlogPost } from './types';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router';
+import { BlogPost } from './types';
 import { BLOG_POSTS } from './data/mockData';
 import { DOCS_BY_ID } from './data/docs';
 import { TopNav } from './components/TopNav';
@@ -12,18 +13,76 @@ import { CommandPalette } from './components/CommandPalette';
 import { WhitepaperModal } from './components/WhitepaperModal';
 import { KeymapModal } from './components/KeymapModal';
 
+/** Scrolls to top on route change; to the anchor element when a #hash is present. */
+function ScrollManager() {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    const target = hash ? hash.slice(1) : null;
+
+    if (!target) {
+      window.scrollTo({ top: 0 });
+      return;
+    }
+
+    const findEl = () =>
+      document.getElementById(target) ||
+      document.getElementById(target.startsWith('_') ? target.slice(1) : `_${target}`);
+
+    const scroll = () => {
+      const el = findEl();
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0 });
+      }
+    };
+
+    // Retry a few times: the doc renders + images below the anchor shift layout,
+    // and a single scroll call during the initial commit can get swallowed.
+    const timers = [80, 250, 600].map((ms) => window.setTimeout(scroll, ms));
+    window.addEventListener('load', scroll);
+
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      window.removeEventListener('load', scroll);
+    };
+  }, [pathname, hash]);
+
+  return null;
+}
+
+/** Blog route wrapper — opens the whitepaper modal when deep-linked at /blog/:postId. */
+function BlogPage({ onOpenWhitepaper }: { onOpenWhitepaper: (postId: string) => void }) {
+  const { postId } = useParams();
+
+  useEffect(() => {
+    if (postId && BLOG_POSTS.some((p) => p.id === postId)) onOpenWhitepaper(postId);
+  }, [postId, onOpenWhitepaper]);
+
+  return <BlogView onOpenWhitepaper={(post) => onOpenWhitepaper(post.id)} />;
+}
+
+/** Redirects unknown /docs/:docId URLs to the overview doc. */
+function DocsGuard({ children }: { children: React.ReactNode }) {
+  const { docId } = useParams();
+  if (docId && !DOCS_BY_ID[docId]) {
+    return <Navigate to="/docs/overview" replace />;
+  }
+  return <>{children}</>;
+}
+
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<PageTab>('home');
-  const [activeDocId, setActiveDocId] = useState<string>('overview');
-  const [activeSection, setActiveSection] = useState<string | undefined>(undefined);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isKeymapOpen, setIsKeymapOpen] = useState(false);
   const [selectedWhitepaper, setSelectedWhitepaper] = useState<BlogPost | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Global key listener for '/' and 'Ctrl+K'
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.key === '/' || (e.ctrlKey && e.key === 'k') || (e.metaKey && e.key === 'k')) && 
+      if ((e.key === '/' || (e.ctrlKey && e.key === 'k') || (e.metaKey && e.key === 'k')) &&
           !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
         e.preventDefault();
         setIsSearchOpen(true);
@@ -33,114 +92,61 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleNavigate = (tab: PageTab, docOrSectionId?: string, sectionId?: string) => {
-    setCurrentTab(tab);
-
-    if (tab === 'docs') {
-      if (docOrSectionId) {
-        if (DOCS_BY_ID[docOrSectionId]) {
-          setActiveDocId(docOrSectionId);
-          setActiveSection(sectionId);
-        } else {
-          // If it's a known anchor or unknown doc, check if any doc has this heading or default to overview
-          setActiveDocId('overview');
-          setActiveSection(docOrSectionId);
-        }
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      if (docOrSectionId) {
-        setActiveSection(docOrSectionId);
-        setTimeout(() => {
-          const el = document.getElementById(docOrSectionId);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 100);
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-  };
-
-  const handleOpenWhitepaperById = (postId: string) => {
-    const post = BLOG_POSTS.find(p => p.id === postId) || BLOG_POSTS[0];
+  const openWhitepaperById = useCallback((postId: string) => {
+    const post = BLOG_POSTS.find((p) => p.id === postId) || null;
     setSelectedWhitepaper(post);
-  };
+  }, []);
 
-  const handleScrollToInstall = () => {
-    handleNavigate('install');
-  };
+  const closeWhitepaper = useCallback(() => {
+    setSelectedWhitepaper(null);
+    if (/^\/blog\/[^/]+/.test(location.pathname)) {
+      navigate('/blog', { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   return (
     <div className="min-h-screen bg-canvas-obsidian text-text-primary flex flex-col font-sans selection:bg-secondary/30 selection:text-secondary transition-colors duration-200">
       {/* Top Navigation */}
       <TopNav
-        currentTab={currentTab}
-        onSelectTab={(tab) => handleNavigate(tab)}
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenKeymap={() => setIsKeymapOpen(true)}
-        onScrollToInstall={handleScrollToInstall}
       />
 
       {/* Dynamic View Body */}
       <div className="flex-grow flex flex-col">
-        {currentTab === 'docs' && (
-          <DocsView
-            onOpenSearch={() => setIsSearchOpen(true)}
-            onOpenKeymap={() => setIsKeymapOpen(true)}
-            activeDocId={activeDocId}
-            activeSection={activeSection}
-            onNavigateDoc={(docId, secId) => {
-              setActiveDocId(docId);
-              setActiveSection(secId);
-            }}
-            onNavigateInstall={() => handleNavigate('install')}
+        <ScrollManager />
+        <Routes>
+          <Route path="/" element={<LandingView onOpenKeymap={() => setIsKeymapOpen(true)} />} />
+          <Route
+            path="/docs"
+            element={<Navigate to="/docs/overview" replace />}
           />
-        )}
-
-        {currentTab === 'blog' && (
-          <BlogView
-            onOpenWhitepaper={(post) => setSelectedWhitepaper(post)}
-            onNavigateToDocs={(sectionId) => handleNavigate('docs', 'overview', sectionId)}
+          <Route
+            path="/docs/:docId"
+            element={
+              <DocsGuard>
+                <DocsView onOpenSearch={() => setIsSearchOpen(true)} onOpenKeymap={() => setIsKeymapOpen(true)} />
+              </DocsGuard>
+            }
           />
-        )}
-
-        {currentTab === 'install' && (
-          <InstallView
-            onNavigate={handleNavigate}
-            onOpenKeymap={() => setIsKeymapOpen(true)}
-          />
-        )}
-
-        {currentTab === 'home' && (
-          <LandingView
-            onNavigate={handleNavigate}
-            onOpenKeymap={() => setIsKeymapOpen(true)}
-          />
-        )}
+          <Route path="/install" element={<InstallView />} />
+          <Route path="/blog" element={<BlogPage onOpenWhitepaper={openWhitepaperById} />} />
+          <Route path="/blog/:postId" element={<BlogPage onOpenWhitepaper={openWhitepaperById} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </div>
 
       {/* Global Footer */}
-      <Footer
-        onNavigate={handleNavigate}
-        onOpenKeymap={() => setIsKeymapOpen(true)}
-        onScrollToInstall={handleScrollToInstall}
-      />
+      <Footer onOpenKeymap={() => setIsKeymapOpen(true)} />
 
       {/* Global Interactive Modals */}
       <CommandPalette
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
-        onNavigate={handleNavigate}
-        onOpenWhitepaper={handleOpenWhitepaperById}
+        onOpenWhitepaper={openWhitepaperById}
       />
 
-      <WhitepaperModal
-        post={selectedWhitepaper}
-        onClose={() => setSelectedWhitepaper(null)}
-        onNavigateToDocs={(sectionId) => handleNavigate('docs', 'overview', sectionId)}
-      />
+      <WhitepaperModal post={selectedWhitepaper} onClose={closeWhitepaper} />
 
       <KeymapModal
         isOpen={isKeymapOpen}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BlogPost } from '../types';
 import { BLOG_POSTS, PACKAGE_COMMANDS } from '../data/mockData';
+import { usePageMeta } from '../meta';
 import { 
   ArrowRight, 
   Terminal, 
@@ -16,13 +17,16 @@ import {
 
 interface BlogViewProps {
   onOpenWhitepaper: (post: BlogPost) => void;
-  onNavigateToDocs: (sectionId?: string) => void;
 }
 
 export const BlogView: React.FC<BlogViewProps> = ({
-  onOpenWhitepaper,
-  onNavigateToDocs
+  onOpenWhitepaper
 }) => {
+  usePageMeta(
+    'Blog — gtm Docs & Devlog',
+    'Engineering devlog, benchmarks, and technical deep-dives for the gtm terminal music player.'
+  );
+
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [emailInput, setEmailInput] = useState('');
   const [subStatus, setSubStatus] = useState<'idle' | 'success'>('idle');

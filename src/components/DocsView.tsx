@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { NavLink, Link, useParams } from 'react-router';
 import { 
   ALL_DOCS, 
   DOCS_BY_ID, 
@@ -7,22 +8,18 @@ import {
   DocItem 
 } from '../data/docs';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { usePageMeta } from '../meta';
 import { 
   Search, 
   Check, 
   Copy, 
-  Edit, 
-  Layers, 
   Keyboard, 
   ArrowRight, 
   ArrowLeft,
-  Terminal,
-  ExternalLink,
   ChevronRight,
   ListTree,
   Github,
   ArrowUpRight,
-  Menu,
   X,
   BookOpen,
   ChevronDown,
@@ -32,10 +29,6 @@ import {
 interface DocsViewProps {
   onOpenSearch: () => void;
   onOpenKeymap: () => void;
-  activeDocId?: string;
-  activeSection?: string;
-  onNavigateDoc?: (docId: string, sectionId?: string) => void;
-  onNavigateInstall?: () => void;
 }
 
 const DEFAULT_FALLBACK_DOC: DocItem = {
@@ -56,12 +49,11 @@ const DEFAULT_FALLBACK_DOC: DocItem = {
 
 export const DocsView: React.FC<DocsViewProps> = ({
   onOpenSearch,
-  onOpenKeymap,
-  activeDocId = 'overview',
-  activeSection,
-  onNavigateDoc,
-  onNavigateInstall
+  onOpenKeymap
 }) => {
+  const { docId } = useParams();
+  const activeDocId = docId || 'overview';
+
   // Current active doc
   const [currentDocId, setCurrentDocId] = useState<string>(() => {
     return DOCS_BY_ID[activeDocId] ? activeDocId : (ALL_DOCS[0]?.id || 'overview');
@@ -92,7 +84,7 @@ export const DocsView: React.FC<DocsViewProps> = ({
     }
   }, [isMobileDrawerOpen]);
 
-  // Sync state if prop changes
+  // Sync state if route param changes
   useEffect(() => {
     if (activeDocId && DOCS_BY_ID[activeDocId] && activeDocId !== currentDocId) {
       setCurrentDocId(activeDocId);
@@ -110,35 +102,6 @@ export const DocsView: React.FC<DocsViewProps> = ({
 
   const prevDoc = currentIndex > 0 ? ALL_DOCS[currentIndex - 1] : null;
   const nextDoc = (currentIndex >= 0 && currentIndex < ALL_DOCS.length - 1) ? ALL_DOCS[currentIndex + 1] : null;
-
-  const handleSelectDoc = (docId: string, sectionId?: string) => {
-    setCurrentDocId(docId);
-    if (onNavigateDoc) {
-      onNavigateDoc(docId, sectionId);
-    }
-    if (sectionId) {
-      setTimeout(() => {
-        const el = document.getElementById(sectionId) || document.getElementById(`_${sectionId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  // Scroll to section when requested
-  useEffect(() => {
-    if (activeSection) {
-      setTimeout(() => {
-        const el = document.getElementById(activeSection) || document.getElementById(`_${activeSection}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 150);
-    }
-  }, [activeSection, currentDocId]);
 
   // Scroll spy to track current active heading in viewport
   useEffect(() => {
@@ -197,6 +160,11 @@ export const DocsView: React.FC<DocsViewProps> = ({
     }
   };
 
+  usePageMeta(
+    activeDoc ? `${activeDoc.title} — gtm Docs` : 'Docs — gtm',
+    activeDoc?.description || 'gtm documentation — terminal audio player guides and references.'
+  );
+
   return (
     <div className="w-full flex flex-col font-sans">
       <div className="max-w-7xl mx-auto flex w-full">
@@ -228,36 +196,34 @@ export const DocsView: React.FC<DocsViewProps> = ({
                   </div>
 
                   <ul className="space-y-0.5 border-l border-hairline-subtle ml-2 pl-2">
-                    {docsInCat.map((doc) => {
-                      const isActive = currentDocId === doc.id;
-                      return (
-                        <React.Fragment key={doc.id}>
-                          <li>
-                            <button
-                              onClick={() => handleSelectDoc(doc.id)}
-                              className={`w-full text-left py-1.5 px-2 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 ${
+                    {docsInCat.map((doc) => (
+                      <React.Fragment key={doc.id}>
+                        <li>
+                          <NavLink
+                            to={`/docs/${doc.id}`}
+                            className={({ isActive }) =>
+                              `w-full text-left py-1.5 px-2 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 ${
                                 isActive
                                   ? 'bg-surface-elevated text-secondary font-bold border border-secondary/30'
                                   : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/40'
-                              }`}
+                              }`
+                            }
+                          >
+                            <span className="truncate">{doc.title}</span>
+                          </NavLink>
+                        </li>
+                        {category === 'Introduction & Setup' && doc.id === 'overview' && (
+                          <li>
+                            <Link
+                              to="/install"
+                              className="w-full text-left py-1.5 px-2 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 text-text-muted hover:text-text-primary hover:bg-surface-elevated/40"
                             >
-                              <span className="truncate">{doc.title}</span>
-                            </button>
+                              <span className="truncate">Installation</span>
+                            </Link>
                           </li>
-                          {category === 'Introduction & Setup' && doc.id === 'overview' && (
-                            <li>
-                              <button
-                                type="button"
-                                onClick={() => onNavigateInstall?.()}
-                                className="w-full text-left py-1.5 px-2 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 text-text-muted hover:text-text-primary hover:bg-surface-elevated/40"
-                              >
-                                <span className="truncate">Installation</span>
-                              </button>
-                            </li>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
+                        )}
+                      </React.Fragment>
+                    ))}
                   </ul>
                 </div>
               );
@@ -343,14 +309,13 @@ export const DocsView: React.FC<DocsViewProps> = ({
               aria-label="Breadcrumbs"
               className="flex items-center gap-1.5 text-xs font-mono text-text-muted flex-wrap"
             >
-              <button
-                type="button"
-                onClick={() => handleSelectDoc(ALL_DOCS[0]?.id || 'overview')}
+              <Link
+                to={`/docs/${ALL_DOCS[0]?.id || 'overview'}`}
                 className="hover:text-text-primary hover:underline transition-colors cursor-pointer"
                 title="Go to documentation overview"
               >
                 Docs
-              </button>
+              </Link>
 
               <ChevronRight className="w-3.5 h-3.5 text-hairline-outline shrink-0" />
               <button
@@ -380,7 +345,6 @@ export const DocsView: React.FC<DocsViewProps> = ({
           <article className="prose-container space-y-4">
             <MarkdownRenderer
               content={activeDoc?.content || ''}
-              onNavigateDoc={(docId, anchorId) => handleSelectDoc(docId, anchorId)}
             />
           </article>
 
@@ -406,9 +370,9 @@ export const DocsView: React.FC<DocsViewProps> = ({
           {/* Pagination Controls (Prev / Next) */}
           <div className="pt-6 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-xs">
             {prevDoc ? (
-              <button
-                onClick={() => handleSelectDoc(prevDoc.id)}
-                className="p-4 rounded-lg border border-hairline-outline bg-surface-container hover:bg-surface-elevated text-left transition-colors cursor-pointer group flex flex-col justify-between"
+              <Link
+                to={`/docs/${prevDoc.id}`}
+                className="p-4 rounded-lg border border-hairline-outline bg-surface-container hover:bg-surface-elevated text-left transition-colors group flex flex-col justify-between"
               >
                 <div className="text-[11px] text-text-muted flex items-center gap-1 mb-1">
                   <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
@@ -417,13 +381,13 @@ export const DocsView: React.FC<DocsViewProps> = ({
                 <div className="text-text-primary font-bold text-sm truncate">
                   {prevDoc.title}
                 </div>
-              </button>
+              </Link>
             ) : <div />}
 
             {nextDoc ? (
-              <button
-                onClick={() => handleSelectDoc(nextDoc.id)}
-                className="p-4 rounded-lg border border-hairline-outline bg-surface-container hover:bg-surface-elevated text-right transition-colors cursor-pointer group flex flex-col justify-between items-end sm:col-start-2"
+              <Link
+                to={`/docs/${nextDoc.id}`}
+                className="p-4 rounded-lg border border-hairline-outline bg-surface-container hover:bg-surface-elevated text-right transition-colors group flex flex-col justify-between items-end sm:col-start-2"
               >
                 <div className="text-[11px] text-text-muted flex items-center gap-1 mb-1">
                   <span>Next</span>
@@ -432,7 +396,7 @@ export const DocsView: React.FC<DocsViewProps> = ({
                 <div className="text-text-primary font-bold text-sm truncate">
                   {nextDoc.title}
                 </div>
-              </button>
+              </Link>
             ) : <div />}
           </div>
         </main>
@@ -547,43 +511,36 @@ export const DocsView: React.FC<DocsViewProps> = ({
                     </div>
 
                     <ul className="space-y-0.5 border-l border-hairline-subtle ml-2 pl-2">
-                      {docsInCat.map((doc) => {
-                        const isActive = currentDocId === doc.id;
-                        return (
-                          <React.Fragment key={doc.id}>
-                            <li>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  handleSelectDoc(doc.id);
-                                  setIsMobileDrawerOpen(false);
-                                }}
-                                className={`w-full text-left py-2 px-2.5 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 ${
+                      {docsInCat.map((doc) => (
+                        <React.Fragment key={doc.id}>
+                          <li>
+                            <NavLink
+                              to={`/docs/${doc.id}`}
+                              onClick={() => setIsMobileDrawerOpen(false)}
+                              className={({ isActive }) =>
+                                `w-full text-left py-2 px-2.5 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 ${
                                   isActive
                                     ? 'bg-surface-elevated text-secondary font-bold border border-secondary/30'
                                     : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/40'
-                                }`}
+                                }`
+                              }
+                            >
+                              <span className="truncate">{doc.title}</span>
+                            </NavLink>
+                          </li>
+                          {category === 'Introduction & Setup' && doc.id === 'overview' && (
+                            <li>
+                              <Link
+                                to="/install"
+                                onClick={() => setIsMobileDrawerOpen(false)}
+                                className="w-full text-left py-2 px-2.5 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 text-text-muted hover:text-text-primary hover:bg-surface-elevated/40"
                               >
-                                <span className="truncate">{doc.title}</span>
-                              </button>
+                                <span className="truncate">Installation</span>
+                              </Link>
                             </li>
-                            {category === 'Introduction & Setup' && doc.id === 'overview' && (
-                              <li>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onNavigateInstall?.();
-                                    setIsMobileDrawerOpen(false);
-                                  }}
-                                  className="w-full text-left py-2 px-2.5 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 text-text-muted hover:text-text-primary hover:bg-surface-elevated/40"
-                                >
-                                  <span className="truncate">Installation</span>
-                                </button>
-                              </li>
-                            )}
-                          </React.Fragment>
-                        );
-                      })}
+                          )}
+                        </React.Fragment>
+                      ))}
                     </ul>
                   </div>
                 );

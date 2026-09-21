@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router';
 import { motion, type Variants } from 'motion/react';
 import { IMAGES, PACKAGE_COMMANDS, KEYBINDINGS } from '../data/mockData';
-import { PageTab } from '../types';
 import { AnimatedTelemetryBenchmark } from './AnimatedTelemetryBenchmark';
 import { MusicalDoodleBackground } from './MusicalDoodleBackground';
+import { usePageMeta } from '../meta';
 import { 
   Check, 
   Copy, 
@@ -25,14 +26,18 @@ import {
 import { SiLinux, SiAndroid, SiApple } from 'react-icons/si';
 
 interface LandingViewProps {
-  onNavigate: (tab: PageTab, docOrSectionId?: string, sectionId?: string) => void;
   onOpenKeymap: () => void;
 }
 
 type TuiTab = 'library' | 'lyrics' | 'fft' | 'search';
 type PkgTab = 'curl' | 'cargo' | 'brew' | 'aur' | 'nix';
 
-export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeymap }) => {
+export const LandingView: React.FC<LandingViewProps> = ({ onOpenKeymap }) => {
+  usePageMeta(
+    '> gtm — Documentation & Technical Devlog',
+    'High-fidelity audio playback documentation, architecture guides, benchmarks, and engineering devlog for the gtm terminal music player in Rust.'
+  );
+
   // Hero package switcher
   const [heroPkg, setHeroPkg] = useState<PkgTab>('curl');
   const [heroCopied, setHeroCopied] = useState(false);
@@ -511,13 +516,13 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, onOpenKeym
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 pt-2">
-                    <button
-                      onClick={() => onNavigate('docs', item.docId, item.sectionId)}
+                    <Link
+                      to={`/docs/${item.docId}${item.sectionId ? `#${item.sectionId}` : ''}`}
                       className="inline-flex items-center gap-2 px-3.5 py-2 rounded bg-surface-elevated border border-hairline-outline hover:border-secondary hover:text-text-primary text-secondary font-mono text-xs transition-colors cursor-pointer"
                     >
                       <span>Read docs</span>
                       <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>

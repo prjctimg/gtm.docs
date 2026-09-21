@@ -1,73 +1,58 @@
 import React from 'react';
-import { PageTab } from '../types';
+import { Link, NavLink } from 'react-router';
 import { Search, Github } from 'lucide-react';
 
 interface TopNavProps {
-  currentTab: PageTab;
-  onSelectTab: (tab: PageTab) => void;
   onOpenSearch: () => void;
   onOpenKeymap: () => void;
-  onScrollToInstall?: () => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
-  currentTab,
-  onSelectTab,
   onOpenSearch,
-  onOpenKeymap,
-  onScrollToInstall
+  onOpenKeymap
 }) => {
-  const handleInstallClick = () => {
-    if (onScrollToInstall) {
-      onScrollToInstall();
-    } else {
-      onSelectTab('home');
-      setTimeout(() => {
-        const el = document.getElementById('install');
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    }
-  };
-
   return (
     <header className="w-full border-b border-hairline-outline bg-canvas-obsidian sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
         {/* Brand & Desktop Links */}
         <div className="flex items-center gap-5 sm:gap-8">
-          <button
+          <Link
+            to="/"
             id="nav-brand-button"
-            onClick={() => onSelectTab('home')}
             className="font-mono text-base sm:text-lg text-secondary tracking-tight font-bold flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer text-left"
           >
             <span>&gt; gtm</span>
-          </button>
+          </Link>
 
           {/* Navigation Links */}
           <nav className="flex items-center gap-4 sm:gap-6 font-mono text-xs">
-            <button
+            <NavLink
+              to="/docs"
               id="nav-docs-link"
-              onClick={() => onSelectTab('docs')}
-              className={`py-1 cursor-pointer transition-colors ${
-                currentTab === 'docs'
-                  ? 'text-text-primary font-bold border-b-2 border-primary-container'
-                  : 'text-text-muted hover:text-text-primary'
-              }`}
+              className={({ isActive }) =>
+                `py-1 cursor-pointer transition-colors ${
+                  isActive
+                    ? 'text-text-primary font-bold border-b-2 border-primary-container'
+                    : 'text-text-muted hover:text-text-primary'
+                }`
+              }
             >
               Docs
-            </button>
-            <button
+            </NavLink>
+            <NavLink
+              to="/install"
               id="nav-install-link"
-              onClick={() => onSelectTab('install')}
-              className={`py-1 cursor-pointer transition-colors ${
-                currentTab === 'install'
-                  ? 'text-text-primary font-bold border-b-2 border-primary-container'
-                  : 'text-text-muted hover:text-text-primary'
-              }`}
+              end
+              className={({ isActive }) =>
+                `py-1 cursor-pointer transition-colors ${
+                  isActive
+                    ? 'text-text-primary font-bold border-b-2 border-primary-container'
+                    : 'text-text-muted hover:text-text-primary'
+                }`
+              }
             >
               Install
-            </button>
+            </NavLink>
             <button
               id="nav-keymap-link"
               onClick={onOpenKeymap}

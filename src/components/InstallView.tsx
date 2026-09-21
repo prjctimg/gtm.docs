@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { PageTab } from '../types';
+import { Link } from 'react-router';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { usePageMeta } from '../meta';
 import { ALL_DOCS, DOC_CATEGORIES, DOCS_BY_CATEGORY } from '../data/docs';
 import { 
   ChevronRight, 
@@ -18,9 +19,6 @@ import {
 } from 'lucide-react';
 
 interface InstallViewProps {
-  onNavigate: (tab: PageTab, docOrSectionId?: string, sectionId?: string) => void;
-  onOpenKeymap: () => void;
-  onOpenSearch?: () => void;
 }
 
 const INSTALL_DOCUMENT_MARKDOWN = `
@@ -228,28 +226,31 @@ The daemon logs to \`~/.local/share/gtm/gtmd.log\` (or \`$XDG_DATA_HOME/gtm/gtmd
 - **YouTube search:** Requires the \`youtube\` Cargo feature, which is disabled on Android/Termux builds.
 `;
 
-export const InstallView: React.FC<InstallViewProps> = ({ onNavigate }) => {
+export const InstallView: React.FC<InstallViewProps> = () => {
+  usePageMeta(
+    'Install gtm — gtm Docs',
+    'Official installation methods, package managers, and build configurations for gtm — the terminal audio player.'
+  );
+
   return (
     <div className="w-full min-h-[calc(100vh-60px)] bg-canvas-obsidian text-text-primary pb-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-8 sm:pt-12">
         
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 font-mono text-xs text-text-muted mb-6">
-          <button
-            type="button"
-            onClick={() => onNavigate('home')}
-            className="hover:text-text-primary hover:underline transition-colors cursor-pointer"
+          <Link
+            to="/"
+            className="hover:text-text-primary hover:underline transition-colors"
           >
             Home
-          </button>
+          </Link>
           <ChevronRight className="w-3.5 h-3.5 text-hairline-outline shrink-0" />
-          <button
-            type="button"
-            onClick={() => onNavigate('docs')}
-            className="hover:text-text-primary hover:underline transition-colors cursor-pointer"
+          <Link
+            to="/docs/overview"
+            className="hover:text-text-primary hover:underline transition-colors"
           >
             Docs
-          </button>
+          </Link>
           <ChevronRight className="w-3.5 h-3.5 text-hairline-outline shrink-0" />
           <span className="text-secondary font-semibold">Installation</span>
         </nav>
@@ -268,7 +269,6 @@ export const InstallView: React.FC<InstallViewProps> = ({ onNavigate }) => {
         <article className="prose-container space-y-4">
           <MarkdownRenderer
             content={INSTALL_DOCUMENT_MARKDOWN}
-            onNavigateDoc={(docId, anchorId) => onNavigate('docs', docId, anchorId)}
           />
         </article>
 

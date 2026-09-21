@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router';
 import { PageTab } from '../types';
 import { BLOG_POSTS, KEYBINDINGS } from '../data/mockData';
 import { ALL_DOCS } from '../data/docs';
@@ -7,7 +8,6 @@ import { Search, FileText, BookOpen, Terminal, Keyboard, ArrowRight, X, Radio, D
 interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
-  onNavigate: (tab: PageTab, docOrSectionId?: string, sectionId?: string) => void;
   onOpenWhitepaper: (postId: string) => void;
 }
 
@@ -23,9 +23,9 @@ interface SearchItem {
 export const CommandPalette: React.FC<CommandPaletteProps> = ({
   isOpen,
   onClose,
-  onNavigate,
   onOpenWhitepaper
 }) => {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -103,7 +103,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       onOpenWhitepaper(item.postId);
     } else {
       onClose();
-      onNavigate(item.tab, item.docId, item.sectionId);
+      if (item.tab === 'install') {
+        navigate('/install');
+      } else {
+        navigate(`/docs/${item.docId}${item.sectionId ? `#${item.sectionId}` : ''}`);
+      }
     }
   };
 
