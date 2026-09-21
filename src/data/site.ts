@@ -41,7 +41,7 @@ export const KEYBINDINGS: KeybindingItem[] = [
 
 /** Install methods documented by gtm.rs (README + crates.io). */
 export const PACKAGE_COMMANDS = {
-  curl: 'curl -fsSL https://raw.githubusercontent.com/prjctimg/gtm.rs/main/install.sh | bash',
+  curl: 'curl -fsSL https://gtmd.dev/install.sh | bash',
   cargo: 'cargo install gtm --locked',
   source: 'git clone https://github.com/prjctimg/gtm.rs && cd gtm.rs && cargo build --release',
   termux: 'make termux',

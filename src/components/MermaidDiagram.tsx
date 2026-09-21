@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useId, useRef } from 'react';
+import React, { useEffect, useRef, useState, useId } from 'react';
 import mermaid from 'mermaid';
 import { Check, Copy } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -8,12 +8,6 @@ interface MermaidDiagramProps {
 }
 
 let lastInitializedTheme: 'dark' | 'light' | null = null;
-
-// Mermaid is not safe under concurrent .render() calls — parallel renders
-// (every diagram in a doc mounting at once) trample the shared internal
-// diagram cache and intermittently fail. Serialize all renders through one
-// promise chain so capture and real visitors get deterministic output.
-let renderQueue: Promise<void> = Promise.resolve();
 
 function initializeMermaid(theme: 'dark' | 'light') {
   if (lastInitializedTheme === theme) return;
@@ -72,6 +66,14 @@ function initializeMermaid(theme: 'dark' | 'light') {
   }
 }
 
+/**
+ * Renders a mermaid diagram. Uses the official v12 API (initialize once per
+ * theme, then `mermaid.render(id, text)`); render calls are serialized by
+ * mermaid itself, so no custom queue is needed. The resulting SVG is written
+ * into a ref-owned host div that React never re-renders, and `mermaid.render`
+ * cleans its own temporary DOM — the previous version tried to remove mermaid
+ * "strays" itself and ended up deleting the very SVG it had just inserted.
+ */
 export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
   const { theme } = useTheme();
   const uniqueId = useId().replace(/[^a-zA-Z0-9]/g, '');
@@ -89,8 +91,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
     initializeMermaid(theme);
 
     // Render one diagram, but never wait forever: mermaid can wedge on some
-    // syntaxes, and a hung promise must not block this diagram's retry — or
-    // the serialized render queue behind it.
+    // syntaxes, and a hung promise must not block this diagram's retry.
     async function renderOne(renderId: string) {
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
@@ -104,8 +105,8 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
     }
 
     async function renderDiagram() {
-      // One render can lose a cold-start race with mermaid's shared diagram
-      // cache; retry once before surfacing an error box.
+      // One render can lose a cold-start race with mermaid's lazy-loaded
+      // diagram chunks; retry once before surfacing an error box.
       let lastError: unknown = null;
       for (let attempt = 0; attempt < 2; attempt++) {
         const renderId = `mermaid-${uniqueId}-${Date.now().toString(36)}`;
@@ -114,9 +115,6 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
           if (isMounted && hostRef.current) {
             hostRef.current.innerHTML = renderResult.svg;
           }
-          // Clean up any stray DOM elements mermaid leaves behind.
-          const stray = document.getElementById(renderId) || document.getElementById('d' + renderId);
-          if (stray) stray.remove();
           return;
         } catch (err) {
           lastError = err;
@@ -147,7 +145,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
         `</div>`;
     }
 
-    renderQueue = renderQueue.then(renderDiagram);
+    void renderDiagram();
 
     return () => {
       isMounted = false;

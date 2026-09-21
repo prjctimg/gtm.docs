@@ -59,7 +59,7 @@ sudo dnf install alsa-lib-devel pulseaudio-libs-devel
 The fastest way to install \`gtm\` on Linux and macOS is using the automated install script, which downloads pre-compiled release binaries for your architecture:
 
 \`\`\`bash
-curl -fsSL https://raw.githubusercontent.com/prjctimg/gtm.rs/main/install.sh | bash
+curl -fsSL https://gtmd.dev/install.sh | bash
 \`\`\`
 
 The script automatically:
@@ -73,7 +73,7 @@ The script automatically:
 Nightly builds are automatically compiled and published on every commit to \`main\`:
 
 \`\`\`bash
-curl -fsSL https://raw.githubusercontent.com/prjctimg/gtm.rs/main/install.sh | bash -s -- --nightly
+curl -fsSL https://gtmd.dev/install.sh | bash -s -- --nightly
 \`\`\`
 
 ---
