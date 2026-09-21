@@ -5,7 +5,6 @@ import { IMAGES, PACKAGE_COMMANDS, KEYBINDINGS } from '../data/site';
 import { TelemetryBenchmark } from '../components/TelemetryBenchmark';
 import { DoodleBackground } from '../components/DoodleBackground';
 import { usePageMeta } from '../lib/meta';
-import { IS_HYDRATING } from '../lib/hydration';
 import { 
   Check, 
   Copy, 
@@ -182,8 +181,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
     <div className="w-full flex flex-col font-sans space-y-16 sm:space-y-24">
       {/* HERO SECTION */}
       <motion.section
-        initial={!IS_HYDRATING ? { opacity: 0, y: 20 } : false}
-        animate={IS_HYDRATING ? undefined : { opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
         className="relative overflow-hidden w-full pt-6 md:pt-14 pb-8 md:pb-12 px-4 rounded-t-none rounded-b-2xl border border-hairline-outline/40 bg-canvas-obsidian/25 sm:bg-canvas-obsidian/60 shadow-inner"
       >
@@ -193,8 +192,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
         <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
           {/* Main Title */}
           <motion.h1
-            initial={!IS_HYDRATING ? { opacity: 0, y: 14 } : false}
-            animate={IS_HYDRATING ? undefined : { opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="font-mono text-3xl sm:text-5xl lg:text-6xl font-extrabold text-text-primary tracking-tight leading-tight max-w-4xl mx-auto"
           >
@@ -202,8 +201,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
           </motion.h1>
 
           <motion.p
-            initial={!IS_HYDRATING ? { opacity: 0, y: 14 } : false}
-            animate={IS_HYDRATING ? undefined : { opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-sm sm:text-base text-text-muted max-w-2xl mx-auto leading-relaxed"
           >
@@ -212,8 +211,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
 
           {/* Multi-package manager install widget */}
           <motion.div
-            initial={!IS_HYDRATING ? { opacity: 0, y: 14 } : false}
-            animate={IS_HYDRATING ? undefined : { opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-xl mx-auto pt-2"
           >
@@ -269,7 +268,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
 
       {/* INTERACTIVE TUI EXPLORER / PLAYGROUND */}
       <motion.section
-        initial={IS_HYDRATING ? false : 'hidden'}
+        initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.1, margin: "0px 0px -50px 0px" }}
         variants={scrollSectionVariants}
@@ -423,7 +422,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
       {/* FEATURE SHOWCASE - SCROLL TO REVIEW STACK */}
       <motion.section 
         id="feature-tour-showcase"
-        initial={IS_HYDRATING ? false : 'hidden'}
+        initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.08, margin: "0px 0px -50px 0px" }}
         variants={scrollSectionVariants}
@@ -531,7 +530,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
 
       {/* LIVE CI & TELEMETRY BENCHMARK */}
       <motion.section
-        initial={IS_HYDRATING ? false : 'hidden'}
+        initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.12, margin: "0px 0px -50px 0px" }}
         variants={scrollSectionVariants}
@@ -543,7 +542,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
       {/* CLOSING INSTALL CALL TO ACTION */}
       <motion.section
         id="install"
-        initial={IS_HYDRATING ? false : 'hidden'}
+        initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.15, margin: "0px 0px -50px 0px" }}
         variants={scrollSectionVariants}

@@ -81,10 +81,9 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
   const cleanCode = code.trim();
 
   // The rendered diagram (and any error state) lives inside a ref-owned host
-  // div, injected imperatively rather than driven by React state. This keeps
-  // the committed React tree structurally identical across the prerendered
-  // DOM (SVG already injected) and the first client render (empty host), so
-  // React hydration never sees a mismatch between the two.
+  // div, injected imperatively rather than driven by React state. React's
+  // committed tree just owns the (empty) host div, so re-renders never touch
+  // the SVG that mermaid wrote into it.
   useEffect(() => {
     let isMounted = true;
     initializeMermaid(theme);

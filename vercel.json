@@ -1,9 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "bunx playwright install chromium && bun run build",
-  "env": {
-    "PLAYWRIGHT_BROWSERS_PATH": "0"
-  },
+  "buildCommand": "bun run build",
   "outputDirectory": "dist",
   "rewrites": [
     {

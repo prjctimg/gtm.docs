@@ -2,10 +2,10 @@
 /**
  * Generates public/sitemap.xml from the shared route set (scripts/routes.mjs)
  * so the sitemap regenerates on every build (runs as the `prebuild` npm
- * script) and always agrees with the prerendered pages.
+ * script) and always matches the routes the SPA actually serves.
  *
- * Every route maps to a real navigable path served by index.html (or its own
- * prerendered dist/<path>/index.html after build).
+ * Every route maps to a real navigable path served by index.html via the
+ * `vercel.json` SPA rewrite.
  *
  * Node-only — no dependencies.
  */

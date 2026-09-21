@@ -48,8 +48,7 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
   const [hasError, setHasError] = useState<boolean>(false);
 
   // Frequency bars animation state — starts at the same idle value the mount
-  // effect resets to (0.08), so the first committed render matches the
-  // prerendered DOM (a 0.1 start would leave a hydration difference).
+  // effect resets to (0.08), so the first committed render has no visual jump.
   const [spectrumLevels, setSpectrumLevels] = useState<number[]>(() => 
     Array.from({ length: 16 }, () => 0.08)
   );

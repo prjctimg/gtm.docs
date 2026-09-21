@@ -177,9 +177,8 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           ),
           p: ({ children, node }) => {
             // Paragraphs holding only an image/gif render block-level media
-            // (GifPreview's <figure>). That nesting is invalid inside <p> and
-            // the HTML parser re-parents it after prerender serialization,
-            // which would break hydration — so render a <div> instead.
+            // (GifPreview's <figure>). That nesting is invalid inside <p>, so
+            // render a <div> instead.
             const kids = node?.children ?? [];
             const onlyMedia =
               kids.length > 0 &&

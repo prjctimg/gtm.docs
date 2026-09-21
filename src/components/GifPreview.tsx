@@ -13,7 +13,6 @@ import {
   Film,
   Sparkles
 } from 'lucide-react';
-import { IS_HYDRATING } from '../lib/hydration';
 
 interface GifPreviewProps {
   src: string;
@@ -161,12 +160,9 @@ export const GifPreview: React.FC<GifPreviewProps> = ({
 
         {/* Media display */}
         <div className="relative flex items-center justify-center min-h-[140px] max-h-[460px] bg-canvas-obsidian/40">
-          {/* Loading state is a prerender/hydration hazard: the captured DOM
-              shows the already-loaded GIF (no overlay), but the hydration
-              first commit would render this overlay until onLoad fires.
-              Skip it entirely when hydrating — the image is local and loads
-              in a frame, and the overlay is meaningless on a cached page. */}
-          {!IS_HYDRATING && !hasLoaded && !hasError && (
+          {/* The overlay renders until the GIF's onLoad fires; the image is
+              local and loads in a frame, so the spinner is barely visible. */}
+          {!hasLoaded && !hasError && (
             <div className="absolute inset-0 flex items-center justify-center bg-surface-container/50">
               <div className="flex items-center gap-2 text-xs font-mono text-text-muted">
                 <div className="w-4 h-4 rounded-full border-2 border-secondary/30 border-t-secondary animate-spin" />

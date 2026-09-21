@@ -4,10 +4,9 @@
  *
  * Consumed by:
  *   - scripts/generate-sitemap.mjs (sitemap entries)
- *   - scripts/prerender.mjs       (Option C: Playwright post-build capture)
  *
- * So the sitemap and the prerendered pages can never disagree about what
- * routes exist. Node-only — no dependencies.
+ * So the sitemap can never disagree about what routes exist. Node-only — no
+ * dependencies.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';

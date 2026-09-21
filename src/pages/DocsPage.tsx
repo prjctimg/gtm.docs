@@ -60,10 +60,8 @@ export const DocsPage: React.FC<DocsPageProps> = ({
   });
 
   // Start with the first heading active: the scroll-spy sets the same value
-  // right after the first paint (the page loads at the top), so initializing
-  // from the doc's static data keeps the prerendered DOM and hydration commit
-  // identical (otherwise the active class toggles between them and React
-  // reports an attribute mismatch).
+  // right after the first paint (the page loads at the top), so the active
+  // class is present from the start instead of flashing after the spy runs.
   const [activeHeadingId, setActiveHeadingId] = useState<string>(() => {
     const doc = DOCS_BY_ID[activeDocId] || ALL_DOCS[0];
     return doc?.headings?.[0]?.id ?? '';
