@@ -64,9 +64,9 @@ curl -fsSL https://gtmd.dev/install.sh | bash
 
 The script automatically:
 1. Detects your OS and CPU architecture (x86_64, aarch64).
-2. Downloads and unpacks the latest release binaries into \`/usr/local/bin\`.
+2. Downloads and unpacks the latest release binaries into \`~/.local/bin\` and adds it to your PATH (bash, zsh, or fish).
 3. Installs shell completions into standard completion directories for Bash, Zsh, and Fish.
-4. Installs the manual page to \`/usr/local/share/man/man1/gtm.1\`.
+4. Installs the manual page to \`~/.local/share/man/man1/gtm.1\`.
 
 ### Nightly Builds
 
