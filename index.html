@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>&gt; gtm — Documentation &amp; Technical Devlog</title>
-    <meta name="description" content="High-fidelity audio playback documentation, architecture guides, benchmarks, and engineering devlog for the gtm terminal music player in Rust." />
+    <title>gtm - Docs</title>
+    <meta name="description" content="📻 gtm is a feature rich terminal audio player." />
     <meta name="author" content="prjctimg" />
     <meta name="theme-color" content="#030407" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -12,17 +12,17 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="gtm — Docs &amp; Devlog" />
+    <meta property="og:site_name" content="gtm - Docs" />
     <meta property="og:url" content="https://gtmd.dev" />
-    <meta property="og:title" content="&gt; gtm — Documentation &amp; Technical Devlog" />
-    <meta property="og:description" content="High-fidelity audio playback documentation, architecture guides, benchmarks, and engineering devlog for the gtm terminal music player in Rust." />
+    <meta property="og:title" content="gtm - Docs" />
+    <meta property="og:description" content="📻 gtm is a feature rich terminal audio player." />
     <meta property="og:image" content="https://gtmd.dev/og.png" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@prjctimg" />
-    <meta name="twitter:title" content="&gt; gtm — Documentation &amp; Technical Devlog" />
-    <meta name="twitter:description" content="High-fidelity audio playback documentation, architecture guides, benchmarks, and engineering devlog for the gtm terminal music player in Rust." />
+    <meta name="twitter:title" content="gtm - Docs" />
+    <meta name="twitter:description" content="📻 gtm is a feature rich terminal audio player." />
     <meta name="twitter:image" content="https://gtmd.dev/og.png" />
 
     <!-- Google Fonts -->
@@ -30,6 +30,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+    <!-- CodeBlock highlights via Prism.highlight() itself; stop prismjs's
+         bundled auto-highlighter from re-processing every code[class*=language-]
+         and mutating the <pre> (language-* class + tabindex) after mount.
+         Seeded before the app bundle so the static DOM and the hydrated tree
+         always match. -->
+    <script>window.Prism = window.Prism || { manual: true };</script>
   </head>
   <body class="bg-canvas-obsidian text-text-body antialiased selection:bg-secondary/20 selection:text-secondary min-h-screen transition-colors duration-200">
     <div id="root"></div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
-import { MarkdownRenderer } from './MarkdownRenderer';
-import { usePageMeta } from '../meta';
+import { MarkdownRenderer } from '../components/MarkdownRenderer';
+import { usePageMeta } from '../lib/meta';
 import { ALL_DOCS, DOC_CATEGORIES, DOCS_BY_CATEGORY } from '../data/docs';
 import { 
   ChevronRight, 
@@ -18,7 +18,7 @@ import {
   X 
 } from 'lucide-react';
 
-interface InstallViewProps {
+interface InstallPageProps {
 }
 
 const INSTALL_DOCUMENT_MARKDOWN = `
@@ -226,10 +226,10 @@ The daemon logs to \`~/.local/share/gtm/gtmd.log\` (or \`$XDG_DATA_HOME/gtm/gtmd
 - **YouTube search:** Requires the \`youtube\` Cargo feature, which is disabled on Android/Termux builds.
 `;
 
-export const InstallView: React.FC<InstallViewProps> = () => {
+export const InstallPage: React.FC<InstallPageProps> = () => {
   usePageMeta(
-    'Install gtm — gtm Docs',
-    'Official installation methods, package managers, and build configurations for gtm — the terminal audio player.'
+    'Install | gtm',
+    'Install methods for gtm: the install script, crates.io, a source build, and Termux.'
   );
 
   return (

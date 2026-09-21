@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { NavLink, Link, useParams } from 'react-router';
+import { NavLink, Link, useParams, Navigate } from 'react-router';
 import { 
   ALL_DOCS, 
   DOCS_BY_ID, 
@@ -7,8 +7,8 @@ import {
   DOC_CATEGORIES, 
   DocItem 
 } from '../data/docs';
-import { MarkdownRenderer } from './MarkdownRenderer';
-import { usePageMeta } from '../meta';
+import { MarkdownRenderer } from '../components/MarkdownRenderer';
+import { usePageMeta } from '../lib/meta';
 import { 
   Search, 
   Check, 
@@ -26,7 +26,7 @@ import {
   PanelLeft
 } from 'lucide-react';
 
-interface DocsViewProps {
+interface DocsPageProps {
   onOpenSearch: () => void;
   onOpenKeymap: () => void;
 }
@@ -35,7 +35,7 @@ const DEFAULT_FALLBACK_DOC: DocItem = {
   id: 'overview',
   slug: '/overview/',
   title: 'Intro',
-  description: 'A terminal music player with background playback, YouTube and Spotify integration, and a focus on discoverability.',
+  description: 'What gtm is: a terminal audio player split into a background daemon (gtmd) and a TUI client (gtm).',
   order: 1,
   rawContent: '',
   content: 'Welcome to the gtm documentation.',
@@ -47,7 +47,7 @@ const DEFAULT_FALLBACK_DOC: DocItem = {
   category: 'Introduction & Setup',
 };
 
-export const DocsView: React.FC<DocsViewProps> = ({
+export const DocsPage: React.FC<DocsPageProps> = ({
   onOpenSearch,
   onOpenKeymap
 }) => {
@@ -59,7 +59,15 @@ export const DocsView: React.FC<DocsViewProps> = ({
     return DOCS_BY_ID[activeDocId] ? activeDocId : (ALL_DOCS[0]?.id || 'overview');
   });
 
-  const [activeHeadingId, setActiveHeadingId] = useState<string>('');
+  // Start with the first heading active: the scroll-spy sets the same value
+  // right after the first paint (the page loads at the top), so initializing
+  // from the doc's static data keeps the prerendered DOM and hydration commit
+  // identical (otherwise the active class toggles between them and React
+  // reports an attribute mismatch).
+  const [activeHeadingId, setActiveHeadingId] = useState<string>(() => {
+    const doc = DOCS_BY_ID[activeDocId] || ALL_DOCS[0];
+    return doc?.headings?.[0]?.id ?? '';
+  });
   const [copiedLink, setCopiedLink] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
@@ -161,9 +169,14 @@ export const DocsView: React.FC<DocsViewProps> = ({
   };
 
   usePageMeta(
-    activeDoc ? `${activeDoc.title} — gtm Docs` : 'Docs — gtm',
+    activeDoc ? `${activeDoc.title} | gtm` : 'Docs | gtm',
     activeDoc?.description || 'gtm documentation — terminal audio player guides and references.'
   );
+
+  // Unknown /docs/:docId URLs fall back to the overview doc.
+  if (docId && !DOCS_BY_ID[docId]) {
+    return <Navigate to="/docs/overview" replace />;
+  }
 
   return (
     <div className="w-full flex flex-col font-sans">
@@ -212,16 +225,6 @@ export const DocsView: React.FC<DocsViewProps> = ({
                             <span className="truncate">{doc.title}</span>
                           </NavLink>
                         </li>
-                        {category === 'Introduction & Setup' && doc.id === 'overview' && (
-                          <li>
-                            <Link
-                              to="/install"
-                              className="w-full text-left py-1.5 px-2 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 text-text-muted hover:text-text-primary hover:bg-surface-elevated/40"
-                            >
-                              <span className="truncate">Installation</span>
-                            </Link>
-                          </li>
-                        )}
                       </React.Fragment>
                     ))}
                   </ul>
@@ -354,7 +357,7 @@ export const DocsView: React.FC<DocsViewProps> = ({
               See an error or typo? Make this page better by editing it on GitHub.
             </p>
             <a
-              href={`https://github.com/prjctimg/gtm.rs/blob/main/content/${activeDoc?.id || 'overview'}.mdx`}
+              href={`https://github.com/prjctimg/gtm.docs/blob/main/content/${activeDoc?.id || 'overview'}.mdx`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-text-muted hover:text-text-primary bg-surface-container hover:bg-surface-elevated border border-hairline-outline rounded transition-colors group cursor-pointer shrink-0"
@@ -413,7 +416,10 @@ export const DocsView: React.FC<DocsViewProps> = ({
           ) : (
             <ul className="space-y-1.5 border-l border-hairline-outline pl-3">
               {(activeDoc?.headings || []).map((h) => (
-                <li key={h.id} style={{ paddingLeft: h.level === 3 ? '8px' : '0px' }}>
+                <li
+                  key={h.id}
+                  style={h.level === 3 ? { paddingLeft: '8px' } : undefined}
+                >
                   <button
                     onClick={() => scrollToHeading(h.id)}
                     className={`block text-left transition-colors cursor-pointer text-xs truncate max-w-[180px] ${
@@ -528,17 +534,6 @@ export const DocsView: React.FC<DocsViewProps> = ({
                               <span className="truncate">{doc.title}</span>
                             </NavLink>
                           </li>
-                          {category === 'Introduction & Setup' && doc.id === 'overview' && (
-                            <li>
-                              <Link
-                                to="/install"
-                                onClick={() => setIsMobileDrawerOpen(false)}
-                                className="w-full text-left py-2 px-2.5 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 text-text-muted hover:text-text-primary hover:bg-surface-elevated/40"
-                              >
-                                <span className="truncate">Installation</span>
-                              </Link>
-                            </li>
-                          )}
                         </React.Fragment>
                       ))}
                     </ul>

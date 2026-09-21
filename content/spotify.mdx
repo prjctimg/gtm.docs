@@ -1,6 +1,6 @@
 ---
 title: Spotify
-description: "Streaming your Spotify library, linking accounts, and syncing playlists."
+description: "Linking a Spotify account, search and streaming, playlist sync, and cover art."
 sidebar:
   order: 13
 ---
@@ -36,7 +36,7 @@ OAuth details:
 
 - Redirect port **8990** (or `$GTM_SPOTIFY_PORT`) — the server listens on
   `http://127.0.0.1:8990/login` for the code.
-- Login window is capped at **120 seconds**.
+- Login window is capped at **180 seconds**.
 - Scopes: playback-state, modify-playback-state, currently-playing,
   private/collaborative playlists, user-library, and user profile.
 - **No `offline_access` scope** — Spotify does not define it for this flow;
@@ -55,9 +55,11 @@ it for a token automatically.
 
 - `Alt+s` — open the Spotify search picker
 
-Search covers tracks, albums (3 results), and artists (3 results), with
-track search backed by the official Search API. Entering a track streams it
-through the Spotify Web/zlib decoder without ever storing the track locally.
+Search covers tracks, albums, and artists. In the default 20-result window,
+track hits fill most of the list while albums (up to 6) and artists (up to 5)
+are pulled as smaller fractions, all backed by the official Search API.
+Entering a track streams it through the Spotify Web/zlib decoder without ever
+storing the track locally.
 
 Streams use the same EQ, reverb, volume, and crossfade pipeline as local
 files. Position and state are broadcast the same way, so the TUI treats
@@ -100,8 +102,9 @@ cover. See [Cover Art](/cover-art/).
 - Requires a Spotify **Premium** account for 320kbps streaming.
 - The `youtube` feature must be enabled for the decipher step used by the
   Web stream (same restriction as YouTube on Android builds).
-- Search returns a bounded set; album/artist results are capped at 3.
-- Login is time-boxed to 120 seconds.
+- Search returns a bounded set (default 20 results); album/artist results
+  are smaller fractions of that window.
+- Login is time-boxed to 180 seconds.
 - Spotify is not a full music source for *this* account — it syncs your
   playlists, doesn't sync the whole discography.
 - Scrobbling to Last.fm and Spotify link are separate accounts; see

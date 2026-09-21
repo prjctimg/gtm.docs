@@ -1,6 +1,6 @@
 ---
 title: Theming
-description: "Themes, dark/light detection, reactive theming, progress styles, footer presets, and command palette icons."
+description: "Built-in and user themes, theme-mode detection, reactive theming, progress styles, footer presets, and icons."
 sidebar:
   order: 11
 ---
@@ -154,9 +154,9 @@ built-in presets are provided:
 
 | Preset | Modules |
 |--------|---------|
-| **Default** | Playback, Repeat, Shuffle, Volume, Speed, LowPower, Device, EqPreset, KeyAction, Notification, SleepTimer, Download (right: Queue, Time, System, Multiselect) |
+| **Default** | Playback, Repeat, Shuffle, Volume, Speed, LowPower, Mono, Device, EqPreset, KeyAction, Notification, SleepTimer, Download (right: Queue, Time, System, Multiselect, Network, Source) |
 | **Minimal** | Playback, Volume, KeyAction, SleepTimer (right: Time, System) — for Termux/small viewports |
-| **Full** | Playback, Title, Repeat, Shuffle, Volume, EqPreset, Progress, KeyAction, SleepTimer (right: Queue, Time, System, Multiselect) |
+| **Full** | Playback, Title, Repeat, Shuffle, Volume, EqPreset, Mono, Progress, KeyAction, SleepTimer (right: Queue, Time, System, Multiselect, Network, Source) |
 
 Add your own in `~/.config/gtm/footer.toml` (or
 `$XDG_CONFIG_HOME/gtm/footer.toml`):
@@ -176,8 +176,8 @@ Modules available:
 
 ```
 Playback Title Volume Speed Repeat Shuffle Progress Queue KeyAction
-Backend System EqPreset SleepTimer LowPower Device Notification Time
-Multiselect Download
+Backend System EqPreset SleepTimer LowPower Mono Device Notification Time
+Multiselect Download Network Source
 ```
 
 - `Alt+,` → Settings → Footer Preset opens the preset chooser, where you

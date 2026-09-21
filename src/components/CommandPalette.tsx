@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { PageTab } from '../types';
-import { BLOG_POSTS, KEYBINDINGS } from '../data/mockData';
+import { KEYBINDINGS } from '../data/site';
 import { ALL_DOCS } from '../data/docs';
-import { Search, FileText, BookOpen, Terminal, Keyboard, ArrowRight, X, Radio, Disc3 } from 'lucide-react';
+import { Search, BookOpen, Keyboard, ArrowRight, X } from 'lucide-react';
 
 interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
-  onOpenWhitepaper: (postId: string) => void;
 }
 
 interface SearchItem {
@@ -17,13 +16,11 @@ interface SearchItem {
   tab: PageTab;
   docId?: string;
   sectionId?: string;
-  postId?: string;
 }
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({
   isOpen,
-  onClose,
-  onOpenWhitepaper
+  onClose
 }) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
@@ -40,17 +37,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   // Build searchable items
   const installItems: SearchItem[] = [
-    { title: 'Install gtm (All Methods: curl, cargo, source, aur, brew, nix, termux)', category: 'Installation', tab: 'install' },
-    { title: 'Quick Install Script (Stable & Nightly curl script)', category: 'Installation // Script', tab: 'install' },
-    { title: 'Cargo Install (Build from crates.io with locked deps)', category: 'Installation // Cargo', tab: 'install' },
-    { title: 'Build from Source (git clone & make install)', category: 'Installation // Source', tab: 'install' },
-    { title: 'Homebrew Formula (macOS Apple Silicon & Linux)', category: 'Installation // Brew', tab: 'install' },
-    { title: 'Arch Linux AUR (paru -S gtm-bin / yay)', category: 'Installation // AUR', tab: 'install' },
-    { title: 'Termux Android Build (make termux)', category: 'Installation // Termux', tab: 'install' },
-    { title: 'Nix Flake (nix profile install github:prjctimg/gtm.rs)', category: 'Installation // Nix', tab: 'install' }
+    { title: 'Install gtm (curl script, cargo, source, Termux)', category: 'Installation', tab: 'install' },
+    { title: 'Quick Install Script (stable and nightly)', category: 'Installation // Script', tab: 'install' },
+    { title: 'Cargo Install (crates.io, locked deps)', category: 'Installation // Cargo', tab: 'install' },
+    { title: 'Build from Source (git clone, cargo build)', category: 'Installation // Source', tab: 'install' },
+    { title: 'Termux Android Build (make termux)', category: 'Installation // Termux', tab: 'install' }
   ];
 
-  // Dynamic Docs from all 20 live MDX content files
+  // Dynamic docs from all live MDX content files
   const docItems: SearchItem[] = [];
   ALL_DOCS.forEach(doc => {
     // Top-level document item
@@ -73,13 +67,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     });
   });
 
-  const blogItems: SearchItem[] = BLOG_POSTS.map(post => ({
-    title: post.title,
-    category: `Blog // ${post.category}`,
-    tab: 'blog',
-    postId: post.id
-  }));
-
   const keyItems: SearchItem[] = KEYBINDINGS.map(k => ({
     title: `${k.key}: ${k.action} (${k.scope})`,
     category: 'Keybindings',
@@ -88,26 +75,21 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     sectionId: 'keybindings'
   }));
 
-  const allItems: SearchItem[] = [...installItems, ...docItems, ...blogItems, ...keyItems];
+  const allItems: SearchItem[] = [...installItems, ...docItems, ...keyItems];
 
   const filteredItems = query.trim()
-    ? allItems.filter(item => 
-        item.title.toLowerCase().includes(query.toLowerCase()) || 
+    ? allItems.filter(item =>
+        item.title.toLowerCase().includes(query.toLowerCase()) ||
         item.category.toLowerCase().includes(query.toLowerCase())
       )
     : allItems.slice(0, 10);
 
   const handleSelect = (item: SearchItem) => {
-    if (item.postId) {
-      onClose();
-      onOpenWhitepaper(item.postId);
+    onClose();
+    if (item.tab === 'install') {
+      navigate('/install');
     } else {
-      onClose();
-      if (item.tab === 'install') {
-        navigate('/install');
-      } else {
-        navigate(`/docs/${item.docId}${item.sectionId ? `#${item.sectionId}` : ''}`);
-      }
+      navigate(`/docs/${item.docId}${item.sectionId ? `#${item.sectionId}` : ''}`);
     }
   };
 
@@ -138,7 +120,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div 
+      <div
         className="bg-surface-container border border-primary-container/70 rounded-xl max-w-xl w-full flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.85)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
@@ -157,7 +139,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             className="w-full bg-transparent border-none text-text-primary text-sm font-mono focus:outline-none placeholder:text-text-disabled"
           />
           {query && (
-            <button 
+            <button
               onClick={() => setQuery('')}
               className="text-text-muted hover:text-text-primary p-0.5 cursor-pointer"
             >
@@ -190,9 +172,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   }`}
                 >
                   <div className="flex items-center gap-2.5 overflow-hidden">
-                    {item.category.includes('Blog') ? (
-                      <FileText className="w-3.5 h-3.5 text-primary-container shrink-0" />
-                    ) : item.category.includes('Keybinding') ? (
+                    {item.category.includes('Keybinding') ? (
                       <Keyboard className="w-3.5 h-3.5 text-state-warning shrink-0" />
                     ) : (
                       <BookOpen className="w-3.5 h-3.5 text-secondary shrink-0" />

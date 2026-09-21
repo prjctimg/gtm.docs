@@ -1,6 +1,6 @@
 ---
 title: Audio
-description: "Audio backends, output devices, the equalizer, reverb, and the spectrum visualizer."
+description: "Audio backends, output devices, the equalizer and presets, reverb, and the visualizer."
 sidebar:
   order: 7
 ---
@@ -121,7 +121,7 @@ the daemon and toggled from Settings → Playback.
 ## Visualizer
 
 The visualizer renders live FFT data from the daemon's decoder
-(`audio_levels` — a set of spectrum bins refreshed roughly every 300 ms).
+(`audio_levels` — a set of spectrum bins refreshed roughly every 16 ms).
 
 ![Spectrum Visualizer Rendering Animation](/samples/spectrum-visualizer-demo.gif)
 
@@ -132,24 +132,32 @@ The visualizer renders live FFT data from the daemon's decoder
 Dual-harmonic bell tone triggered on queue completion and terminal notifications.
 :::
 
-### Presets
+### Visualizer presets
 
 | Preset | Render style |
 |--------|--------------|
-| **Braille** (default) | Braille grid cells, single color by amplitude |
-| **Blocks** | Full-block columns with fractional heights |
-| **Mirror** | Center-symmetric bars blooming outward |
-| **Gradient** | Braille grid with a 4-step color ramp |
-| **Spectrum** | Block-based spectrum view |
+| **Braille** (default) | Braille cells, color chosen per bar by amplitude |
+| **Blocks** | Block columns with fine fractional heights (`▁…█`) |
+| **Mirror** | Center-symmetric bars blooming outward from the middle axis |
+| **Gradient** | Braille cells with a 4-step color ramp by amplitude |
+| **Spectrum** | Log-mapped spectrum bars with peak-hold caps (falling `▔` marker) |
+| **BarsDot** | Braille-stippled bars, each cell a 4×2 dot grid filled bottom-up |
+| **ClassicPeak** | Classic falling peak caps over thin columns (launch/gravity/cap physics) |
+| **Columns** | Dense thin interpolated columns, one glyph per terminal column |
+| **Wave** | Braille oscilloscope over the decimated waveform ring (sine sweep when idle) |
+| **Stereo** | Stereo L/R horizontal LED peak meters |
+| **Retro** | 80s synthwave scene: striped sun, horizon, scrolling grid, audio-reactive wave |
+| **Flame** | Doom-fire heat field rendered through Braille cells, colored by heat |
 
-Rendering is frame-rate independent: bars use attack 0.65 / decay 0.45
-(0.8 when idle), and when nothing is playing an idle sine-wave animation
-keeps the view alive.
+Rendering is frame-rate independent: bars use attack 0.65 / decay 0.45 (0.25
+when idle), and when nothing is playing an idle sine-wave animation keeps the
+view alive.
 
 The visualizer only renders when the terminal is ≥ 80 columns wide.
 
 The client's `visualizer_preset` config key sets the default preset
-(`"braille" | "blocks" | "mirror" | "gradient" | "spectrum"`).
+(`"braille" | "blocks" | "mirror" | "gradient" | "spectrum" | "barsdot" |
+"classicpeak" | "columns" | "wave" | "stereo" | "retro" | "flame"`).
 
 ---
 

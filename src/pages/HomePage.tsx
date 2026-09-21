@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { motion, type Variants } from 'motion/react';
-import { IMAGES, PACKAGE_COMMANDS, KEYBINDINGS } from '../data/mockData';
-import { AnimatedTelemetryBenchmark } from './AnimatedTelemetryBenchmark';
-import { MusicalDoodleBackground } from './MusicalDoodleBackground';
-import { usePageMeta } from '../meta';
+import { IMAGES, PACKAGE_COMMANDS, KEYBINDINGS } from '../data/site';
+import { TelemetryBenchmark } from '../components/TelemetryBenchmark';
+import { DoodleBackground } from '../components/DoodleBackground';
+import { usePageMeta } from '../lib/meta';
+import { IS_HYDRATING } from '../lib/hydration';
 import { 
   Check, 
   Copy, 
@@ -25,18 +26,15 @@ import {
 } from 'lucide-react';
 import { SiLinux, SiAndroid, SiApple } from 'react-icons/si';
 
-interface LandingViewProps {
+interface HomePageProps {
   onOpenKeymap: () => void;
 }
 
 type TuiTab = 'library' | 'lyrics' | 'fft' | 'search';
-type PkgTab = 'curl' | 'cargo' | 'brew' | 'aur' | 'nix';
+type PkgTab = 'curl' | 'cargo' | 'source' | 'termux';
 
-export const LandingView: React.FC<LandingViewProps> = ({ onOpenKeymap }) => {
-  usePageMeta(
-    '> gtm — Documentation & Technical Devlog',
-    'High-fidelity audio playback documentation, architecture guides, benchmarks, and engineering devlog for the gtm terminal music player in Rust.'
-  );
+export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
+  usePageMeta('gtm - Docs', '📻 gtm is a feature rich terminal audio player.');
 
   // Hero package switcher
   const [heroPkg, setHeroPkg] = useState<PkgTab>('curl');
@@ -184,19 +182,19 @@ export const LandingView: React.FC<LandingViewProps> = ({ onOpenKeymap }) => {
     <div className="w-full flex flex-col font-sans space-y-16 sm:space-y-24">
       {/* HERO SECTION */}
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={!IS_HYDRATING ? { opacity: 0, y: 20 } : false}
+        animate={IS_HYDRATING ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
         className="relative overflow-hidden w-full pt-6 md:pt-14 pb-8 md:pb-12 px-4 rounded-t-none rounded-b-2xl border border-hairline-outline/40 bg-canvas-obsidian/25 sm:bg-canvas-obsidian/60 shadow-inner"
       >
         {/* Doodled Musical Background with musical symbols, notes & instruments */}
-        <MusicalDoodleBackground />
+        <DoodleBackground />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
           {/* Main Title */}
           <motion.h1
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={!IS_HYDRATING ? { opacity: 0, y: 14 } : false}
+            animate={IS_HYDRATING ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="font-mono text-3xl sm:text-5xl lg:text-6xl font-extrabold text-text-primary tracking-tight leading-tight max-w-4xl mx-auto"
           >
@@ -204,8 +202,8 @@ export const LandingView: React.FC<LandingViewProps> = ({ onOpenKeymap }) => {
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={!IS_HYDRATING ? { opacity: 0, y: 14 } : false}
+            animate={IS_HYDRATING ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-sm sm:text-base text-text-muted max-w-2xl mx-auto leading-relaxed"
           >
@@ -214,8 +212,8 @@ export const LandingView: React.FC<LandingViewProps> = ({ onOpenKeymap }) => {
 
           {/* Multi-package manager install widget */}
           <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={!IS_HYDRATING ? { opacity: 0, y: 14 } : false}
+            animate={IS_HYDRATING ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-xl mx-auto pt-2"
           >
@@ -223,7 +221,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onOpenKeymap }) => {
               {/* Package Selector Tabs */}
               <div className="flex items-center justify-start border-b border-hairline-outline pb-2 px-1 font-mono text-xs overflow-x-auto scrollbar-none">
                 <div className="flex items-center gap-1 whitespace-nowrap min-w-max">
-                  {(['curl', 'cargo', 'brew', 'aur', 'nix'] as PkgTab[]).map(pkg => (
+                  {(['curl', 'cargo', 'source', 'termux'] as PkgTab[]).map(pkg => (
                     <button
                       key={pkg}
                       onClick={() => setHeroPkg(pkg)}
@@ -271,7 +269,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onOpenKeymap }) => {
 
       {/* INTERACTIVE TUI EXPLORER / PLAYGROUND */}
       <motion.section
-        initial="hidden"
+        initial={IS_HYDRATING ? false : 'hidden'}
         whileInView="visible"
         viewport={{ once: true, amount: 0.1, margin: "0px 0px -50px 0px" }}
         variants={scrollSectionVariants}
@@ -425,7 +423,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onOpenKeymap }) => {
       {/* FEATURE SHOWCASE - SCROLL TO REVIEW STACK */}
       <motion.section 
         id="feature-tour-showcase"
-        initial="hidden"
+        initial={IS_HYDRATING ? false : 'hidden'}
         whileInView="visible"
         viewport={{ once: true, amount: 0.08, margin: "0px 0px -50px 0px" }}
         variants={scrollSectionVariants}
@@ -533,19 +531,19 @@ export const LandingView: React.FC<LandingViewProps> = ({ onOpenKeymap }) => {
 
       {/* LIVE CI & TELEMETRY BENCHMARK */}
       <motion.section
-        initial="hidden"
+        initial={IS_HYDRATING ? false : 'hidden'}
         whileInView="visible"
         viewport={{ once: true, amount: 0.12, margin: "0px 0px -50px 0px" }}
         variants={scrollSectionVariants}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full"
       >
-        <AnimatedTelemetryBenchmark className="w-full" />
+        <TelemetryBenchmark className="w-full" />
       </motion.section>
 
       {/* CLOSING INSTALL CALL TO ACTION */}
       <motion.section
         id="install"
-        initial="hidden"
+        initial={IS_HYDRATING ? false : 'hidden'}
         whileInView="visible"
         viewport={{ once: true, amount: 0.15, margin: "0px 0px -50px 0px" }}
         variants={scrollSectionVariants}
@@ -566,7 +564,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onOpenKeymap }) => {
             {/* Package Selector Tabs */}
             <div className="flex items-center justify-start border-b border-hairline-outline pb-2 px-1 font-mono text-xs overflow-x-auto scrollbar-none">
               <div className="flex items-center gap-1 whitespace-nowrap min-w-max">
-                {(['curl', 'cargo', 'brew', 'aur', 'nix'] as PkgTab[]).map(t => (
+                {(['curl', 'cargo', 'source', 'termux'] as PkgTab[]).map(t => (
                   <button
                     key={t}
                     onClick={() => setFooterPkg(t)}

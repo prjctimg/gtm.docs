@@ -1,6 +1,6 @@
 ---
 title: YouTube
-description: "Search YouTube, stream audio, and download tracks with yt-dlp."
+description: "YouTube search, audio streaming, downloads, and cookies."
 sidebar:
   order: 12
 ---
@@ -26,7 +26,9 @@ Results are interleaved (tracks and videos together) and show title,
 duration, and channel. A search that starts with `http://` / `https://`
 performs a direct URL lookup instead of a keyword search.
 
-TUI-only: there is no YouTube CLI subcommand.
+The CLI equivalent is `gtm --cli ytsearch <query>` — it accepts plain
+keywords, or provider prefixes such as `scsearch:` (SoundCloud) and
+`bilisearch:` (Bilibili).
 
 :::note
 YouTube search requires the `youtube` cargo feature. It is **compiled out

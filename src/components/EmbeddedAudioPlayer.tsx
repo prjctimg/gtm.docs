@@ -47,9 +47,11 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
   );
   const [hasError, setHasError] = useState<boolean>(false);
 
-  // Frequency bars animation state
+  // Frequency bars animation state — starts at the same idle value the mount
+  // effect resets to (0.08), so the first committed render matches the
+  // prerendered DOM (a 0.1 start would leave a hydration difference).
   const [spectrumLevels, setSpectrumLevels] = useState<number[]>(() => 
-    Array.from({ length: 16 }, () => 0.1)
+    Array.from({ length: 16 }, () => 0.08)
   );
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -75,7 +77,7 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
 
   // Format time as mm:ss
   const formatTime = (secs: number) => {
-    if (isNaN(secs) || secs < 0) return '0:00';
+    if (!isFinite(secs) || secs < 0) return '--:--';
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
     return `${m}:${s.toString().padStart(2, '0')}`;
@@ -457,11 +459,15 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
           </div>
         </div>
 
-        {/* Timestamps */}
+        {/* Timestamps: pruned from the hydration text comparison — during capture
+            the media element's duration/currentTime are already known (and the
+            static server may not report ranges, so they can differ from the
+            client's initial 0/0:00). The values are patched in on the first
+            timeupdate, so nothing visible is lost. */}
         <div className="flex items-center justify-between text-[11px] font-mono text-text-muted mt-1.5">
-          <span>{formatTime(currentTime)}</span>
+          <span suppressHydrationWarning>{formatTime(currentTime)}</span>
           <span className="text-text-disabled">/</span>
-          <span>{duration > 0 ? formatTime(duration) : '--:--'}</span>
+          <span suppressHydrationWarning>{duration > 0 ? formatTime(duration) : '--:--'}</span>
         </div>
       </div>
 

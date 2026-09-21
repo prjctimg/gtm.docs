@@ -1,6 +1,6 @@
 ---
 title: MPRIS
-description: "Control gtm from desktop media keys, GNOME, KDE Plasma, and any MPRIS client."
+description: "Exposing MPRIS/D-Bus controls and desktop media-key integration."
 sidebar:
   order: 19
 ---
@@ -72,8 +72,9 @@ Read-only introspection mirrors gtm state:
 - `Metadata`: track id, title, artist, album, length, artwork URL
 - `CanSeek`, `CanControl`, `CanPlay`/`CanPause`, `CanGoNext`/`CanGoPrevious`
 
-`CanPause` is `false` for live streams (radio, podcasts, subsonic), exactly
-like the TUI.
+`CanPause` is reported `true` unconditionally. Pausing is only meaningful
+for seekable sources — the TUI itself blocks pause for live streams (radio,
+podcasts, subsonic).
 
 ---
 
@@ -96,7 +97,8 @@ playerctl next
 
 - Requires a session D-Bus and the `mpris` feature.
 - `set-rate` is a no-op — playback speed stays controlled from the TUI/CLI.
-- `CanPause` is `false` for live streams.
+- `CanPause` is reported `true` even for live streams (pausing a live source
+  is handled by the daemon, not blocked at the MPRIS layer).
 - Track identity is the daemon track id; `SetPosition` with an unknown
   track id is ignored.
 - MPRIS is strictly one instance; concurrent `gtmd`s conflict (by design).

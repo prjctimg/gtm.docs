@@ -175,11 +175,28 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
               {children}
             </h4>
           ),
-          p: ({ children }) => (
-            <p className="my-3 text-sm text-text-body leading-relaxed font-sans">
-              {children}
-            </p>
-          ),
+          p: ({ children, node }) => {
+            // Paragraphs holding only an image/gif render block-level media
+            // (GifPreview's <figure>). That nesting is invalid inside <p> and
+            // the HTML parser re-parents it after prerender serialization,
+            // which would break hydration — so render a <div> instead.
+            const kids = node?.children ?? [];
+            const onlyMedia =
+              kids.length > 0 &&
+              kids.every(
+                (c) =>
+                  (c.type === 'element' && c.tagName === 'img') ||
+                  (c.type === 'text' && !c.value.trim())
+              );
+            if (onlyMedia) {
+              return <div className="my-3">{children}</div>;
+            }
+            return (
+              <p className="my-3 text-sm text-text-body leading-relaxed font-sans">
+                {children}
+              </p>
+            );
+          },
           ul: ({ children }) => (
             <ul className="my-3 ml-5 list-disc space-y-1.5 text-sm text-text-body leading-relaxed">
               {children}

@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useId } from 'react';
+import React, { useEffect, useState, useId, useRef } from 'react';
 import mermaid from 'mermaid';
-import { Check, Copy, AlertCircle, RefreshCw } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 interface MermaidDiagramProps {
@@ -8,6 +8,12 @@ interface MermaidDiagramProps {
 }
 
 let lastInitializedTheme: 'dark' | 'light' | null = null;
+
+// Mermaid is not safe under concurrent .render() calls — parallel renders
+// (every diagram in a doc mounting at once) trample the shared internal
+// diagram cache and intermittently fail. Serialize all renders through one
+// promise chain so capture and real visitors get deterministic output.
+let renderQueue: Promise<void> = Promise.resolve();
 
 function initializeMermaid(theme: 'dark' | 'light') {
   if (lastInitializedTheme === theme) return;
@@ -69,42 +75,80 @@ function initializeMermaid(theme: 'dark' | 'light') {
 export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
   const { theme } = useTheme();
   const uniqueId = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const [svg, setSvg] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
+  const hostRef = useRef<HTMLDivElement>(null);
 
   const cleanCode = code.trim();
 
+  // The rendered diagram (and any error state) lives inside a ref-owned host
+  // div, injected imperatively rather than driven by React state. This keeps
+  // the committed React tree structurally identical across the prerendered
+  // DOM (SVG already injected) and the first client render (empty host), so
+  // React hydration never sees a mismatch between the two.
   useEffect(() => {
     let isMounted = true;
     initializeMermaid(theme);
 
-    async function renderDiagram() {
-      setLoading(true);
-      setError(null);
-      const renderId = `mermaid-${uniqueId}-${Date.now().toString(36)}`;
-
+    // Render one diagram, but never wait forever: mermaid can wedge on some
+    // syntaxes, and a hung promise must not block this diagram's retry — or
+    // the serialized render queue behind it.
+    async function renderOne(renderId: string) {
+      let timer: ReturnType<typeof setTimeout> | undefined;
       try {
-        const renderResult = await mermaid.render(renderId, cleanCode);
-        if (isMounted) {
-          setSvg(renderResult.svg);
-          setError(null);
-          setLoading(false);
-        }
-      } catch (err: unknown) {
-        if (isMounted) {
-          const errorMessage = err instanceof Error ? err.message : 'Invalid Mermaid syntax';
-          setError(errorMessage);
-          setLoading(false);
-        }
-        // Clean up any stray DOM elements mermaid may leave behind on parse error
-        const stray = document.getElementById(renderId) || document.getElementById('d' + renderId);
-        if (stray) stray.remove();
+        const timeout = new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Mermaid render timed out')), 6000);
+        });
+        return await Promise.race([mermaid.render(renderId, cleanCode), timeout]);
+      } finally {
+        clearTimeout(timer);
       }
     }
 
-    renderDiagram();
+    async function renderDiagram() {
+      // One render can lose a cold-start race with mermaid's shared diagram
+      // cache; retry once before surfacing an error box.
+      let lastError: unknown = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const renderId = `mermaid-${uniqueId}-${Date.now().toString(36)}`;
+        try {
+          const renderResult = await renderOne(renderId);
+          if (isMounted && hostRef.current) {
+            hostRef.current.innerHTML = renderResult.svg;
+          }
+          // Clean up any stray DOM elements mermaid leaves behind.
+          const stray = document.getElementById(renderId) || document.getElementById('d' + renderId);
+          if (stray) stray.remove();
+          return;
+        } catch (err) {
+          lastError = err;
+          if (attempt === 0) {
+            await new Promise((r) => setTimeout(r, 150));
+          }
+        }
+      }
+      // Fall back to the error box only after both attempts; a hung render
+      // (mermaid can wedge on certain syntaxes) must never block this
+      // diagram — or the queue behind it — forever. Do not gate on
+      // isMounted here: a re-render may have made the old closure stale,
+      // but the host ref is still live in the DOM and the error box is
+      // a strictly better state than an empty host.
+      if (!hostRef.current) return;
+      const errorMessage = lastError instanceof Error ? lastError.message : 'Invalid Mermaid syntax';
+      const escaped = errorMessage
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      hostRef.current.innerHTML =
+        `<div class="w-full space-y-2 p-4 rounded border border-state-error/40 bg-state-error/10 text-left">` +
+        `<div class="flex items-center gap-2 text-state-error font-semibold text-xs">` +
+        `  <span>Diagram Syntax Error</span>` +
+        `</div>` +
+        `<p class="text-[11px] text-text-body font-mono break-all">${escaped}</p>` +
+        `<pre class="p-3 bg-code-canvas rounded border border-hairline-outline text-xs font-mono text-text-body overflow-x-auto"><code>${escaped}</code></pre>` +
+        `</div>`;
+    }
+
+    renderQueue = renderQueue.then(renderDiagram);
 
     return () => {
       isMounted = false;
@@ -139,32 +183,11 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
 
       {/* Main Diagram Area */}
       <div className="p-4 sm:p-6 overflow-x-auto min-h-[120px] flex items-center justify-center bg-canvas-obsidian/40 relative">
-        {loading && (
-          <div className="flex items-center gap-2 text-text-muted py-6">
-            <RefreshCw className="w-4 h-4 animate-spin text-secondary" />
-            <span className="text-xs">Rendering diagram...</span>
-          </div>
-        )}
-
-        {!loading && error && (
-          <div className="w-full space-y-2 p-4 rounded border border-state-error/40 bg-state-error/10 text-left">
-            <div className="flex items-center gap-2 text-state-error font-semibold text-xs">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>Diagram Syntax Error</span>
-            </div>
-            <p className="text-[11px] text-text-body font-mono break-all">{error}</p>
-            <pre className="p-3 bg-code-canvas rounded border border-hairline-outline text-xs font-mono text-text-body overflow-x-auto">
-              <code>{cleanCode}</code>
-            </pre>
-          </div>
-        )}
-
-        {!loading && !error && svg && (
-          <div
-            className="w-full flex justify-center items-center select-none [&>svg]:max-w-full [&>svg]:h-auto [&>svg]:transition-all"
-            dangerouslySetInnerHTML={{ __html: svg }}
-          />
-        )}
+        <div
+          ref={hostRef}
+          data-mermaid-host
+          className="w-full flex justify-center items-center select-none [&>svg]:max-w-full [&>svg]:h-auto [&>svg]:transition-all"
+        />
       </div>
     </div>
   );

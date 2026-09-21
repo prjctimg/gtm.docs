@@ -1,18 +1,19 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { 
-  Play, 
-  Pause, 
-  Maximize2, 
-  X, 
-  Copy, 
-  Check, 
-  ExternalLink, 
-  ZoomIn, 
-  ZoomOut, 
+import {
+  Play,
+  Pause,
+  Maximize2,
+  X,
+  Copy,
+  Check,
+  ExternalLink,
+  ZoomIn,
+  ZoomOut,
   RotateCcw,
   Film,
   Sparkles
 } from 'lucide-react';
+import { IS_HYDRATING } from '../lib/hydration';
 
 interface GifPreviewProps {
   src: string;
@@ -160,7 +161,12 @@ export const GifPreview: React.FC<GifPreviewProps> = ({
 
         {/* Media display */}
         <div className="relative flex items-center justify-center min-h-[140px] max-h-[460px] bg-canvas-obsidian/40">
-          {!hasLoaded && !hasError && (
+          {/* Loading state is a prerender/hydration hazard: the captured DOM
+              shows the already-loaded GIF (no overlay), but the hydration
+              first commit would render this overlay until onLoad fires.
+              Skip it entirely when hydrating — the image is local and loads
+              in a frame, and the overlay is meaningless on a cached page. */}
+          {!IS_HYDRATING && !hasLoaded && !hasError && (
             <div className="absolute inset-0 flex items-center justify-center bg-surface-container/50">
               <div className="flex items-center gap-2 text-xs font-mono text-text-muted">
                 <div className="w-4 h-4 rounded-full border-2 border-secondary/30 border-t-secondary animate-spin" />
@@ -215,11 +221,16 @@ export const GifPreview: React.FC<GifPreviewProps> = ({
         <div className="px-3.5 py-2 bg-surface-elevated/80 border-t border-hairline-subtle flex items-center justify-between text-[11px] font-mono text-text-muted">
           <div className="flex items-center gap-2 truncate">
             <span className="text-text-primary font-medium truncate">{caption || alt}</span>
-            {dimensions && (
-              <span className="text-text-disabled text-[10px] hidden sm:inline">
-                ({dimensions.width}×{dimensions.height})
-              </span>
-            )}
+            {/* Always in the tree: the captured DOM shows real pixel sizes but
+                hydration's first commit has none yet (load is async), so this
+                text is exempted from hydration comparison and just updates
+                once onLoad provides the numbers. */}
+            <span
+              suppressHydrationWarning
+              className="text-text-disabled text-[10px] hidden sm:inline"
+            >
+              {dimensions ? `(${dimensions.width}×${dimensions.height})` : ''}
+            </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-text-disabled">

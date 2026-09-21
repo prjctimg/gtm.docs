@@ -1,6 +1,6 @@
 ---
 title: Intro
-description: "A terminal music player with background playback, YouTube and Spotify integration, and a focus on discoverability."
+description: "What gtm is: a terminal audio player split into a background daemon (gtmd) and a TUI client (gtm)."
 sidebar:
   order: 1
 ---
@@ -13,8 +13,8 @@ sidebar:
 
 ## Overview
 
-**gtm** ("goto music") is a terminal music player with background playback,
-YouTube and Spotify integration, and a focus on discoverability.
+**gtm** ("goto music") is a feature-rich terminal audio player with background
+playback and YouTube/Spotify integration.
 
 It is built as a small daemon (`gtmd`) and a thin client (`gtm`). The client
 opens a keyboard-driven TUI by default, but every control is also available
@@ -26,9 +26,10 @@ from a plain CLI — so the same tool drives interactive use and scripting.
 
 ```mermaid
 graph LR
-    Client["gtm (client)<br/>TUI & CLI Interface"]
-    Daemon["gtmd (daemon)<br/>Audio Engine & Database"]
-    Client <==>|"IPC over Unix socket"| Daemon
+    Client["gtm (client) — TUI and CLI"]
+    Daemon["gtmd (daemon) — audio engine and database"]
+    Client -->|IPC over Unix socket| Daemon
+    Daemon -->|audio + state events| Client
 ```
 
 - The daemon owns audio output, the library database, network providers, and
@@ -48,8 +49,9 @@ graph LR
   pitch-preserving speed (0.25×–2.0×), volume, seek.
 - **Crossfade** — gapless-ish transitions with a configurable 0–30 s duration.
 - **Equalizer** — 15-band ISO 1/3-octave graphic EQ with 16 presets.
-- **Visualizer** — five render styles (Braille, Blocks, Mirror, Gradient,
-  Spectrum) driven by live FFT.
+- **Visualizer** — 12 FFT-driven render styles (Braille, Blocks, Mirror,
+  Gradient, Spectrum, BarsDot, ClassicPeak, Columns, Wave, Stereo, Retro,
+  Flame).
 - **Lyrics** — synced lyrics from LRCLIB, sidecar `.lrc` / `.srt` / `.json`
   files, offline cache, and enhanced LRC word-level timing.
 - **Cover art** — fetched automatically via MusicBrainz, Deezer, or Spotify;

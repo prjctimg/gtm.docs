@@ -1,28 +1,47 @@
 import React from 'react';
 import { Link, NavLink } from 'react-router';
 import { Search, Github } from 'lucide-react';
+import { useLatestReleaseTag, RELEASES_URL } from '../lib/version';
 
-interface TopNavProps {
+interface NavbarProps {
   onOpenSearch: () => void;
   onOpenKeymap: () => void;
 }
 
-export const TopNav: React.FC<TopNavProps> = ({
+export const Navbar: React.FC<NavbarProps> = ({
   onOpenSearch,
   onOpenKeymap
 }) => {
+  const latestTag = useLatestReleaseTag();
+
   return (
     <header className="w-full border-b border-hairline-outline bg-canvas-obsidian sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
         {/* Brand & Desktop Links */}
         <div className="flex items-center gap-5 sm:gap-8">
-          <Link
-            to="/"
-            id="nav-brand-button"
-            className="font-mono text-base sm:text-lg text-secondary tracking-tight font-bold flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer text-left"
-          >
-            <span>&gt; gtm</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/"
+              id="nav-brand-button"
+              className="font-mono text-base sm:text-lg text-secondary tracking-tight font-bold flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer text-left"
+            >
+              <span>&gt; gtm</span>
+            </Link>
+
+            {/* Latest release tag — subtle, next to the brand */}
+            {latestTag && (
+              <a
+                href={RELEASES_URL}
+                target="_blank"
+                rel="noreferrer"
+                id="nav-version-badge"
+                className="hidden sm:inline-block font-mono text-[10px] leading-none text-text-disabled hover:text-text-muted border border-hairline-outline rounded px-1.5 py-0.5 transition-colors"
+                title={`Latest release: ${latestTag}`}
+              >
+                {latestTag}
+              </a>
+            )}
+          </div>
 
           {/* Navigation Links */}
           <nav className="flex items-center gap-4 sm:gap-6 font-mono text-xs">

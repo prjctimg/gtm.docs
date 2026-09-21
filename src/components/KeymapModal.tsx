@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { KEYBINDINGS } from '../data/mockData';
+import { KEYBINDINGS } from '../data/site';
 import { X, Keyboard, Command } from 'lucide-react';
 
 interface KeymapModalProps {

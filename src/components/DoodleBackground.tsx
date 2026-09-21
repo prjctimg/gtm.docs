@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const MusicalDoodleBackground: React.FC = () => {
+export const DoodleBackground: React.FC = () => {
   return (
     <div
       className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0"

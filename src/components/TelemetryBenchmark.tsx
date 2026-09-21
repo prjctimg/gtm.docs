@@ -12,7 +12,7 @@ import {
   FileCode2
 } from 'lucide-react';
 
-interface AnimatedTelemetryBenchmarkProps {
+interface TelemetryBenchmarkProps {
   className?: string;
   onNavigateDocs?: () => void;
 }
@@ -186,7 +186,7 @@ const formatRelativeTime = (isoString?: string): string => {
   return `${days}d ago`;
 };
 
-export const AnimatedTelemetryBenchmark: React.FC<AnimatedTelemetryBenchmarkProps> = ({ className = '' }) => {
+export const TelemetryBenchmark: React.FC<TelemetryBenchmarkProps> = ({ className = '' }) => {
   const [workflows, setWorkflows] = useState<WorkflowRunItem[]>(INITIAL_WORKFLOWS);
   const [now, setNow] = useState<number>(() => Date.now());
 
@@ -312,11 +312,15 @@ export const AnimatedTelemetryBenchmark: React.FC<AnimatedTelemetryBenchmarkProp
       <div className="bg-surface-container border border-hairline-outline rounded-xl p-5 sm:p-6 flex flex-col justify-between space-y-4 shadow-sm hover:border-secondary/40 transition-colors font-mono">
         {/* Real Commit Context Box: Avatar on left (slightly bigger) */}
         <div className="bg-code-canvas border border-hairline-outline rounded-lg p-3 sm:p-3.5 flex items-start gap-3">
+          {/* The capture aborts off-origin requests, so this image fails there and
+            hides itself via display:none — but it loads fine for real visitors.
+            Exempt the style from hydration comparison. */}
           <img
             src={primaryRun.actorAvatarUrl || `https://github.com/${primaryRun.actor}.png`}
             alt={primaryRun.actor}
             title={`@${primaryRun.actor}`}
             className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-hairline-outline bg-surface-elevated shrink-0 mt-0.5"
+            suppressHydrationWarning
             onError={(e) => {
               (e.currentTarget as HTMLElement).style.display = 'none';
             }}

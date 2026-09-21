@@ -1,19 +1,18 @@
 #!/usr/bin/env node
 /**
- * Generates public/sitemap.xml from the docs in content/ so the sitemap
- * regenerates on every build (runs as the `prebuild` npm script).
+ * Generates public/sitemap.xml from the shared route set (scripts/routes.mjs)
+ * so the sitemap regenerates on every build (runs as the `prebuild` npm
+ * script) and always agrees with the prerendered pages.
  *
- * Every doc in content/*.mdx maps to a /docs/<slug> route. The SPA is a
- * client-side routed app (see vercel.json rewrite), so all URLs here are
- * real navigable paths served by index.html.
+ * Every route maps to a real navigable path served by index.html (or its own
+ * prerendered dist/<path>/index.html after build).
  *
- * Node-only — no dependencies, safe to run anywhere bun/node exist.
+ * Node-only — no dependencies.
  */
-import { readdirSync, writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { SITE_URL, buildRoutes } from './routes.mjs';
 
-const SITE_URL = 'https://gtmd.dev';
-const CONTENT_DIR = join(process.cwd(), 'content');
 const OUT_DIR = join(process.cwd(), 'public');
 const OUT_FILE = join(OUT_DIR, 'sitemap.xml');
 
@@ -29,21 +28,14 @@ function urlEntry(loc, priority = '0.7', changefreq = 'weekly') {
   </url>`;
 }
 
-let entries = [
-  urlEntry('/', '1.0', 'weekly'),
-  urlEntry('/docs', '0.9', 'weekly'),
-  urlEntry('/install', '0.9', 'monthly'),
-  urlEntry('/blog', '0.8', 'weekly'),
-];
-
-const docSlugs = readdirSync(CONTENT_DIR)
-  .filter((f) => f.endsWith('.mdx'))
-  .map((f) => f.replace(/\.mdx$/, ''))
-  .sort();
-
-for (const slug of docSlugs) {
-  entries.push(urlEntry(`/docs/${slug}`, '0.9', 'weekly'));
-}
+const routes = buildRoutes();
+const entries = routes.map((r) =>
+  urlEntry(
+    r.path,
+    r.path === '/' ? '1.0' : '0.9',
+    r.path === '/install' ? 'monthly' : 'weekly',
+  ),
+);
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -53,4 +45,4 @@ ${entries.join('\n')}
 
 mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(OUT_FILE, sitemap + '\n');
-console.log(`✓ generated ${OUT_FILE} (${docSlugs.length} docs, ${entries.length} URLs)`);
+console.log(`✓ generated ${OUT_FILE} (${routes.length} URLs)`);
