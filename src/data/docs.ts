@@ -9,6 +9,8 @@ export interface DocItem {
   content: string; // without frontmatter
   headings: { id: string; text: string; level: number }[];
   category: string;
+  /** ISO-8601 timestamp of the last meaningful edit to this doc. */
+  updatedAt?: string;
 }
 
 // Raw MDX files loaded via Vite eager glob
@@ -17,6 +19,31 @@ const rawDocs = import.meta.glob<string>('../../content/*.mdx', {
   import: 'default',
   eager: true,
 });
+
+// Map of content file names → ISO-8601 last-updated timestamp.
+// Source: `git log -1 --format='%cI' -- content/<file>.mdx` run 2026-09-21.
+const updatedAtMap: Record<string, string> = {
+  audio:              '2026-09-21T19:22:53+02:00',
+  configuration:      '2026-09-21T19:22:53+02:00',
+  'cover-art':        '2026-09-21T19:22:53+02:00',
+  crossfade:          '2026-09-21T19:22:53+02:00',
+  daemon:             '2026-09-21T19:22:53+02:00',
+  'getting-started':  '2026-09-21T20:59:08+02:00',
+  interface:          '2026-09-21T19:22:53+02:00',
+  library:            '2026-09-21T19:22:53+02:00',
+  lyrics:             '2026-09-21T19:22:53+02:00',
+  'metadata-sources': '2026-09-21T19:22:53+02:00',
+  mpris:              '2026-09-21T19:22:53+02:00',
+  overview:           '2026-09-21T19:22:53+02:00',
+  playback:           '2026-09-21T19:22:53+02:00',
+  podcasts:           '2026-09-21T19:22:53+02:00',
+  radio:              '2026-09-21T19:22:53+02:00',
+  spotify:            '2026-09-21T19:22:53+02:00',
+  streams:            '2026-09-21T19:22:53+02:00',
+  subsonic:           '2026-09-21T19:22:53+02:00',
+  theming:            '2026-09-21T19:22:53+02:00',
+  youtube:            '2026-09-21T19:22:53+02:00',
+};
 
 // Helper to assign categories based on order or slug
 function getDocCategory(order: number, id: string): string {
@@ -101,6 +128,12 @@ function parseDoc(filePath: string, raw: string): DocItem {
     headings.push({ id: slug, text, level });
   }
 
+  // Per-file last-updates derived from `git log -1 --format=%cI` on 2026-09-21.
+  // Every doc was shipped in the initial batch; getting-started was updated
+  // shortly after. This drives the "Updated X ago" timestamp at the bottom of
+  // each doc page.
+  const updatedAt = updatedAtMap[fileName] || undefined;
+
   return {
     id: fileName,
     slug: `/${fileName}/`,
@@ -111,6 +144,7 @@ function parseDoc(filePath: string, raw: string): DocItem {
     content,
     headings,
     category: getDocCategory(order, fileName),
+    ...(updatedAt ? { updatedAt } : {}),
   };
 }
 

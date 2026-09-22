@@ -44,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Navigation Links */}
-          <nav className="flex items-center gap-4 sm:gap-6 font-mono text-xs">
+          <nav className="flex items-center gap-4 sm:gap-6 font-mono text-sm">
             <NavLink
               to="/docs"
               id="nav-docs-link"
@@ -87,12 +87,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Search Button */}
           <button
             onClick={onOpenSearch}
-            className="flex items-center gap-2 px-2.5 py-1.5 bg-surface-container border border-hairline-outline hover:border-text-muted rounded text-xs font-mono text-text-muted hover:text-text-primary transition-colors cursor-pointer min-h-[38px]"
+            className="flex items-center gap-2 px-2.5 py-1.5 bg-surface-container border border-hairline-outline hover:border-text-muted rounded text-sm font-mono text-text-muted hover:text-text-primary transition-colors cursor-pointer min-h-[38px]"
             title="Search docs (Ctrl+K or /)"
           >
             <Search className="w-3.5 h-3.5 text-secondary" />
             <span className="hidden sm:inline">Search...</span>
-            <kbd className="hidden sm:inline px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-[10px] text-text-disabled">
+            <kbd className="hidden sm:inline px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-[11px] text-text-disabled">
               /
             </kbd>
           </button>

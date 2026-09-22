@@ -14,7 +14,7 @@ export const Footer: React.FC<FooterProps> = ({
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <footer className="w-full border-t border-hairline-outline bg-canvas-obsidian py-8 px-4 sm:px-6 md:px-12 font-mono text-xs transition-colors duration-200">
+    <footer className="w-full border-t border-hairline-outline bg-canvas-obsidian py-8 px-4 sm:px-6 md:px-12 font-mono text-sm transition-colors duration-200">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Theme Switcher Header */}
         <div className="flex items-center justify-center">
@@ -36,7 +36,7 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Footer Links inline with Copyright */}
-        <div className="pt-4 border-t border-hairline-outline/40 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 text-text-muted text-[11px]">
+        <div className="pt-4 border-t border-hairline-outline/40 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 text-text-muted text-xs">
           <span>
             © {currentYear},{' '}
             <a
@@ -50,7 +50,7 @@ export const Footer: React.FC<FooterProps> = ({
           </span>
 
           {/* Navigation links matching the navbar */}
-          <nav className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 text-xs">
+          <nav className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 text-sm">
             <Link
               to="/docs/overview"
               className="hover:text-text-primary transition-colors"

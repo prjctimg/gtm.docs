@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { NavLink, Link, useParams, Navigate } from 'react-router';
+import { NavLink, Link, useParams } from 'react-router';
 import { 
   ALL_DOCS, 
   DOCS_BY_ID, 
@@ -9,11 +9,12 @@ import {
 } from '../data/docs';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { usePageMeta } from '../lib/meta';
+import { useRelativeTime } from '../lib/relative-time';
+import { NotFoundPage } from './NotFoundPage';
 import { 
   Search, 
   Check, 
   Copy, 
-  Keyboard, 
   ArrowRight, 
   ArrowLeft,
   ChevronRight,
@@ -23,12 +24,12 @@ import {
   X,
   BookOpen,
   ChevronDown,
-  PanelLeft
+  PanelLeft,
+  Clock
 } from 'lucide-react';
 
 interface DocsPageProps {
   onOpenSearch: () => void;
-  onOpenKeymap: () => void;
 }
 
 const DEFAULT_FALLBACK_DOC: DocItem = {
@@ -48,11 +49,14 @@ const DEFAULT_FALLBACK_DOC: DocItem = {
 };
 
 export const DocsPage: React.FC<DocsPageProps> = ({
-  onOpenSearch,
-  onOpenKeymap
+  onOpenSearch
 }) => {
   const { docId } = useParams();
   const activeDocId = docId || 'overview';
+
+  // Unknown /docs/:docId URLs render a real 404 page (preserving the URL)
+  // instead of silently redirecting to the overview doc.
+  const missingDoc = Boolean(docId && !DOCS_BY_ID[docId]);
 
   // Current active doc
   const [currentDocId, setCurrentDocId] = useState<string>(() => {
@@ -132,7 +136,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
         }
       }
 
-      setActiveHeadingId(currentId);
+      setActiveHeadingId((prev) => (prev === currentId ? prev : currentId));
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -167,29 +171,37 @@ export const DocsPage: React.FC<DocsPageProps> = ({
   };
 
   usePageMeta(
-    activeDoc ? `${activeDoc.title} | gtm` : 'Docs | gtm',
-    activeDoc?.description || 'gtm documentation — terminal audio player guides and references.'
+    missingDoc
+      ? 'Page not found | gtm'
+      : activeDoc
+        ? `${activeDoc.title} | gtm`
+        : 'Docs | gtm',
+    missingDoc
+      ? 'The page you are looking for does not exist or has moved.'
+      : activeDoc?.description || 'gtm documentation — terminal audio player guides and references.'
   );
 
-  // Unknown /docs/:docId URLs fall back to the overview doc.
-  if (docId && !DOCS_BY_ID[docId]) {
-    return <Navigate to="/docs/overview" replace />;
+  // Unknown /docs/:docId URLs render a real 404 page (URL is preserved).
+  if (missingDoc) {
+    return <NotFoundPage onOpenSearch={onOpenSearch} />;
   }
+
+  const updatedLabel = useRelativeTime(activeDoc?.updatedAt);
 
   return (
     <div className="w-full flex flex-col font-sans">
       <div className="max-w-7xl mx-auto flex w-full">
         {/* LEFT SIDEBAR: Document List & Categories (Desktop) */}
-        <aside className="w-72 shrink-0 border-r border-hairline-outline bg-canvas-obsidian px-4 pt-6 pb-6 hidden lg:block sticky top-14 self-start max-h-[calc(100vh-56px)] overflow-y-auto font-mono text-xs">
+        <aside className="w-72 shrink-0 border-r border-hairline-outline bg-canvas-obsidian px-4 pt-6 pb-6 hidden lg:block sticky top-14 self-start max-h-[calc(100vh-56px)] overflow-y-auto font-mono text-sm">
           {/* Search Trigger */}
           <div className="relative mb-5">
             <button
               onClick={onOpenSearch}
-              className="w-full flex items-center justify-between pl-8 pr-3 py-2 bg-code-canvas border border-hairline-outline hover:border-primary-container rounded text-text-muted text-xs transition-colors cursor-pointer text-left"
+              className="w-full flex items-center justify-between pl-8 pr-3 py-2 bg-code-canvas border border-hairline-outline hover:border-primary-container rounded text-text-muted text-sm transition-colors cursor-pointer text-left"
             >
               <Search className="w-3.5 h-3.5 absolute left-2.5 text-secondary" />
               <span>Search {ALL_DOCS.length} topics...</span>
-              <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-[10px] text-text-muted">
+              <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-[11px] text-text-muted">
                 /
               </kbd>
             </button>
@@ -201,7 +213,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
               const docsInCat = DOCS_BY_CATEGORY[category] || [];
               return (
                 <div key={category} className="space-y-1.5">
-                  <div className="text-[11px] font-bold text-text-muted tracking-wider uppercase flex items-center gap-1.5 px-1">
+                  <div className="text-xs font-bold text-text-muted tracking-wider uppercase flex items-center gap-1.5 px-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
                     <span>{category}</span>
                   </div>
@@ -213,7 +225,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                           <NavLink
                             to={`/docs/${doc.id}`}
                             className={({ isActive }) =>
-                              `w-full text-left py-1.5 px-2 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 ${
+                              `w-full text-left py-1.5 px-2 rounded text-sm cursor-pointer transition-colors flex items-center gap-1.5 ${
                                 isActive
                                   ? 'bg-surface-elevated text-secondary font-bold border border-secondary/30'
                                   : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/40'
@@ -229,32 +241,6 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                 </div>
               );
             })}
-
-            {/* Quick Tools Box */}
-            <div className="pt-2 border-t border-hairline-outline space-y-2">
-              <div className="text-[11px] font-bold text-text-muted tracking-wider uppercase flex items-center gap-2 px-1">
-                <Keyboard className="w-3 h-3 text-state-warning" />
-                <span>Quick Tools</span>
-              </div>
-              <ul className="space-y-1 border-l border-hairline-subtle ml-2 pl-2">
-                <li>
-                  <button
-                    onClick={onOpenKeymap}
-                    className="block w-full text-left py-1 px-2 text-secondary hover:underline text-xs cursor-pointer"
-                  >
-                    Keybindings Cheatsheet →
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={onOpenSearch}
-                    className="block w-full text-left py-1 px-2 text-text-muted hover:text-text-primary text-xs cursor-pointer"
-                  >
-                    Fuzzy Search (/)
-                  </button>
-                </li>
-              </ul>
-            </div>
           </div>
         </aside>
 
@@ -286,7 +272,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                   setActiveHeadingId('');
                 }
               }}
-              className="flex-1 min-w-0 appearance-none bg-surface-container hover:bg-surface-elevated/70 border border-hairline-outline hover:border-secondary/40 focus:border-secondary focus:ring-1 focus:ring-secondary/30 text-text-primary font-mono text-xs rounded-lg px-3.5 py-2.5 pr-10 focus:outline-none transition-all cursor-pointer shadow-xs min-h-[38px]"
+              className="flex-1 min-w-0 appearance-none bg-surface-container hover:bg-surface-elevated/70 border border-hairline-outline hover:border-secondary/40 focus:border-secondary focus:ring-1 focus:ring-secondary/30 text-text-primary font-mono text-sm rounded-lg px-3.5 py-2.5 pr-10 focus:outline-none transition-all cursor-pointer shadow-xs min-h-[38px]"
             >
               <option value="" className="bg-canvas-obsidian text-text-primary font-mono">
                 {activeDoc?.title} (Top)
@@ -308,7 +294,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
             <nav
               id="docs-breadcrumb-nav"
               aria-label="Breadcrumbs"
-              className="flex items-center gap-1.5 text-xs font-mono text-text-muted flex-wrap"
+              className="flex items-center gap-1.5 text-sm font-mono text-text-muted flex-wrap"
             >
               <Link
                 to={`/docs/${ALL_DOCS[0]?.id || 'overview'}`}
@@ -348,6 +334,15 @@ export const DocsPage: React.FC<DocsPageProps> = ({
               content={activeDoc?.content || ''}
             />
           </article>
+
+          {/* Last Updated timestamp */}
+          {activeDoc?.updatedAt && (
+            <div className="-mt-2 flex items-center gap-1.5 font-mono text-xs text-text-muted">
+              <Clock className="w-3.5 h-3.5 text-text-disabled" />
+              <span>Updated</span>
+              <span className="text-text-primary font-semibold">{updatedLabel}</span>
+            </div>
+          )}
 
           {/* Page Footer Action: Edit on GitHub */}
           <div className="pt-6 border-t border-hairline-outline flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-mono text-xs">
@@ -403,14 +398,14 @@ export const DocsPage: React.FC<DocsPageProps> = ({
         </main>
 
         {/* RIGHT SIDEBAR: On This Page Table of Contents (Desktop) */}
-        <aside className="w-60 shrink-0 border-l border-hairline-outline bg-canvas-obsidian px-6 pt-6 pb-6 hidden xl:block sticky top-14 self-start max-h-[calc(100vh-56px)] overflow-y-auto font-mono text-xs">
-          <div className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+        <aside className="w-60 shrink-0 border-l border-hairline-outline bg-canvas-obsidian px-6 pt-6 pb-6 hidden xl:block sticky top-14 self-start max-h-[calc(100vh-56px)] overflow-y-auto font-mono text-sm">
+          <div className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
             <ListTree className="w-3.5 h-3.5 text-secondary" />
             <span>On this page</span>
           </div>
 
           {(activeDoc?.headings || []).length === 0 ? (
-            <p className="text-text-muted text-[11px] italic">No sub-sections</p>
+            <p className="text-text-muted text-xs italic">No sub-sections</p>
           ) : (
             <ul className="space-y-1.5 border-l border-hairline-outline pl-3">
               {(activeDoc?.headings || []).map((h) => (
@@ -420,7 +415,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                 >
                   <button
                     onClick={() => scrollToHeading(h.id)}
-                    className={`block text-left transition-colors cursor-pointer text-xs truncate max-w-[180px] ${
+                    className={`block text-left transition-colors cursor-pointer text-sm truncate max-w-[180px] ${
                       activeHeadingId === h.id
                         ? 'text-secondary font-bold'
                         : 'text-text-muted hover:text-text-primary'
@@ -437,7 +432,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
           <div className="mt-8 pt-6 border-t border-hairline-outline space-y-2.5">
             <button
               onClick={handleCopyDocUrl}
-              className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors text-xs cursor-pointer w-full text-left"
+              className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors text-sm cursor-pointer w-full text-left"
             >
               {copiedLink ? (
                 <>
@@ -466,7 +461,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
           />
 
           {/* Drawer Sheet */}
-          <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-canvas-obsidian border-r border-hairline-outline shadow-2xl flex flex-col font-mono text-xs z-10 animate-in slide-in-from-left duration-200">
+          <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-canvas-obsidian border-r border-hairline-outline shadow-2xl flex flex-col font-mono text-sm z-10 animate-in slide-in-from-left duration-200">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-hairline-outline bg-surface-container/50">
               <div className="flex items-center gap-2 text-secondary font-bold text-xs">
@@ -491,13 +486,13 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                   setIsMobileDrawerOpen(false);
                   onOpenSearch();
                 }}
-                className="w-full flex items-center justify-between px-3 py-2 bg-code-canvas border border-hairline-outline hover:border-secondary/50 rounded text-text-muted text-xs transition-colors cursor-pointer text-left"
+                className="w-full flex items-center justify-between px-3 py-2 bg-code-canvas border border-hairline-outline hover:border-secondary/50 rounded text-text-muted text-sm transition-colors cursor-pointer text-left"
               >
                 <div className="flex items-center gap-2">
                   <Search className="w-3.5 h-3.5 text-secondary" />
                   <span>Search {ALL_DOCS.length} topics...</span>
                 </div>
-                <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-[10px] text-text-muted">
+                <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-[11px] text-text-muted">
                   /
                 </kbd>
               </button>
@@ -509,7 +504,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                 const docsInCat = DOCS_BY_CATEGORY[category] || [];
                 return (
                   <div key={category} className="space-y-1.5">
-                    <div className="text-[11px] font-bold text-text-muted tracking-wider uppercase flex items-center gap-1.5 px-1">
+                    <div className="text-xs font-bold text-text-muted tracking-wider uppercase flex items-center gap-1.5 px-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
                       <span>{category}</span>
                     </div>
@@ -522,7 +517,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                               to={`/docs/${doc.id}`}
                               onClick={() => setIsMobileDrawerOpen(false)}
                               className={({ isActive }) =>
-                                `w-full text-left py-2 px-2.5 rounded text-xs cursor-pointer transition-colors flex items-center gap-1.5 ${
+                                `w-full text-left py-2 px-2.5 rounded text-sm cursor-pointer transition-colors flex items-center gap-1.5 ${
                                   isActive
                                     ? 'bg-surface-elevated text-secondary font-bold border border-secondary/30'
                                     : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/40'
@@ -538,28 +533,6 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                   </div>
                 );
               })}
-
-              {/* Quick Tools Box */}
-              <div className="pt-3 border-t border-hairline-outline space-y-2">
-                <div className="text-[11px] font-bold text-text-muted tracking-wider uppercase flex items-center gap-2 px-1">
-                  <Keyboard className="w-3 h-3 text-state-warning" />
-                  <span>Quick Tools</span>
-                </div>
-                <ul className="space-y-1 border-l border-hairline-subtle ml-2 pl-2">
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMobileDrawerOpen(false);
-                        onOpenKeymap();
-                      }}
-                      className="block w-full text-left py-1.5 px-2 text-secondary hover:underline text-xs cursor-pointer"
-                    >
-                      Keybindings Cheatsheet →
-                    </button>
-                  </li>
-                </ul>
-              </div>
             </div>
           </div>
         </div>

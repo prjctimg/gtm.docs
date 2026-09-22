@@ -8,6 +8,7 @@ import { ScrollManager } from './components/ScrollManager';
 import { HomePage } from './pages/HomePage';
 import { DocsPage } from './pages/DocsPage';
 import { InstallPage } from './pages/InstallPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -45,12 +46,16 @@ export default function App() {
             element={
               <DocsPage
                 onOpenSearch={() => setIsSearchOpen(true)}
-                onOpenKeymap={() => setIsKeymapOpen(true)}
               />
             }
           />
           <Route path="/install" element={<InstallPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route
+            path="*"
+            element={
+              <NotFoundPage onOpenSearch={() => setIsSearchOpen(true)} />
+            }
+          />
         </Routes>
       </div>
 

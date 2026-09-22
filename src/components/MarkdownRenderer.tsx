@@ -121,9 +121,8 @@ function parseContentSegments(rawContent: string): ContentSegment[] {
   return segments;
 }
 
-export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
-  content,
-}) => {
+export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
+  function MarkdownRenderer({ content }) {
   const segments = parseContentSegments(content);
 
   const renderMarkdownComponent = (mdText: string) => {
@@ -499,5 +498,6 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         </React.Fragment>
       ))}
     </div>
-  );
-};
+    );
+  }
+);

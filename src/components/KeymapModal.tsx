@@ -31,7 +31,7 @@ export const KeymapModal: React.FC<KeymapModalProps> = ({ isOpen, onClose }) => 
           <div className="flex items-center gap-2.5">
             <Keyboard className="w-4 h-4 text-secondary" />
             <h3 className="font-mono text-sm font-bold text-text-primary">
-              Vim Keybindings &amp; Hotkey Cheatsheet
+              Keybindings (default)
             </h3>
           </div>
           <button

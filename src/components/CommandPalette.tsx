@@ -194,9 +194,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Footer info */}
-        <div className="px-4 py-2 bg-canvas-obsidian border-t border-hairline-outline flex items-center justify-between text-[11px] font-mono text-text-muted">
+        <div className="px-4 py-2 bg-canvas-obsidian border-t border-hairline-outline flex items-center justify-center text-[11px] font-mono text-text-muted">
           <span>Navigate with [↑][↓], Select with [Enter]</span>
-          <span className="text-secondary">{ALL_DOCS.length} live docs loaded</span>
         </div>
       </div>
     </div>

@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState, useId } from 'react';
-import mermaid from 'mermaid';
+// NOTE: `mermaid` is imported lazily via dynamic import() (see getMermaid
+// below). mermaid's core + diagram renderers are ~5 MB minified, so it must
+// only download on pages that actually render a diagram — never in the main
+// entry chunk.
 import { Check, Copy } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -7,9 +10,18 @@ interface MermaidDiagramProps {
   code: string;
 }
 
-let lastInitializedTheme: 'dark' | 'light' | null = null;
+type Mermaid = typeof import('mermaid')['default'];
 
-function initializeMermaid(theme: 'dark' | 'light') {
+let lastInitializedTheme: 'dark' | 'light' | null = null;
+let mermaidPromise: Promise<Mermaid> | null = null;
+
+function getMermaid(): Promise<Mermaid> {
+  // Cache the chunk across mounts/remounts so repeated navigations are instant.
+  mermaidPromise ??= import('mermaid').then((mod) => mod.default);
+  return mermaidPromise;
+}
+
+function initializeMermaid(mermaid: Mermaid, theme: 'dark' | 'light') {
   if (lastInitializedTheme === theme) return;
   try {
     const isLight = theme === 'light';
@@ -67,14 +79,13 @@ function initializeMermaid(theme: 'dark' | 'light') {
 }
 
 /**
- * Renders a mermaid diagram. Uses the official v12 API (initialize once per
- * theme, then `mermaid.render(id, text)`); render calls are serialized by
- * mermaid itself, so no custom queue is needed. The resulting SVG is written
- * into a ref-owned host div that React never re-renders, and `mermaid.render`
- * cleans its own temporary DOM — the previous version tried to remove mermaid
- * "strays" itself and ended up deleting the very SVG it had just inserted.
- * Render attempts use escalating timeouts + backoff (the flowchart renderer is
- * a lazily imported chunk, so cold-start chunk fetches can hiccup transiently).
+ * Renders a mermaid diagram lazily. mermaid v12 serializes render calls
+ * internally, so no custom queue is needed. The resulting SVG is written into
+ * a ref-owned host div that React never re-renders, and `mermaid.render`
+ * cleans its own temporary DOM. Render attempts use escalating timeouts +
+ * backoff (the flowchart renderer is a lazily imported chunk, so cold-start
+ * chunk fetches can hiccup transiently). The mermaid module itself is also
+ * imported lazily — it only downloads on pages that render a diagram.
  */
 export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
   const { theme } = useTheme();
@@ -84,17 +95,16 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
 
   const cleanCode = code.trim();
 
-  // The rendered diagram (and any error state) lives inside a ref-owned host
-  // div, injected imperatively rather than driven by React state. React's
-  // committed tree just owns the (empty) host div, so re-renders never touch
-  // the SVG that mermaid wrote into it.
   useEffect(() => {
     let isMounted = true;
-    initializeMermaid(theme);
 
     // Render one diagram, but never wait forever: mermaid can wedge on some
     // syntaxes, and a hung promise must not block this diagram's retry.
-    async function renderOne(renderId: string, timeoutMs: number) {
+    async function renderOne(
+      mermaid: Mermaid,
+      renderId: string,
+      timeoutMs: number
+    ) {
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
         const timeout = new Promise<never>((_, reject) => {
@@ -107,12 +117,13 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
     }
 
     async function renderDiagram() {
-      // The flowchart renderer is itself a lazily dynamic-imported chunk, so
-      // the first attempt can lose a cold-start race (slow network, cold
-      // browser cache, or a transiently failed chunk fetch). Retry with
-      // escalating timeouts and backoff — a chunk/network failure is
-      // transient, while a syntax error always fails identically — and only
-      // surface the error box once every attempt has exhausted its wait.
+      // The mermaid module chunk + the flowchart renderer are lazily
+      // dynamic-imported chunks, so the first attempt can lose a cold-start
+      // race (slow network, cold browser cache, or a transiently failed chunk
+      // fetch). Retry with escalating timeouts and backoff — a chunk/network
+      // failure is transient, while a syntax error always fails identically —
+      // and only surface the error box once every attempt has exhausted its
+      // wait.
       let lastError: unknown = null;
       const attempts = [
         { timeout: 7000, backoff: 400 },
@@ -120,38 +131,47 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
         { timeout: 14000, backoff: 4000 },
         { timeout: 18000, backoff: 0 },
       ];
-      for (let attempt = 0; attempt < attempts.length; attempt++) {
-        const renderId = `mermaid-${uniqueId}-${Date.now().toString(36)}`;
-        try {
-          const renderResult = await renderOne(renderId, attempts[attempt].timeout);
-          if (isMounted && hostRef.current) {
-            hostRef.current.innerHTML = renderResult.svg;
-          }
-          return;
-        } catch (err) {
-          lastError = err;
-          const isChunkFailure =
-            typeof err === 'object' &&
-            err !== null &&
-            /dynamically imported module|failed to fetch|failed to load resource|import/i.test(
-              Object.prototype.toString.call(err) === '[object Error]' ? (err as Error).message : String(err)
-            );
-          if (isChunkFailure) {
-            // Chunk fetches are transient: give them the long backoff so the
-            // browser can retry the download before we burn further attempts.
-            console.warn('[mermaid] lazy chunk load hiccup, retrying:', err);
-          }
-          if (attempt < attempts.length - 1) {
-            await new Promise((r) => setTimeout(r, isChunkFailure ? attempts[attempt].backoff * 2 : attempts[attempt].backoff));
+
+      try {
+        const mermaid = await getMermaid();
+        if (!isMounted) return;
+        initializeMermaid(mermaid, theme);
+
+        for (let attempt = 0; attempt < attempts.length; attempt++) {
+          const renderId = `mermaid-${uniqueId}-${Date.now().toString(36)}`;
+          try {
+            const renderResult = await renderOne(mermaid, renderId, attempts[attempt].timeout);
+            if (isMounted && hostRef.current) {
+              hostRef.current.innerHTML = renderResult.svg;
+            }
+            return;
+          } catch (err) {
+            lastError = err;
+            const isChunkFailure =
+              typeof err === 'object' &&
+              err !== null &&
+              /dynamically imported module|failed to fetch|failed to load resource|import/i.test(
+                Object.prototype.toString.call(err) === '[object Error]' ? (err as Error).message : String(err)
+              );
+            if (isChunkFailure) {
+              // Chunk fetches are transient: give them the long backoff so the
+              // browser can retry the download before we burn further attempts.
+              console.warn('[mermaid] lazy chunk load hiccup, retrying:', err);
+            }
+            if (attempt < attempts.length - 1) {
+              await new Promise((r) => setTimeout(r, isChunkFailure ? attempts[attempt].backoff * 2 : attempts[attempt].backoff));
+            }
           }
         }
+      } catch (err) {
+        lastError = err;
       }
-      // Fall back to the error box only after both attempts; a hung render
-      // (mermaid can wedge on certain syntaxes) must never block this
-      // diagram — or the queue behind it — forever. Do not gate on
-      // isMounted here: a re-render may have made the old closure stale,
-      // but the host ref is still live in the DOM and the error box is
-      // a strictly better state than an empty host.
+
+      // Fall back to the error box after the attempts exhausted; a hung render
+      // (mermaid can wedge on certain syntaxes) must never block this diagram.
+      // Do not gate on isMounted here: a re-render may have made the old
+      // closure stale, but the host ref is still live in the DOM and the error
+      // box is a strictly better state than an empty host.
       if (!hostRef.current) return;
       const errorMessage = lastError instanceof Error ? lastError.message : 'Invalid Mermaid syntax';
       const escaped = errorMessage
@@ -166,6 +186,11 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
         `<p class="text-[11px] text-text-body font-mono break-all">${escaped}</p>` +
         `<pre class="p-3 bg-code-canvas rounded border border-hairline-outline text-xs font-mono text-text-body overflow-x-auto"><code>${escaped}</code></pre>` +
         `</div>`;
+    }
+
+    if (hostRef.current && !hostRef.current.innerHTML.trim()) {
+      hostRef.current.innerHTML =
+        `<div class="font-mono text-xs text-text-muted py-6">Loading diagram…</div>`;
     }
 
     void renderDiagram();

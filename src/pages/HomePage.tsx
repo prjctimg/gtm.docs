@@ -144,7 +144,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
         }
       });
 
-      setActiveFeatureIdx(currentIdx);
+      setActiveFeatureIdx((prev) => (prev === currentIdx ? prev : currentIdx));
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
