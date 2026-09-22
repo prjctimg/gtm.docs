@@ -9,9 +9,6 @@ import {
   Repeat, 
   Music, 
   Download, 
-  Sliders, 
-  Radio, 
-  Sparkles,
   AlertCircle
 } from 'lucide-react';
 
@@ -20,7 +17,6 @@ interface EmbeddedAudioPlayerProps {
   title?: string;
   artist?: string;
   description?: string;
-  format?: string;
   autoPlay?: boolean;
   className?: string;
 }
@@ -30,7 +26,6 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
   title = 'Audio Sample',
   artist = 'gtm.rs Daemon',
   description,
-  format,
   autoPlay = false,
   className = ''
 }) => {
@@ -39,7 +34,6 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
   const [duration, setDuration] = useState<number>(0);
   const [volume, setVolume] = useState<number>(0.85);
   const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [isLooping, setIsLooping] = useState<boolean>(false);
   const [isBuffering, setIsBuffering] = useState<boolean>(false);
   const [useSynthFallback, setUseSynthFallback] = useState<boolean>(
@@ -61,18 +55,6 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
   const synthCtxRef = useRef<AudioContext | null>(null);
   const synthNodesRef = useRef<{ oscs: OscillatorNode[]; gain: GainNode } | null>(null);
   const synthStartTimeRef = useRef<number>(0);
-
-  // Auto-detect format badge
-  const detectedFormat = format || (() => {
-    const clean = src.split('?')[0].toLowerCase();
-    if (clean.endsWith('.mp3')) return 'MP3';
-    if (clean.endsWith('.wav')) return 'WAV';
-    if (clean.endsWith('.ogg')) return 'OGG';
-    if (clean.endsWith('.flac')) return 'FLAC';
-    if (clean.endsWith('.m4a') || clean.endsWith('.aac')) return 'AAC';
-    if (useSynthFallback) return 'SYNTH';
-    return 'AUDIO';
-  })();
 
   // Format time as mm:ss
   const formatTime = (secs: number) => {
@@ -181,7 +163,7 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
 
     let t = 0;
     const updateSpectrum = () => {
-      t += 0.15 * playbackRate;
+      t += 0.15;
       setSpectrumLevels(prev => 
         prev.map((_, i) => {
           const base = Math.sin(t * 1.5 + i * 0.45);
@@ -220,7 +202,7 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isPlaying, playbackRate, useSynthFallback, duration, isLooping, stopSynthPlayback]);
+  }, [isPlaying, useSynthFallback, duration, isLooping, stopSynthPlayback]);
 
   // Volume & Mute synchronizer
   useEffect(() => {
@@ -234,13 +216,6 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
       );
     }
   }, [volume, isMuted]);
-
-  // Playback rate synchronizer
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.playbackRate = playbackRate;
-    }
-  }, [playbackRate]);
 
   // Scrubbing handler
   const handleScrub = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -256,13 +231,6 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
     } else if (useSynthFallback && synthCtxRef.current) {
       synthStartTimeRef.current = synthCtxRef.current.currentTime - newTime;
     }
-  };
-
-  // Cycle speed
-  const handleCycleSpeed = () => {
-    const speeds = [1, 1.25, 1.5, 0.75];
-    const nextIdx = (speeds.indexOf(playbackRate) + 1) % speeds.length;
-    setPlaybackRate(speeds[nextIdx]);
   };
 
   // Clean up audio on unmount
@@ -338,9 +306,6 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
               <span className="font-mono text-sm sm:text-base font-bold text-text-primary truncate">
                 {title}
               </span>
-              <span className="px-1.5 py-0.5 rounded bg-surface-elevated border border-hairline-outline text-[10px] font-mono font-semibold text-secondary tracking-wider shrink-0">
-                {detectedFormat}
-              </span>
             </div>
             <p className="text-xs text-text-muted font-mono truncate mt-0.5">
               {artist}
@@ -373,16 +338,6 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
 
         {/* Right: Controls & Volume */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-end sm:self-center">
-          {/* Speed selector */}
-          <button
-            type="button"
-            onClick={handleCycleSpeed}
-            title="Playback speed"
-            className="px-2 py-1 rounded bg-surface-elevated hover:bg-surface-elevated/80 border border-hairline-outline text-[11px] font-mono text-text-muted hover:text-text-primary transition-colors cursor-pointer"
-          >
-            {playbackRate}x
-          </button>
-
           {/* Loop toggle */}
           <button
             type="button"

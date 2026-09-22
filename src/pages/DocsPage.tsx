@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { NavLink, Link, useParams } from 'react-router';
 import { 
   ALL_DOCS, 
@@ -143,6 +143,44 @@ export const DocsPage: React.FC<DocsPageProps> = ({
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, [activeDoc?.id, activeDoc?.headings]);
+
+  // Fluid reading-progress path in the right sidebar. The stroke's dashoffset
+  // is driven straight off the DOM (rAF-throttled) — never through React
+  // state — so scrolling can't trigger re-renders or layout shifts.
+  const tanglePathRef = useRef<SVGPathElement>(null);
+  const progressPctRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const pathEl = tanglePathRef.current;
+    if (!pathEl) return;
+
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+      // pathLength={1} normalizes the path to unit length, so offset 1-p
+      // directly maps to how much of the curve has been "drawn".
+      pathEl.style.strokeDashoffset = String(1 - p);
+      if (progressPctRef.current) {
+        progressPctRef.current.textContent = `${Math.round(p * 100)}%`;
+      }
+    };
+
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [activeDoc?.id]); // re-baseline the readout when switching docs
 
   const activeHeading = useMemo(() => {
     return (activeDoc?.headings || []).find(h => h.id === activeHeadingId);
@@ -399,6 +437,46 @@ export const DocsPage: React.FC<DocsPageProps> = ({
 
         {/* RIGHT SIDEBAR: On This Page Table of Contents (Desktop) */}
         <aside className="w-60 shrink-0 border-l border-hairline-outline bg-canvas-obsidian px-6 pt-6 pb-6 hidden xl:block sticky top-14 self-start max-h-[calc(100vh-56px)] overflow-y-auto font-mono text-sm">
+          {/* Reading progress — a fluid path that "draws" as you scroll */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-bold text-text-muted uppercase tracking-wider">
+                Reading progress
+              </span>
+              <span ref={progressPctRef} className="text-[11px] text-secondary font-bold" suppressHydrationWarning>
+                0%
+              </span>
+            </div>
+            <svg
+              viewBox="0 0 36 96"
+              className="w-full h-20"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              {/* Track (full path, dimmed) */}
+              <path
+                d="M18 6 C 28 16, 8 26, 18 36 C 28 46, 8 56, 18 66 C 26 74, 26 82, 18 90"
+                fill="none"
+                stroke="var(--hairline-outline)"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              {/* Progress path — dashoffset updated directly via ref/rAF */}
+              <path
+                ref={tanglePathRef}
+                d="M18 6 C 28 16, 8 26, 18 36 C 28 46, 8 56, 18 66 C 26 74, 26 82, 18 90"
+                fill="none"
+                stroke="var(--secondary)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                pathLength={1}
+                strokeDasharray="1"
+                strokeDashoffset="1"
+                style={{ filter: 'drop-shadow(0 0 3px color-mix(in srgb, var(--secondary) 60%, transparent))' }}
+              />
+            </svg>
+          </div>
+
           <div className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
             <ListTree className="w-3.5 h-3.5 text-secondary" />
             <span>On this page</span>

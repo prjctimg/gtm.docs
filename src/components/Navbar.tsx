@@ -72,6 +72,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               Install
             </NavLink>
+            <NavLink
+              to="/benchmark"
+              id="nav-benchmark-link"
+              end
+              className={({ isActive }) =>
+                `py-1 cursor-pointer transition-colors ${
+                  isActive
+                    ? 'text-text-primary font-bold border-b-2 border-primary-container'
+                    : 'text-text-muted hover:text-text-primary'
+                }`
+              }
+            >
+              Benchmarks
+            </NavLink>
             <button
               id="nav-keymap-link"
               onClick={onOpenKeymap}

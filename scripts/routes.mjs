@@ -19,6 +19,9 @@ export const HOME_DESCRIPTION = '📻 gtm is a feature rich terminal audio playe
 export const INSTALL_TITLE = 'Install | gtm';
 export const INSTALL_DESCRIPTION =
   'Install methods for gtm: the install script, crates.io, a source build, and Termux.';
+export const BENCHMARK_TITLE = 'Benchmarks | gtm';
+export const BENCHMARK_DESCRIPTION =
+  'gtm vs cliamp resource-usage benchmarks, charted release over release — a living document, take it with a grain of salt.';
 
 /**
  * @typedef {{ path: string, file: string, title: string, description: string }} Route
@@ -40,11 +43,12 @@ export function docSlugs() {
     .sort();
 }
 
-/** The full route set: home + install + every /docs/<slug>. */
+/** The full route set: home + install + benchmark + every /docs/<slug>. */
 export function buildRoutes() {
   const routes = [
     { path: '/', file: 'index.html', title: HOME_TITLE, description: HOME_DESCRIPTION },
     { path: '/install', file: 'install/index.html', title: INSTALL_TITLE, description: INSTALL_DESCRIPTION },
+    { path: '/benchmark', file: 'benchmark/index.html', title: BENCHMARK_TITLE, description: BENCHMARK_DESCRIPTION },
   ];
   for (const slug of docSlugs()) {
     const { title, description } = frontmatter(readFileSync(join(CONTENT_DIR, `${slug}.mdx`), 'utf8'));

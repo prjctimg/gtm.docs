@@ -63,6 +63,12 @@ export const Footer: React.FC<FooterProps> = ({
             >
               Install
             </Link>
+            <Link
+              to="/benchmark"
+              className="hover:text-text-primary transition-colors"
+            >
+              Benchmarks
+            </Link>
             {onOpenKeymap && (
               <button
                 type="button"

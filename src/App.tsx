@@ -8,6 +8,7 @@ import { ScrollManager } from './components/ScrollManager';
 import { HomePage } from './pages/HomePage';
 import { DocsPage } from './pages/DocsPage';
 import { InstallPage } from './pages/InstallPage';
+import { BenchmarkPage } from './pages/BenchmarkPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 export default function App() {
@@ -50,6 +51,7 @@ export default function App() {
             }
           />
           <Route path="/install" element={<InstallPage />} />
+          <Route path="/benchmark" element={<BenchmarkPage />} />
           <Route
             path="*"
             element={

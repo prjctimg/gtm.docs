@@ -1,4 +1,4 @@
-export type PageTab = 'home' | 'docs' | 'install';
+export type PageTab = 'home' | 'docs' | 'install' | 'bench';
 export type Theme = 'dark' | 'light';
 
 export interface KeybindingItem {

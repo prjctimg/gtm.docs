@@ -10,8 +10,7 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  Film,
-  Sparkles
+  Film
 } from 'lucide-react';
 
 interface GifPreviewProps {
@@ -35,7 +34,6 @@ export const GifPreview: React.FC<GifPreviewProps> = ({
   const [hasError, setHasError] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
 
   const imgRef = useRef<HTMLImageElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -74,7 +72,6 @@ export const GifPreview: React.FC<GifPreviewProps> = ({
     const img = e.currentTarget;
     setHasLoaded(true);
     setHasError(false);
-    setDimensions({ width: img.naturalWidth, height: img.naturalHeight });
     if (!isPlaying) {
       captureFreezeFrame(canvasRef.current, img);
     }
@@ -213,26 +210,10 @@ export const GifPreview: React.FC<GifPreviewProps> = ({
           )}
         </div>
 
-        {/* Bottom Bar: info + click to zoom prompt */}
+        {/* Bottom Bar: caption */}
         <div className="px-3.5 py-2 bg-surface-elevated/80 border-t border-hairline-subtle flex items-center justify-between text-[11px] font-mono text-text-muted">
           <div className="flex items-center gap-2 truncate">
             <span className="text-text-primary font-medium truncate">{caption || alt}</span>
-            {/* Always in the tree: the captured DOM shows real pixel sizes but
-                hydration's first commit has none yet (load is async), so this
-                text is exempted from hydration comparison and just updates
-                once onLoad provides the numbers. */}
-            <span
-              suppressHydrationWarning
-              className="text-text-disabled text-[10px] hidden sm:inline"
-            >
-              {dimensions ? `(${dimensions.width}×${dimensions.height})` : ''}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-text-disabled">
-              <Sparkles className="w-3 h-3 text-secondary/70" />
-              Click to preview
-            </span>
           </div>
         </div>
       </div>
@@ -268,11 +249,6 @@ export const GifPreview: React.FC<GifPreviewProps> = ({
               <span className="font-mono text-xs sm:text-sm text-text-primary font-medium truncate">
                 {caption || alt}
               </span>
-              {dimensions && (
-                <span className="text-xs font-mono text-text-muted hidden md:inline">
-                  {dimensions.width}×{dimensions.height}px
-                </span>
-              )}
             </div>
 
             {/* Controls */}

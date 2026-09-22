@@ -44,6 +44,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     { title: 'Termux Android Build (make termux)', category: 'Installation // Termux', tab: 'install' }
   ];
 
+  // Command palette entries for /benchmark (a top-level route, not a doc)
+  const benchItems: SearchItem[] = [
+    { title: 'Benchmarks — gtm vs cliamp, release over release', category: 'Benchmarks', tab: 'bench' },
+    { title: 'Benchmark methodology & what is measured', category: 'Benchmarks // Methodology', tab: 'bench' }
+  ];
+
   // Dynamic docs from all live MDX content files
   const docItems: SearchItem[] = [];
   ALL_DOCS.forEach(doc => {
@@ -75,7 +81,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     sectionId: 'keybindings'
   }));
 
-  const allItems: SearchItem[] = [...installItems, ...docItems, ...keyItems];
+  const allItems: SearchItem[] = [...installItems, ...benchItems, ...docItems, ...keyItems];
 
   const filteredItems = query.trim()
     ? allItems.filter(item =>
@@ -88,6 +94,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     onClose();
     if (item.tab === 'install') {
       navigate('/install');
+    } else if (item.tab === 'bench') {
+      navigate('/benchmark');
     } else {
       navigate(`/docs/${item.docId}${item.sectionId ? `#${item.sectionId}` : ''}`);
     }

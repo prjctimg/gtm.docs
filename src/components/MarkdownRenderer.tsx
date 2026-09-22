@@ -318,14 +318,12 @@ export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
               const audioSrc = attrs['src'] || (firstLine.includes('/') ? firstLine.trim() : '/samples/audio-equalizer-sample.wav');
               const audioTitle = attrs['title'] || 'Audio Preview';
               const audioArtist = attrs['artist'] || 'gtm Audio Engine';
-              const audioFormat = attrs['format'] || undefined;
 
               return (
                 <EmbeddedAudioPlayer
                   src={audioSrc}
                   title={audioTitle}
                   artist={audioArtist}
-                  format={audioFormat}
                   description={desc || undefined}
                 />
               );
@@ -405,14 +403,12 @@ export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
     const audioSrc = attrs['src'] || (firstLine.includes('/') || firstLine.startsWith('http') || firstLine.startsWith('demo:') || firstLine.startsWith('synth:') ? firstLine.trim() : '/samples/audio-equalizer-sample.wav');
     const audioTitle = attrs['title'] || 'Audio Preview';
     const audioArtist = attrs['artist'] || 'gtm.rs Daemon';
-    const audioFormat = attrs['format'] || undefined;
 
     return (
       <EmbeddedAudioPlayer
         src={audioSrc}
         title={audioTitle}
         artist={audioArtist}
-        format={audioFormat}
         description={desc || undefined}
       />
     );
