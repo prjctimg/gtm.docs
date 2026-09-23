@@ -328,11 +328,11 @@ export const TelemetryBenchmark: React.FC<TelemetryBenchmarkProps> = ({ classNam
 
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1 font-mono text-[11px] text-text-muted bg-surface-elevated px-1.5 py-0.5 rounded border border-hairline-outline">
+              <span className="inline-flex items-center gap-1 font-mono text-xs text-text-muted bg-surface-elevated px-1.5 py-0.5 rounded border border-hairline-outline">
                 <GitBranch className="w-3 h-3 text-secondary" />
                 {primaryRun.branch}
               </span>
-              <span className="inline-flex items-center gap-1 font-mono text-[11px] text-text-muted bg-surface-elevated px-1.5 py-0.5 rounded border border-hairline-outline">
+              <span className="inline-flex items-center gap-1 font-mono text-xs text-text-muted bg-surface-elevated px-1.5 py-0.5 rounded border border-hairline-outline">
                 <GitCommit className="w-3 h-3 text-secondary" />
                 {primaryRun.sha}
               </span>
@@ -348,7 +348,7 @@ export const TelemetryBenchmark: React.FC<TelemetryBenchmarkProps> = ({ classNam
 
             {/* Distinct PR Title (if triggered by PR) */}
             {primaryRun.prTitle && (
-              <div className="flex items-center gap-1.5 pt-0.5 font-mono text-[11px] text-text-muted border-t border-hairline-outline/50">
+              <div className="flex items-center gap-1.5 pt-0.5 font-mono text-xs text-text-muted border-t border-hairline-outline/50">
                 <GitPullRequest className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                 <span className="text-text-secondary truncate font-normal font-mono" title={primaryRun.prTitle}>
                   "{primaryRun.prTitle}"
@@ -396,11 +396,11 @@ export const TelemetryBenchmark: React.FC<TelemetryBenchmarkProps> = ({ classNam
                         <span className="font-mono text-xs font-bold text-text-primary group-hover:text-secondary transition-colors">
                           {wf.workflowName}
                         </span>
-                        <span className="font-mono text-[10px] text-text-muted">
+                        <span className="font-mono text-xs text-text-muted">
                           #{wf.runNumber}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 font-mono text-[10px] text-text-muted truncate">
+                      <div className="flex items-center gap-1.5 font-mono text-xs text-text-muted truncate">
                         <FileCode2 className="w-2.5 h-2.5 text-secondary shrink-0" />
                         <span className="truncate">{wf.workflowFile}</span>
                         <span>•</span>
@@ -425,7 +425,7 @@ export const TelemetryBenchmark: React.FC<TelemetryBenchmarkProps> = ({ classNam
 
         {/* Bottom Summary Bar */}
         <div className="flex items-center justify-between pt-2 border-t border-hairline-outline/60 font-mono text-xs text-text-muted">
-          <div className="flex items-center gap-2.5 text-[11px] flex-wrap">
+          <div className="flex items-center gap-2.5 text-xs flex-wrap">
             {inProgressCount > 0 && (
               <span className="text-amber-400 font-bold flex items-center gap-1" title={`${inProgressCount} Running`}>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

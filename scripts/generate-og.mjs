@@ -36,8 +36,8 @@ const svg = `
   <!-- Terminal body -->
   <rect x="140" y="210" width="920" height="240" rx="0" ry="0" fill="${BG}" stroke="${DIM}" stroke-width="1"/>
 
-  <!-- Prompt "> gtm" -->
-  <text x="160" y="235" font-family="JetBrains Mono, monospace" font-weight="800" font-size="14" fill="${TEAL}">> gtm</text>
+  <!-- Prompt "gtm" -->
+  <text x="160" y="235" font-family="JetBrains Mono, monospace" font-weight="800" font-size="14" fill="${TEAL}">gtm</text>
   <!-- Cursor block -->
   <rect x="210" y="222" width="12" height="18" fill="${TEAL}"/>
 
@@ -58,7 +58,7 @@ const svg = `
   </g>
 
   <!-- Brand text -->
-  <text x="${W/2}" y="${H-100}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="800" font-size="48" fill="${TEAL}">> gtm</text>
+  <text x="${W/2}" y="${H-100}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="800" font-size="48" fill="${TEAL}">gtm</text>
   <text x="${W/2}" y="${H-50}" text-anchor="middle" font-family="Inter, sans-serif" font-weight="500" font-size="20" fill="#c9d1d9">Documentation</text>
 </svg>
 `;

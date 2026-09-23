@@ -20,17 +20,17 @@
   --hairline-outline: #30363d;
   --hairline-subtle: #21262d;
 
-  --primary: #a2c9ff;
-  --primary-container: #58a6ff;
-  --on-primary-container: #003a6b;
-  --primary-fixed: #d3e4ff;
-  --primary-fixed-dim: #a2c9ff;
+  --primary: #40a0ff;
+  --primary-container: #0088ff;
+  --on-primary-container: #ffffff;
+  --primary-fixed: #d6e8ff;
+  --primary-fixed-dim: #99cbff;
 
-  --secondary: #55dad0;
-  --secondary-container: #00aba1;
-  --on-secondary-container: #003834;
-  --secondary-fixed: #75f7ec;
-  --secondary-fixed-dim: #55dad0;
+  --secondary: #0088ff;
+  --secondary-container: #0070d6;
+  --on-secondary-container: #ffffff;
+  --secondary-fixed: #cce5ff;
+  --secondary-fixed-dim: #339fff;
 
   --tertiary: #aec6ff;
   --tertiary-container: #7aa2f7;
@@ -72,20 +72,20 @@
   --hairline-outline: #cbd5e1;
   --hairline-subtle: #e2e8f0;
 
-  --primary: #0284c7;
-  --primary-container: #0284c7;
+  --primary: #0088ff;
+  --primary-container: #0088ff;
   --on-primary-container: #ffffff;
-  --primary-fixed: #e0f2fe;
-  --primary-fixed-dim: #38bdf8;
+  --primary-fixed: #e5f2ff;
+  --primary-fixed-dim: #339fff;
 
-  --secondary: #0d9488;
-  --secondary-container: #0f766e;
-  --on-secondary-container: #ffffff;
-  --secondary-fixed: #ccfbf1;
-  --secondary-fixed-dim: #14b8a6;
+  --secondary: #0088ff;
+  --secondary-container: #e5f2ff;
+  --on-secondary-container: #004c99;
+  --secondary-fixed: #cce5ff;
+  --secondary-fixed-dim: #0088ff;
 
-  --tertiary: #2563eb;
-  --tertiary-container: #1d4ed8;
+  --tertiary: #0070d6;
+  --tertiary-container: #005bb5;
   --on-tertiary-container: #ffffff;
 
   --accent-coral: #e11d48;
@@ -233,7 +233,7 @@
 .token.operator,
 .token.entity,
 .token.url {
-  color: #55dad0;
+  color: #0088ff;
 }
 
 .token.atrule,
@@ -260,7 +260,7 @@
 
 .token.table,
 .token.key {
-  color: #55dad0;
+  color: #0088ff;
 }
 
 .token.important,
@@ -331,7 +331,7 @@
 [data-theme="light"] .token.operator,
 [data-theme="light"] .token.entity,
 [data-theme="light"] .token.url {
-  color: #0d9488;
+  color: #0088ff;
 }
 
 .light .token.atrule,
@@ -369,7 +369,7 @@
 .light .token.key,
 [data-theme="light"] .token.table,
 [data-theme="light"] .token.key {
-  color: #0d9488;
+  color: #0088ff;
 }
 
 /* Feature independent scroll container scrollbar */

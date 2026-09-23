@@ -25,7 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="nav-brand-button"
               className="font-mono text-base sm:text-lg text-secondary tracking-tight font-bold flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer text-left"
             >
-              <span>&gt; gtm</span>
+              <span>gtm</span>
             </Link>
 
             {/* Latest release tag — subtle, next to the brand */}
@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 target="_blank"
                 rel="noreferrer"
                 id="nav-version-badge"
-                className="hidden sm:inline-block font-mono text-[10px] leading-none text-text-disabled hover:text-text-muted border border-hairline-outline rounded px-1.5 py-0.5 transition-colors"
+                className="hidden sm:inline-block font-mono text-xs leading-none text-text-disabled hover:text-text-muted border border-hairline-outline rounded px-1.5 py-0.5 transition-colors"
                 title={`Latest release: ${latestTag}`}
               >
                 {latestTag}
@@ -72,20 +72,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               Install
             </NavLink>
-            <NavLink
-              to="/benchmark"
-              id="nav-benchmark-link"
-              end
-              className={({ isActive }) =>
-                `py-1 cursor-pointer transition-colors ${
-                  isActive
-                    ? 'text-text-primary font-bold border-b-2 border-primary-container'
-                    : 'text-text-muted hover:text-text-primary'
-                }`
-              }
-            >
-              Benchmarks
-            </NavLink>
             <button
               id="nav-keymap-link"
               onClick={onOpenKeymap}
@@ -106,7 +92,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Search className="w-3.5 h-3.5 text-secondary" />
             <span className="hidden sm:inline">Search...</span>
-            <kbd className="hidden sm:inline px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-[11px] text-text-disabled">
+            <kbd className="hidden sm:inline px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-xs text-text-disabled">
               /
             </kbd>
           </button>

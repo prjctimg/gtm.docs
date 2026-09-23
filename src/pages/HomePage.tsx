@@ -314,7 +314,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
                     >
                       {isPlayingFft ? 'Pause visualizer' : 'Resume visualizer'}
                     </button>
-                    <span className="text-text-muted text-[11px]">key [v]</span>
+                    <span className="text-text-muted text-xs">key [v]</span>
                   </div>
                 </div>
 
@@ -340,7 +340,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
                     ))}
                   </div>
 
-                  <div className="flex justify-between text-[11px] text-text-muted px-4">
+                  <div className="flex justify-between text-xs text-text-muted px-4">
                     <span>20 Hz (Sub-Bass)</span>
                     <span>250 Hz (Low-Mid)</span>
                     <span>1 kHz (Mid)</span>
@@ -381,7 +381,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
                       <span className="font-semibold">How Much A Dollar Cost</span>
                       <span className="text-text-muted">— Kendrick Lamar</span>
                     </div>
-                    <span className="text-text-muted text-[11px]">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
+                    <span className="text-text-muted text-xs">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
                   </div>
                   <div className="px-3 py-2 hover:bg-surface-container rounded-lg flex items-center justify-between text-text-body transition-colors">
                     <div className="flex items-center gap-3">
@@ -389,7 +389,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
                       <span>Alright</span>
                       <span className="text-text-muted">— Kendrick Lamar</span>
                     </div>
-                    <span className="text-text-muted text-[11px]">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
+                    <span className="text-text-muted text-xs">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
                   </div>
                   <div className="px-3 py-2 hover:bg-surface-container rounded-lg flex items-center justify-between text-text-body transition-colors">
                     <div className="flex items-center gap-3">
@@ -397,7 +397,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
                       <span>King Kunta</span>
                       <span className="text-text-muted">— Kendrick Lamar</span>
                     </div>
-                    <span className="text-text-muted text-[11px]">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
+                    <span className="text-text-muted text-xs">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
                   </div>
                   <div className="px-3 py-2 hover:bg-surface-container rounded-lg flex items-center justify-between text-text-body transition-colors">
                     <div className="flex items-center gap-3">
@@ -405,7 +405,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
                       <span>The Blacker The Berry</span>
                       <span className="text-text-muted">— Kendrick Lamar</span>
                     </div>
-                    <span className="text-text-muted text-[11px]">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
+                    <span className="text-text-muted text-xs">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
                   </div>
                 </div>
 
@@ -608,7 +608,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
 
           {/* Platform Badges */}
           <div className="flex flex-col items-center justify-center gap-2 pt-1 font-mono text-xs">
-            <span className="text-text-muted uppercase tracking-wider text-[11px] select-none">
+            <span className="text-text-muted uppercase tracking-wider text-xs select-none">
               Available on:
             </span>
             <div className="flex flex-wrap items-center justify-center gap-2">

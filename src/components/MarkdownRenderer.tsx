@@ -299,7 +299,7 @@ export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
               const { node: _node, ...domProps } = props as Record<string, unknown>;
               return (
                 <code
-                  className="px-1.5 py-0.5 rounded bg-surface-elevated text-secondary border border-hairline-outline font-mono text-[12px]"
+                  className="px-1.5 py-0.5 rounded bg-surface-elevated text-secondary border border-hairline-outline font-mono text-xs"
                   {...domProps}
                 >
                   {children}
@@ -362,7 +362,7 @@ export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
             </div>
           ),
           thead: ({ children }) => (
-            <thead className="border-b border-hairline-outline bg-surface-elevated text-text-muted uppercase text-[11px]">
+            <thead className="border-b border-hairline-outline bg-surface-elevated text-text-muted uppercase text-xs">
               {children}
             </thead>
           ),

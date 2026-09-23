@@ -128,7 +128,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language = '', value }) =>
   return (
     <div className="my-5 rounded-lg border border-hairline-outline bg-code-canvas overflow-hidden font-mono text-xs shadow-xs group">
       {/* Header Bar */}
-      <div className="flex items-center justify-between px-3.5 py-1.5 bg-surface-elevated border-b border-hairline-outline text-[11px] text-text-muted">
+      <div className="flex items-center justify-between px-3.5 py-1.5 bg-surface-elevated border-b border-hairline-outline text-xs text-text-muted">
         <div className="flex items-center gap-1.5">
           <Terminal className="w-3 h-3 text-secondary" />
           <span className="uppercase tracking-wider font-semibold text-secondary">
@@ -159,13 +159,13 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language = '', value }) =>
       {/* Code Display with Syntax Highlighting */}
       <div className="p-4 overflow-x-auto select-all leading-relaxed text-text-body">
         {showLineNumbers ? (
-          <div className="flex text-[12px] font-mono leading-relaxed">
+          <div className="flex text-xs font-mono leading-relaxed">
             <div className="select-none pr-4 text-right text-text-disabled font-mono border-r border-hairline-subtle mr-4">
               {Array.from({ length: lineCount }).map((_, i) => (
                 <div key={i}>{i + 1}</div>
               ))}
             </div>
-            <pre className="m-0 flex-1 overflow-x-auto font-mono text-[12px] leading-relaxed">
+            <pre className="m-0 flex-1 overflow-x-auto font-mono text-xs leading-relaxed">
               <code
                 className={`language-${cleanLang || 'text'}`}
                 dangerouslySetInnerHTML={{ __html: highlightedHtml }}
@@ -173,7 +173,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language = '', value }) =>
             </pre>
           </div>
         ) : (
-          <pre className="m-0 font-mono text-[12px] leading-relaxed">
+          <pre className="m-0 font-mono text-xs leading-relaxed">
             <code
               className={`language-${cleanLang || 'text'}`}
               dangerouslySetInnerHTML={{ __html: highlightedHtml }}

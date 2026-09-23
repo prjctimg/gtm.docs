@@ -2,14 +2,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Play, 
   Pause, 
-  Volume2, 
-  VolumeX, 
-  Volume1, 
-  RotateCcw, 
-  Repeat, 
-  Music, 
-  Download, 
-  AlertCircle
+  Info, 
+  AlertCircle 
 } from 'lucide-react';
 
 interface EmbeddedAudioPlayerProps {
@@ -23,8 +17,8 @@ interface EmbeddedAudioPlayerProps {
 
 export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
   src,
-  title = 'Audio Sample',
-  artist = 'gtm.rs Daemon',
+  title: _title = 'Audio Sample',
+  artist: _artist = 'gtm.rs Daemon',
   description,
   autoPlay = false,
   className = ''
@@ -32,19 +26,15 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
-  const [volume, setVolume] = useState<number>(0.85);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [isLooping, setIsLooping] = useState<boolean>(false);
   const [isBuffering, setIsBuffering] = useState<boolean>(false);
   const [useSynthFallback, setUseSynthFallback] = useState<boolean>(
     src.startsWith('synth:') || src.startsWith('demo:')
   );
   const [hasError, setHasError] = useState<boolean>(false);
 
-  // Frequency bars animation state — starts at the same idle value the mount
-  // effect resets to (0.08), so the first committed render has no visual jump.
+  // Frequency bars animation state
   const [spectrumLevels, setSpectrumLevels] = useState<number[]>(() => 
-    Array.from({ length: 16 }, () => 0.08)
+    Array.from({ length: 10 }, () => 0.08)
   );
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -77,7 +67,7 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
       }
 
       const masterGain = ctx.createGain();
-      masterGain.gain.setValueAtTime(isMuted ? 0 : volume * 0.3, ctx.currentTime);
+      masterGain.gain.setValueAtTime(0.25, ctx.currentTime);
       masterGain.connect(ctx.destination);
 
       // Create warm dual-oscillator chords
@@ -88,7 +78,6 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
         const osc = ctx.createOscillator();
         osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
         osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        // Subtle LFO vibrato
         osc.frequency.setValueAtTime(freq * (1 + 0.003 * Math.sin(idx)), ctx.currentTime);
 
         const noteGain = ctx.createGain();
@@ -108,7 +97,7 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
     } catch {
       // AudioContext unavailable
     }
-  }, [currentTime, duration, isMuted, volume]);
+  }, [currentTime, duration]);
 
   const stopSynthPlayback = useCallback(() => {
     if (synthNodesRef.current) {
@@ -142,7 +131,7 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
           setIsPlaying(true);
           setHasError(false);
         } catch {
-          // Playback blocked or failed; switch to synth fallback so user still gets sound!
+          // Playback blocked or failed; switch to synth fallback
           setUseSynthFallback(true);
           startSynthPlayback();
           setIsPlaying(true);
@@ -154,7 +143,7 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
   // Spectrum animation loop
   useEffect(() => {
     if (!isPlaying) {
-      setSpectrumLevels(Array.from({ length: 16 }, () => 0.08));
+      setSpectrumLevels(Array.from({ length: 10 }, () => 0.08));
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
@@ -178,15 +167,10 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
         const elapsed = synthCtxRef.current.currentTime - synthStartTimeRef.current;
         const total = duration || 8;
         if (elapsed >= total) {
-          if (isLooping) {
-            synthStartTimeRef.current = synthCtxRef.current.currentTime;
-            setCurrentTime(0);
-          } else {
-            stopSynthPlayback();
-            setIsPlaying(false);
-            setCurrentTime(0);
-            return;
-          }
+          stopSynthPlayback();
+          setIsPlaying(false);
+          setCurrentTime(0);
+          return;
         } else {
           setCurrentTime(elapsed);
         }
@@ -202,20 +186,7 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isPlaying, useSynthFallback, duration, isLooping, stopSynthPlayback]);
-
-  // Volume & Mute synchronizer
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
-    }
-    if (synthNodesRef.current && synthCtxRef.current) {
-      synthNodesRef.current.gain.gain.setValueAtTime(
-        isMuted ? 0 : volume * 0.3,
-        synthCtxRef.current.currentTime
-      );
-    }
-  }, [volume, isMuted]);
+  }, [isPlaying, useSynthFallback, duration, stopSynthPlayback]);
 
   // Scrubbing handler
   const handleScrub = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -244,15 +215,15 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
   }, [stopSynthPlayback]);
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const remainingTime = duration > 0 ? Math.max(0, duration - currentTime) : 0;
 
   return (
-    <div className={`my-6 rounded-xl border border-hairline-outline bg-surface-container overflow-hidden shadow-md transition-colors hover:border-secondary/40 font-sans ${className}`}>
+    <div className={`my-4 rounded-lg border border-hairline-outline bg-surface-container overflow-hidden shadow-xs transition-colors hover:border-secondary/40 font-sans ${className}`}>
       {/* Underlying HTML5 Audio element */}
       {!useSynthFallback && (
         <audio
           ref={audioRef}
           src={src}
-          loop={isLooping}
           autoPlay={autoPlay}
           onTimeUpdate={() => {
             if (audioRef.current) {
@@ -282,51 +253,61 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
         />
       )}
 
-      {/* Main Player Row */}
-      <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        {/* Left: Play button + Title */}
-        <div className="flex items-center gap-3.5 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={togglePlay}
-            title={isPlaying ? 'Pause' : 'Play sound'}
-            className="w-12 h-12 rounded-xl bg-secondary text-canvas-obsidian hover:bg-secondary/90 active:scale-95 transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer group"
-          >
-            {isBuffering ? (
-              <div className="w-5 h-5 rounded-full border-2 border-canvas-obsidian border-t-transparent animate-spin" />
-            ) : isPlaying ? (
-              <Pause className="w-5 h-5 fill-current" />
-            ) : (
-              <Play className="w-5 h-5 fill-current ml-0.5" />
-            )}
-          </button>
+      {/* Main Inlined Row: Play/Pause button + Scrubber & Remaining Countdown */}
+      <div className="p-3 sm:px-4 sm:py-3 flex items-center gap-3">
+        {/* Inlined Play/Pause button */}
+        <button
+          type="button"
+          onClick={togglePlay}
+          title={isPlaying ? 'Pause audio' : 'Play audio'}
+          aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+          className="w-8 h-8 rounded-lg bg-secondary text-canvas-obsidian hover:bg-secondary/90 active:scale-95 transition-all flex items-center justify-center shrink-0 shadow-xs cursor-pointer group"
+        >
+          {isBuffering ? (
+            <div className="w-3.5 h-3.5 rounded-full border-2 border-canvas-obsidian border-t-transparent animate-spin" />
+          ) : isPlaying ? (
+            <Pause className="w-3.5 h-3.5 fill-current" />
+          ) : (
+            <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+          )}
+        </button>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-sm sm:text-base font-bold text-text-primary truncate">
-                {title}
-              </span>
-            </div>
-            <p className="text-xs text-text-muted font-mono truncate mt-0.5">
-              {artist}
-            </p>
+        {/* Inlined & Reduced-size Progress Indicator */}
+        <div
+          ref={progressBarRef}
+          onClick={handleScrub}
+          className="relative h-1.5 flex-1 bg-canvas-obsidian/80 rounded-full overflow-hidden cursor-pointer group/progress border border-hairline-subtle"
+        >
+          <div
+            style={{ width: `${progressPercent}%` }}
+            className="h-full bg-secondary transition-all duration-100 rounded-full relative"
+          >
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-text-primary opacity-0 group-hover/progress:opacity-100 transition-opacity" />
           </div>
         </div>
 
-        {/* Middle: Terminal Spectrum Visualizer */}
-        <div className="w-full sm:w-44 h-9 bg-canvas-obsidian/70 rounded-lg border border-hairline-subtle px-2.5 py-1.5 flex items-end justify-between gap-1 shrink-0">
+        {/* Remaining Time Countdown */}
+        <span
+          className="text-xs font-mono text-text-muted shrink-0 tabular-nums select-none min-w-[36px] text-right"
+          suppressHydrationWarning
+        >
+          {duration > 0 ? `-${formatTime(remainingTime)}` : '--:--'}
+        </span>
+
+        {/* Compact Inlined Spectrum Visualizer */}
+        <div className="hidden sm:flex w-20 h-6 bg-canvas-obsidian/60 rounded border border-hairline-subtle px-1.5 py-1 items-end justify-between gap-0.5 shrink-0">
           {spectrumLevels.map((level, idx) => (
             <div
               key={idx}
-              className="flex-1 bg-surface-elevated rounded-xs overflow-hidden h-full flex flex-col justify-end"
+              className="flex-1 bg-surface-elevated rounded-2xs overflow-hidden h-full flex flex-col justify-end"
             >
               <div
                 style={{ height: `${Math.round(level * 100)}%` }}
-                className={`w-full rounded-xs transition-all duration-75 ${
+                className={`w-full rounded-2xs transition-all duration-75 ${
                   isPlaying 
-                    ? idx > 12 
+                    ? idx > 7 
                       ? 'bg-state-warning' 
-                      : idx > 8 
+                      : idx > 4 
                         ? 'bg-secondary' 
                         : 'bg-state-success'
                     : 'bg-text-disabled/40'
@@ -335,106 +316,19 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
             </div>
           ))}
         </div>
-
-        {/* Right: Controls & Volume */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-end sm:self-center">
-          {/* Loop toggle */}
-          <button
-            type="button"
-            onClick={() => setIsLooping(!isLooping)}
-            title={isLooping ? 'Looping enabled' : 'Enable loop'}
-            className={`p-1.5 rounded border transition-colors cursor-pointer ${
-              isLooping 
-                ? 'bg-secondary/15 border-secondary/40 text-secondary' 
-                : 'bg-surface-elevated border-hairline-outline text-text-muted hover:text-text-primary'
-            }`}
-          >
-            <Repeat className="w-3.5 h-3.5" />
-          </button>
-
-          {/* Volume Mute + Slider */}
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setIsMuted(!isMuted)}
-              title={isMuted ? 'Unmute' : 'Mute'}
-              className="p-1.5 rounded bg-surface-elevated border border-hairline-outline text-text-muted hover:text-text-primary transition-colors cursor-pointer"
-            >
-              {isMuted || volume === 0 ? (
-                <VolumeX className="w-3.5 h-3.5 text-state-warning" />
-              ) : volume < 0.5 ? (
-                <Volume1 className="w-3.5 h-3.5" />
-              ) : (
-                <Volume2 className="w-3.5 h-3.5" />
-              )}
-            </button>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={isMuted ? 0 : volume}
-              onChange={(e) => {
-                setVolume(parseFloat(e.target.value));
-                if (isMuted) setIsMuted(false);
-              }}
-              className="w-16 h-1 bg-surface-elevated rounded-lg appearance-none cursor-pointer accent-secondary hidden sm:block"
-            />
-          </div>
-
-          {/* Download / Source */}
-          {!src.startsWith('synth:') && !src.startsWith('demo:') && (
-            <a
-              href={src}
-              download
-              target="_blank"
-              rel="noreferrer"
-              title="Download audio source"
-              className="p-1.5 rounded bg-surface-elevated border border-hairline-outline text-text-muted hover:text-text-primary transition-colors cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-            </a>
-          )}
-        </div>
       </div>
 
-      {/* Progress Timeline Scrubber */}
-      <div className="px-4 pb-3 sm:px-5">
-        <div
-          ref={progressBarRef}
-          onClick={handleScrub}
-          className="relative h-2 w-full bg-canvas-obsidian/80 rounded-full overflow-hidden cursor-pointer group/progress border border-hairline-subtle"
-        >
-          <div
-            style={{ width: `${progressPercent}%` }}
-            className="h-full bg-secondary transition-all duration-100 rounded-full relative"
-          >
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-text-primary opacity-0 group-hover/progress:opacity-100 transition-opacity" />
-          </div>
-        </div>
-
-        {/* Timestamps: pruned from the hydration text comparison — during capture
-            the media element's duration/currentTime are already known (and the
-            static server may not report ranges, so they can differ from the
-            client's initial 0/0:00). The values are patched in on the first
-            timeupdate, so nothing visible is lost. */}
-        <div className="flex items-center justify-between text-[11px] font-mono text-text-muted mt-1.5">
-          <span suppressHydrationWarning>{formatTime(currentTime)}</span>
-          <span className="text-text-disabled">/</span>
-          <span suppressHydrationWarning>{duration > 0 ? formatTime(duration) : '--:--'}</span>
-        </div>
-      </div>
-
-      {/* Optional Description or Fallback Notice */}
+      {/* Audio Description with Info Icon */}
       {description && (
-        <div className="px-4 py-2 bg-surface-elevated/40 border-t border-hairline-subtle text-xs text-text-muted font-mono flex items-center gap-2">
-          <Music className="w-3.5 h-3.5 text-secondary shrink-0" />
+        <div className="px-3.5 py-2 bg-surface-elevated/40 border-t border-hairline-subtle text-xs text-text-muted font-mono flex items-center gap-2">
+          <Info className="w-3.5 h-3.5 text-secondary shrink-0" />
           <span>{description}</span>
         </div>
       )}
 
+      {/* Fallback Notice */}
       {hasError && (
-        <div className="px-4 py-2 bg-state-warning/10 border-t border-state-warning/30 text-xs text-state-warning font-mono flex items-center justify-between">
+        <div className="px-3.5 py-2 bg-state-warning/10 border-t border-state-warning/30 text-xs text-state-warning font-mono flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             <span>External audio file could not be streamed directly.</span>
@@ -446,7 +340,7 @@ export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
               setHasError(false);
               togglePlay();
             }}
-            className="underline hover:text-text-primary cursor-pointer text-[11px]"
+            className="underline hover:text-text-primary cursor-pointer text-xs"
           >
             Switch to Synth Engine Demo
           </button>

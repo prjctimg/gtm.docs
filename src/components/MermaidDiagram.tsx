@@ -36,19 +36,19 @@ function initializeMermaid(mermaid: Mermaid, theme: 'dark' | 'light') {
             background: '#ffffff',
             primaryColor: '#f1f5f9',
             primaryTextColor: '#0f172a',
-            primaryBorderColor: '#0d9488',
-            lineColor: '#0284c7',
+            primaryBorderColor: '#0088ff',
+            lineColor: '#0088ff',
             secondaryColor: '#ffffff',
             tertiaryColor: '#f8fafc',
             mainBkg: '#f1f5f9',
             nodeBorder: '#cbd5e1',
             textColor: '#0f172a',
-            titleColor: '#0d9488',
+            titleColor: '#0088ff',
             edgeLabelBackground: '#ffffff',
-            actorBorder: '#0d9488',
+            actorBorder: '#0088ff',
             actorBkg: '#f1f5f9',
             actorTextColor: '#0f172a',
-            signalColor: '#0284c7',
+            signalColor: '#0088ff',
             signalTextColor: '#0f172a',
           }
         : {
@@ -56,19 +56,19 @@ function initializeMermaid(mermaid: Mermaid, theme: 'dark' | 'light') {
             background: '#11151c',
             primaryColor: '#161b22',
             primaryTextColor: '#f0f6fc',
-            primaryBorderColor: '#55dad0',
-            lineColor: '#58a6ff',
+            primaryBorderColor: '#0088ff',
+            lineColor: '#0088ff',
             secondaryColor: '#1f242d',
             tertiaryColor: '#171c23',
             mainBkg: '#161b22',
             nodeBorder: '#30363d',
             textColor: '#f0f6fc',
-            titleColor: '#55dad0',
+            titleColor: '#0088ff',
             edgeLabelBackground: '#1f242d',
-            actorBorder: '#55dad0',
+            actorBorder: '#0088ff',
             actorBkg: '#161b22',
             actorTextColor: '#f0f6fc',
-            signalColor: '#58a6ff',
+            signalColor: '#0088ff',
             signalTextColor: '#f0f6fc',
           },
     });
@@ -183,7 +183,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
         `<div class="flex items-center gap-2 text-state-error font-semibold text-xs">` +
         `  <span>Diagram Syntax Error</span>` +
         `</div>` +
-        `<p class="text-[11px] text-text-body font-mono break-all">${escaped}</p>` +
+        `<p class="text-xs text-text-body font-mono break-all">${escaped}</p>` +
         `<pre class="p-3 bg-code-canvas rounded border border-hairline-outline text-xs font-mono text-text-body overflow-x-auto"><code>${escaped}</code></pre>` +
         `</div>`;
     }

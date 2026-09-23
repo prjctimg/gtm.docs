@@ -54,7 +54,7 @@ export const KeymapModal: React.FC<KeymapModalProps> = ({ isOpen, onClose }) => 
                   {item.action}
                 </span>
               </div>
-              <span className="px-2 py-0.5 rounded bg-surface-elevated border border-hairline-outline text-text-muted text-[11px]">
+              <span className="px-2 py-0.5 rounded bg-surface-elevated border border-hairline-outline text-text-muted text-xs">
                 {item.scope}
               </span>
             </div>
@@ -64,7 +64,7 @@ export const KeymapModal: React.FC<KeymapModalProps> = ({ isOpen, onClose }) => 
         {/* Footer info */}
         <div className="px-5 py-3 bg-canvas-obsidian border-t border-hairline-outline flex items-center justify-between text-xs font-mono text-text-muted">
           <span>Configurable in ~/.config/gtm/keymap.toml</span>
-          <kbd className="px-1.5 py-0.5 rounded bg-surface-elevated border border-hairline-outline text-[11px]">
+          <kbd className="px-1.5 py-0.5 rounded bg-surface-elevated border border-hairline-outline text-xs">
             ESC to close
           </kbd>
         </div>

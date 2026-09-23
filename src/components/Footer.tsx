@@ -43,37 +43,31 @@ export const Footer: React.FC<FooterProps> = ({
               href="https://prjctimg.me"
               target="_blank"
               rel="noreferrer"
-              className="text-text-primary hover:text-secondary underline decoration-hairline-outline hover:decoration-secondary transition-colors"
+              className="text-text-muted hover:text-secondary underline decoration-hairline-outline hover:decoration-secondary transition-colors"
             >
               prjctimg
             </a>
           </span>
 
           {/* Navigation links matching the navbar */}
-          <nav className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 text-sm">
+          <nav className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 text-xs text-text-muted">
             <Link
               to="/docs/overview"
-              className="hover:text-text-primary transition-colors"
+              className="text-text-muted hover:text-text-primary transition-colors"
             >
               Docs
             </Link>
             <Link
               to="/install"
-              className="hover:text-text-primary transition-colors"
+              className="text-text-muted hover:text-text-primary transition-colors"
             >
               Install
-            </Link>
-            <Link
-              to="/benchmark"
-              className="hover:text-text-primary transition-colors"
-            >
-              Benchmarks
             </Link>
             {onOpenKeymap && (
               <button
                 type="button"
                 onClick={onOpenKeymap}
-                className="hover:text-text-primary transition-colors cursor-pointer"
+                className="text-text-muted hover:text-text-primary transition-colors cursor-pointer"
               >
                 Keymap
               </button>
@@ -82,11 +76,11 @@ export const Footer: React.FC<FooterProps> = ({
               href="https://github.com/prjctimg/gtm.rs"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-text-primary transition-colors inline-flex items-center gap-1.5"
+              className="text-text-muted hover:text-text-primary transition-colors inline-flex items-center"
               title="GitHub Repository"
+              aria-label="GitHub Repository"
             >
-              <Github className="w-3.5 h-3.5" />
-              <span>GitHub</span>
+              <Github className="w-4 h-4 text-text-muted hover:text-text-primary transition-colors" />
             </a>
           </nav>
         </div>

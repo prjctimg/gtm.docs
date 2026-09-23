@@ -50,7 +50,14 @@ export default function App() {
               />
             }
           />
-          <Route path="/install" element={<InstallPage />} />
+          <Route
+            path="/install"
+            element={
+              <InstallPage
+                onOpenSearch={() => setIsSearchOpen(true)}
+              />
+            }
+          />
           <Route path="/benchmark" element={<BenchmarkPage />} />
           <Route
             path="*"

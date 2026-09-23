@@ -70,11 +70,11 @@ export const BenchmarkChart: React.FC<BenchmarkChartProps> = ({ title, points, f
       <div className="flex items-center justify-between gap-2 px-4 pt-3 pb-1 border-b border-hairline-subtle">
         <span className="font-mono text-xs font-bold text-text-primary tracking-wide">{title}</span>
         {hovered ? (
-          <span className="font-mono text-[11px] text-secondary">
+          <span className="font-mono text-xs text-secondary">
             {shortTag(hovered.tag)} · {formatValue(hovered.value)}
           </span>
         ) : (
-          <span className="font-mono text-[10px] text-text-disabled">{points.length} releases</span>
+          <span className="font-mono text-xs text-text-disabled">{points.length} releases</span>
         )}
       </div>
 
@@ -179,7 +179,7 @@ export const BenchmarkChart: React.FC<BenchmarkChartProps> = ({ title, points, f
       </svg>
 
       {hovered && (
-        <div className="px-4 pb-2.5 font-mono text-[10px] text-text-muted">
+        <div className="px-4 pb-2.5 font-mono text-xs text-text-muted">
           <span className="text-text-primary">{shortTag(hovered.tag)}</span>
           <span className="text-text-disabled"> · </span>
           {formatDate(hovered.date)}

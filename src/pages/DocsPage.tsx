@@ -22,7 +22,6 @@ import {
   Github,
   ArrowUpRight,
   X,
-  BookOpen,
   ChevronDown,
   PanelLeft,
   Clock
@@ -200,8 +199,8 @@ export const DocsPage: React.FC<DocsPageProps> = ({
               className="w-full flex items-center justify-between pl-8 pr-3 py-2 bg-code-canvas border border-hairline-outline hover:border-primary-container rounded text-text-muted text-sm transition-colors cursor-pointer text-left"
             >
               <Search className="w-3.5 h-3.5 absolute left-2.5 text-secondary" />
-              <span>Search {ALL_DOCS.length} topics...</span>
-              <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-[11px] text-text-muted">
+              <span>Search</span>
+              <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-xs text-text-muted">
                 /
               </kbd>
             </button>
@@ -241,6 +240,30 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                 </div>
               );
             })}
+
+            {/* Benchmarks Section */}
+            <div className="space-y-1.5 pt-2 border-t border-hairline-subtle">
+              <div className="text-xs font-bold text-text-muted tracking-wider uppercase flex items-center gap-1.5 px-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                <span>Benchmarks</span>
+              </div>
+              <ul className="space-y-0.5 border-l border-hairline-subtle ml-2 pl-2">
+                <li>
+                  <NavLink
+                    to="/benchmark"
+                    className={({ isActive }) =>
+                      `w-full text-left py-1.5 px-2 rounded text-sm cursor-pointer transition-colors flex items-center gap-1.5 ${
+                        isActive
+                          ? 'bg-surface-elevated text-secondary font-bold border border-secondary/30'
+                          : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/40'
+                      }`
+                    }
+                  >
+                    <span className="truncate">Benchmarks</span>
+                  </NavLink>
+                </li>
+              </ul>
+            </div>
           </div>
         </aside>
 
@@ -340,7 +363,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
             <div className="-mt-2 flex items-center gap-1.5 font-mono text-xs text-text-muted">
               <Clock className="w-3.5 h-3.5 text-text-disabled" />
               <span>Updated</span>
-              <span className="text-text-primary font-semibold">{updatedLabel}</span>
+              <span className="text-text-muted">{updatedLabel}</span>
             </div>
           )}
 
@@ -370,7 +393,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                 to={`/docs/${prevDoc.id}`}
                 className="p-4 rounded-lg border border-hairline-outline bg-surface-container hover:bg-surface-elevated text-left transition-colors group flex flex-col justify-between"
               >
-                <div className="text-[11px] text-text-muted flex items-center gap-1 mb-1">
+                <div className="text-xs text-text-muted flex items-center gap-1 mb-1">
                   <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
                   <span>Previous</span>
                 </div>
@@ -385,7 +408,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                 to={`/docs/${nextDoc.id}`}
                 className="p-4 rounded-lg border border-hairline-outline bg-surface-container hover:bg-surface-elevated text-right transition-colors group flex flex-col justify-between items-end sm:col-start-2"
               >
-                <div className="text-[11px] text-text-muted flex items-center gap-1 mb-1">
+                <div className="text-xs text-text-muted flex items-center gap-1 mb-1">
                   <span>Next</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -463,11 +486,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
           {/* Drawer Sheet */}
           <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-canvas-obsidian border-r border-hairline-outline shadow-2xl flex flex-col font-mono text-sm z-10 animate-in slide-in-from-left duration-200">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-hairline-outline bg-surface-container/50">
-              <div className="flex items-center gap-2 text-secondary font-bold text-xs">
-                <BookOpen className="w-4 h-4 text-secondary" />
-                <span>Documentation Pages</span>
-              </div>
+            <div className="flex items-center justify-end p-4 border-b border-hairline-outline bg-surface-container/50">
               <button
                 type="button"
                 onClick={() => setIsMobileDrawerOpen(false)}
@@ -490,9 +509,9 @@ export const DocsPage: React.FC<DocsPageProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <Search className="w-3.5 h-3.5 text-secondary" />
-                  <span>Search {ALL_DOCS.length} topics...</span>
+                  <span>Search</span>
                 </div>
-                <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-[11px] text-text-muted">
+                <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-hairline-outline rounded text-xs text-text-muted">
                   /
                 </kbd>
               </button>
@@ -533,6 +552,31 @@ export const DocsPage: React.FC<DocsPageProps> = ({
                   </div>
                 );
               })}
+
+              {/* Benchmarks Section */}
+              <div className="space-y-1.5 pt-2 border-t border-hairline-subtle">
+                <div className="text-xs font-bold text-text-muted tracking-wider uppercase flex items-center gap-1.5 px-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                  <span>Benchmarks</span>
+                </div>
+                <ul className="space-y-0.5 border-l border-hairline-subtle ml-2 pl-2">
+                  <li>
+                    <NavLink
+                      to="/benchmark"
+                      onClick={() => setIsMobileDrawerOpen(false)}
+                      className={({ isActive }) =>
+                        `w-full text-left py-2 px-2.5 rounded text-sm cursor-pointer transition-colors flex items-center gap-1.5 ${
+                          isActive
+                            ? 'bg-surface-elevated text-secondary font-bold border border-secondary/30'
+                            : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/40'
+                        }`
+                      }
+                    >
+                      <span className="truncate">Benchmarks</span>
+                    </NavLink>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>

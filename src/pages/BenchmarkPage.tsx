@@ -75,7 +75,7 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
       <div className="w-full max-w-5xl space-y-8">
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2 font-mono text-[11px]">
+          <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
             <span className="px-2 py-0.5 rounded bg-secondary/15 border border-secondary/30 text-secondary font-semibold tracking-wide">
               LIVING DOCUMENT
             </span>
@@ -144,7 +144,7 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
               <GitCommit className="w-4 h-4 text-secondary" />
               This run vs previous release
             </h2>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-text-muted">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-text-muted">
               <span>
                 this <span className="text-text-primary">{shortTag(run.tag)}</span>
               </span>
@@ -166,13 +166,13 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
               if (!rows?.length) return null;
               return (
                 <div key={player} className="p-5">
-                  <div className="mb-3 font-mono text-[11px] uppercase tracking-wider text-text-muted">
+                  <div className="mb-3 font-mono text-xs uppercase tracking-wider text-text-muted">
                     player <span className="text-secondary font-bold">{player}</span> · diff vs previous release
                   </div>
-                  <div className="overflow-x-auto">
+                    <div className="overflow-x-auto">
                     <table className="w-full text-left font-mono text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-hairline-outline text-text-muted uppercase text-[10px]">
+                        <tr className="border-b border-hairline-outline text-text-muted uppercase text-xs">
                           <th className="py-2 pr-3 font-semibold">Metric</th>
                           <th className="py-2 pr-3 font-semibold text-right">Prev</th>
                           <th className="py-2 pr-3 font-semibold text-right">This</th>
@@ -210,7 +210,7 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
                       </tbody>
                     </table>
                   </div>
-                  <p className="mt-3 font-mono text-[10px] text-text-disabled">
+                  <p className="mt-3 font-mono text-xs text-text-disabled">
                     Δ% is relative to the previous release. For these metrics lower is better — a warning-coloured Δ means a
                     regression.
                   </p>
@@ -255,17 +255,17 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
               if (gtmRun && cliampRun) {
                 return (
                   <div key={fixture} className="space-y-3">
-                    <div className="font-mono text-[11px] uppercase tracking-wider text-text-muted">
+                    <div className="font-mono text-xs uppercase tracking-wider text-text-muted">
                       fixture <span className="text-secondary font-bold">{fixture}</span>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left font-mono text-xs border-collapse">
                         <thead>
-                          <tr className="border-b border-hairline-outline text-text-muted uppercase text-[10px]">
+                          <tr className="border-b border-hairline-outline text-text-muted uppercase text-xs">
                             <th className="py-2 pr-3 font-semibold">Metric</th>
                             <th className="py-2 pr-3 font-semibold text-right">gtm</th>
                             <th className="py-2 pr-3 font-semibold text-right">cliamp</th>
-                            <th className="py-2 font-semibold text-right">gtm − cliamp</th>
+                            <th className="py-2 pr-3 font-semibold text-right">gtm − cliamp</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -293,7 +293,7 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
                         </tbody>
                       </table>
                     </div>
-                    <p className="font-mono text-[10px] text-text-disabled">
+                    <p className="font-mono text-xs text-text-disabled">
                       Lower is better — a green gtm−cliamp delta means gtm used less of that resource.
                     </p>
                   </div>
@@ -314,7 +314,7 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
           <div className="px-5 py-3 border-b border-hairline-subtle flex items-center gap-2">
             <Gauge className="w-4 h-4 text-secondary" />
             <h2 className="font-mono text-sm font-bold text-text-primary">Current run</h2>
-            <span className="ml-auto font-mono text-[11px] text-text-muted">commit {shortTag(run.tag)} · {run.date ? formatDate(run.date) : ''}</span>
+            <span className="ml-auto font-mono text-xs text-text-muted">commit {shortTag(run.tag)} · {run.date ? formatDate(run.date) : ''}</span>
           </div>
           <div className="p-5 space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -323,7 +323,7 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
                 const mp3 = gtmMp3 ? getRunMetric(gtmMp3, m.metric) : 0;
                 return (
                   <div key={m.metric} className="rounded-lg bg-surface-elevated border border-hairline-outline p-3">
-                    <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                    <div className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-text-muted mb-1">
                       {m.metric === 'peak_rss_kb' || m.metric === 'mean_rss_kb' || m.metric === 'rss_5s_kb' ? (
                         <MemoryStick className="w-3 h-3" />
                       ) : m.metric === 'cpu_ms' ? (
@@ -334,7 +334,7 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
                       {m.label}
                     </div>
                     <div className="font-mono text-lg font-bold text-text-primary">{m.format(g)}</div>
-                    <div className="font-mono text-[10px] text-text-disabled">FLAC · mp3 {m.format(mp3)}</div>
+                    <div className="font-mono text-xs text-text-disabled">FLAC · mp3 {m.format(mp3)}</div>
                   </div>
                 );
               })}
@@ -343,7 +343,7 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left font-mono text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-hairline-outline text-text-muted uppercase text-[10px]">
+                  <tr className="border-b border-hairline-outline text-text-muted uppercase text-xs">
                     <th className="py-2 pr-3 font-semibold">Player / Fixture</th>
                     <th className="py-2 pr-3 font-semibold text-right">Peak RSS</th>
                     <th className="py-2 pr-3 font-semibold text-right">Mean RSS</th>
@@ -378,7 +378,7 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
               </table>
             </div>
 
-            <p className="font-mono text-[10px] text-text-disabled leading-relaxed">
+            <p className="font-mono text-xs text-text-disabled leading-relaxed">
               Metrics (per /proc/&lt;pid&gt;): peak / mean / at-5s RSS (VmRSS), CPU (utime+stime), and t_ready (IPC round
               trip to first playing state). Fixture hashes are sealed so a corrupted fixture fails the run loudly — see the{' '}
               <a
@@ -395,13 +395,13 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
         </section>
 
         {/* ── Footer note ─────────────────────────────────────────── */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-6 font-mono text-[11px] text-text-disabled">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-6 font-mono text-xs text-text-muted">
           <span className="flex items-center gap-1.5">
             <ExternalLink className="w-3 h-3" />
             Data: <span className="text-text-muted">src/data/benchmark-stats.json</span> (from gtm.rs{' '}
             <code className="px-1 rounded bg-surface-elevated border border-hairline-outline">stats.json</code>)
           </span>
-          <Link to="/docs/overview" className="text-secondary hover:text-primary transition-colors cursor-pointer">
+          <Link to="/docs/overview" className="text-text-muted hover:text-text-primary transition-colors cursor-pointer">
             ← Back to docs
           </Link>
         </div>

@@ -154,7 +154,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               <X className="w-3.5 h-3.5" />
             </button>
           )}
-          <kbd className="px-1.5 py-0.5 bg-selection-surface border border-hairline-outline rounded text-[10px] font-mono text-text-muted shrink-0">
+          <kbd className="px-1.5 py-0.5 bg-selection-surface border border-hairline-outline rounded text-xs font-mono text-text-muted shrink-0">
             ESC
           </kbd>
         </div>
@@ -190,7 +190,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-3">
-                    <span className="text-[10px] text-text-muted uppercase">
+                    <span className="text-xs text-text-muted uppercase">
                       {item.category}
                     </span>
                     {isSelected && <ArrowRight className="w-3 h-3 text-secondary" />}
@@ -202,7 +202,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Footer info */}
-        <div className="px-4 py-2 bg-canvas-obsidian border-t border-hairline-outline flex items-center justify-center text-[11px] font-mono text-text-muted">
+        <div className="px-4 py-2 bg-canvas-obsidian border-t border-hairline-outline flex items-center justify-center text-xs font-mono text-text-muted">
           <span>Navigate with [↑][↓], Select with [Enter]</span>
         </div>
       </div>
