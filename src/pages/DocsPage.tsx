@@ -381,7 +381,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
               id="edit-on-github-button"
             >
               <Github className="w-3.5 h-3.5 text-text-muted group-hover:text-secondary transition-colors" />
-              <span>Edit on GitHub</span>
+              <span>Edit</span>
               <ArrowUpRight className="w-3 h-3 text-text-disabled group-hover:text-text-primary transition-colors" />
             </a>
           </div>

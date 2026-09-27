@@ -6,8 +6,6 @@ import { ALL_DOCS, DOC_CATEGORIES, DOCS_BY_CATEGORY } from '../data/docs';
 import { useLatestReleaseTag } from '../lib/version';
 import { 
   ChevronRight, 
-  Github, 
-  ArrowUpRight, 
   PanelLeft, 
   ListTree, 
   ChevronDown, 
@@ -386,22 +384,11 @@ export const InstallPage: React.FC<InstallPageProps> = ({ onOpenSearch }) => {
             />
           </article>
 
-          {/* Document Footer: GitHub reference */}
+          {/* Document Footer */}
           <div className="mt-14 pt-6 border-t border-hairline-outline flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-mono text-xs">
             <p className="text-text-muted text-xs font-sans">
-              Latest version: <span className="font-mono text-text-muted font-medium">{version}</span>{' '}
+              Latest version: <span className="font-mono text-text-muted font-medium">{version}</span>
             </p>
-            <a
-              href="https://github.com/prjctimg/gtm.rs"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-text-muted hover:text-text-primary bg-surface-container hover:bg-surface-elevated border border-hairline-outline rounded transition-colors group cursor-pointer shrink-0"
-              title="View on GitHub"
-            >
-              <Github className="w-3.5 h-3.5 text-text-muted group-hover:text-secondary transition-colors" />
-              <span>View on GitHub</span>
-              <ArrowUpRight className="w-3 h-3 text-text-disabled group-hover:text-text-primary transition-colors" />
-            </a>
           </div>
         </main>
 

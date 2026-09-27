@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Copy, ChevronDown, Sparkles, Tag } from 'lucide-react';
+import { Check, Copy, ChevronDown, FlaskConical, Tag } from 'lucide-react';
 import { useAllReleaseTags } from '../lib/version';
 
 export type InstallPkgTab = 'curl' | 'cargo' | 'termux';
@@ -202,7 +202,7 @@ export const InstallTabsWidget: React.FC<InstallTabsWidgetProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-secondary shrink-0" />
+                      <FlaskConical className="w-3.5 h-3.5 text-secondary shrink-0" />
                       <div>
                         <div className="font-semibold flex items-center gap-1.5">
                           <span>nightly</span>
