@@ -10,10 +10,10 @@ import {
   Hash 
 } from 'lucide-react';
 import { CodeBlock } from './CodeBlock';
-import { GifPreview } from './GifPreview';
-import { EmbeddedAudioPlayer } from './EmbeddedAudioPlayer';
+import { Gif } from './Gif';
+import { AudioPlayer } from './AudioPlayer';
 
-interface MarkdownRendererProps {
+interface MarkdownProps {
   content: string;
 }
 
@@ -121,8 +121,8 @@ function parseContentSegments(rawContent: string): ContentSegment[] {
   return segments;
 }
 
-export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
-  function MarkdownRenderer({ content }) {
+export const Markdown = React.memo<MarkdownProps>(
+  function Markdown({ content }) {
   const segments = parseContentSegments(content);
 
   const renderMarkdownComponent = (mdText: string) => {
@@ -176,7 +176,7 @@ export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
           ),
           p: ({ children, node }) => {
             // Paragraphs holding only an image/gif render block-level media
-            // (GifPreview's <figure>). That nesting is invalid inside <p>, so
+            // (Gif's <figure>). That nesting is invalid inside <p>, so
             // render a <div> instead.
             const kids = node?.children ?? [];
             const onlyMedia =
@@ -211,7 +211,7 @@ export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
             const isGif = src.toLowerCase().includes('.gif') || (alt && alt.toLowerCase().includes('[gif]'));
             if (isGif) {
               const cleanAlt = alt?.replace(/\[gif\]/gi, '').trim();
-              return <GifPreview src={src} alt={cleanAlt || 'Animated Demonstration'} />;
+              return <Gif src={src} alt={cleanAlt || 'Animated Demonstration'} />;
             }
             return (
               <figure className="my-6 rounded-xl border border-hairline-outline bg-surface-container overflow-hidden shadow-sm">
@@ -238,7 +238,7 @@ export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
               const titleText = extractText(children) || 'Audio Sample';
               return (
                 <div className="my-3">
-                  <EmbeddedAudioPlayer
+                  <AudioPlayer
                     src={cleanSrc}
                     title={titleText}
                     artist="gtm.rs Audio Engine"
@@ -320,7 +320,7 @@ export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
               const audioArtist = attrs['artist'] || 'gtm Audio Engine';
 
               return (
-                <EmbeddedAudioPlayer
+                <AudioPlayer
                   src={audioSrc}
                   title={audioTitle}
                   artist={audioArtist}
@@ -339,7 +339,7 @@ export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
               const gifCaption = attrs['caption'] || attrs['alt'] || desc || undefined;
 
               return (
-                <GifPreview
+                <Gif
                   src={gifSrc}
                   alt={gifCaption || 'Animated GIF Preview'}
                   caption={gifCaption}
@@ -405,7 +405,7 @@ export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
     const audioArtist = attrs['artist'] || 'gtm.rs Daemon';
 
     return (
-      <EmbeddedAudioPlayer
+      <AudioPlayer
         src={audioSrc}
         title={audioTitle}
         artist={audioArtist}
@@ -424,7 +424,7 @@ export const MarkdownRenderer = React.memo<MarkdownRendererProps>(
     const gifCaption = attrs['caption'] || attrs['alt'] || desc || undefined;
 
     return (
-      <GifPreview
+      <Gif
         src={gifSrc}
         alt={gifCaption || 'Animated Preview'}
         caption={gifCaption}

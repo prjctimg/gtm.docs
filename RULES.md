@@ -8,6 +8,13 @@ Project rules for `gtm.docs` — the docs/devlog site for [gtm.rs](https://githu
 - `node_modules/` is gitignored. Run `bun install` locally to verify; there is **no install restriction** — bun is the canonical toolchain.
 - Add deps with `bun add <pkg>` so both `package.json` and `bun.lock` stay in sync.
 
+## Naming
+
+- **File name == what it exports.** `src/pages/Docs.tsx` exports `Docs`; `src/components/Palette.tsx` exports `Palette`. A component-local props type is `<Name>Props` (`DocsProps`, `PaletteProps`).
+- **No role suffix the directory already implies.** `pages/` says page, `components/` says component/widget, `context/` says context — so no `*Page.tsx`, `*Widget.tsx`, `*Context.tsx`, `*Manager.tsx`, or `*Renderer.tsx`. Name the *thing* (`Nav`, `InstallTabs`, `Theme`), not its job.
+- **Keep partitive/identity compounds** when the bare form would be ambiguous or collide with a library: `CodeBlock` (not `Code` — that is also a lucide icon), `AudioPlayer`, `Doodles`, `Scroll`.
+- Module names are for humans. Never sweep a rename across the word "Page" — `usePageMeta`, the `PageTab` type, and user-visible copy like "Page not found" are domain words, not filenames.
+
 ## Routing
 
 - The site is a **Vite SPA** with path-based client-side routing via `react-router` (`BrowserRouter`).

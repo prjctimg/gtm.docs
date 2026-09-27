@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router';
 
 /** Scrolls to top on route change; to the anchor element when a #hash is present. */
-export function ScrollManager() {
+export function Scroll() {
   const { pathname, hash } = useLocation();
 
   useEffect(() => {

@@ -2,12 +2,12 @@ import React, { useEffect } from 'react';
 import { KEYBINDINGS } from '../data/site';
 import { X, Keyboard, Command } from 'lucide-react';
 
-interface KeymapModalProps {
+interface KeymapProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const KeymapModal: React.FC<KeymapModalProps> = ({ isOpen, onClose }) => {
+export const Keymap: React.FC<KeymapProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();

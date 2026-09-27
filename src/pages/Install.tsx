@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, NavLink } from 'react-router';
-import { MarkdownRenderer } from '../components/MarkdownRenderer';
+import { Markdown } from '../components/Markdown';
 import { usePageMeta } from '../lib/meta';
 import { ALL_DOCS, DOC_CATEGORIES, DOCS_BY_CATEGORY } from '../data/docs';
 import { useLatestReleaseTag } from '../lib/version';
@@ -15,7 +15,7 @@ import {
   X 
 } from 'lucide-react';
 
-interface InstallPageProps {
+interface InstallProps {
   onOpenSearch?: () => void;
 }
 
@@ -213,7 +213,7 @@ const INSTALL_HEADINGS = [
   { id: 'limitations', text: 'Limitations', level: 2 },
 ];
 
-export const InstallPage: React.FC<InstallPageProps> = ({ onOpenSearch }) => {
+export const Install: React.FC<InstallProps> = ({ onOpenSearch }) => {
   const latestTag = useLatestReleaseTag();
   const version = latestTag || 'v0.2.83';
 
@@ -251,7 +251,7 @@ export const InstallPage: React.FC<InstallPageProps> = ({ onOpenSearch }) => {
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const offset = 140; // Navbar (56px) + sticky mobile TOC (~60px) + buffer
+      const offset = 140; // Nav (56px) + sticky mobile TOC (~60px) + buffer
       let currentId = INSTALL_HEADINGS[0]?.id || '';
 
       for (const h of INSTALL_HEADINGS) {
@@ -379,7 +379,7 @@ export const InstallPage: React.FC<InstallPageProps> = ({ onOpenSearch }) => {
 
           {/* Standard Markdown Content */}
           <article className="prose-container space-y-4">
-            <MarkdownRenderer
+            <Markdown
               content={INSTALL_DOCUMENT_MARKDOWN}
             />
           </article>

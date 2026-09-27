@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { motion, type Variants } from 'motion/react';
 import { IMAGES, KEYBINDINGS } from '../data/site';
-import { TelemetryBenchmark } from '../components/TelemetryBenchmark';
-import { DoodleBackground } from '../components/DoodleBackground';
-import { InstallTabsWidget } from '../components/InstallTabsWidget';
+import { Telemetry } from '../components/Telemetry';
+import { Doodles } from '../components/Doodles';
+import { InstallTabs } from '../components/InstallTabs';
 import { usePageMeta } from '../lib/meta';
 import { 
   Check, 
@@ -26,13 +26,13 @@ import {
 } from 'lucide-react';
 import { SiLinux, SiAndroid, SiApple } from 'react-icons/si';
 
-interface HomePageProps {
+interface HomeProps {
   onOpenKeymap: () => void;
 }
 
 type TuiTab = 'library' | 'lyrics' | 'fft' | 'search';
 
-export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
+export const Home: React.FC<HomeProps> = ({ onOpenKeymap }) => {
   usePageMeta('gtm - Docs', '📻 gtm is a feature rich terminal audio player.');
 
   // TUI Explorer Tab
@@ -167,7 +167,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
         className="relative overflow-hidden w-full pt-6 md:pt-14 pb-8 md:pb-12 px-4 rounded-t-none rounded-b-2xl border border-hairline-outline/40 bg-canvas-obsidian/25 sm:bg-canvas-obsidian/60 shadow-inner"
       >
         {/* Doodled Musical Background with musical symbols, notes & instruments */}
-        <DoodleBackground />
+        <Doodles />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
           {/* Main Title */}
@@ -196,7 +196,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
             transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-xl mx-auto pt-2"
           >
-            <InstallTabsWidget id="hero-install-widget" />
+            <InstallTabs id="hero-install-widget" />
           </motion.div>
         </div>
       </motion.section>
@@ -467,7 +467,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
         variants={scrollSectionVariants}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full"
       >
-        <TelemetryBenchmark className="w-full" />
+        <Telemetry className="w-full" />
       </motion.section>
 
       {/* CLOSING INSTALL CALL TO ACTION */}
@@ -491,7 +491,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
 
           {/* Big Terminal Install Box with tabs */}
           <div className="max-w-2xl mx-auto text-left">
-            <InstallTabsWidget id="footer-install-widget" />
+            <InstallTabs id="footer-install-widget" />
           </div>
 
           {/* Platform Badges */}

@@ -7,10 +7,10 @@ import {
   DOC_CATEGORIES, 
   DocItem 
 } from '../data/docs';
-import { MarkdownRenderer } from '../components/MarkdownRenderer';
+import { Markdown } from '../components/Markdown';
 import { usePageMeta } from '../lib/meta';
 import { useRelativeTime } from '../lib/relative-time';
-import { NotFoundPage } from './NotFoundPage';
+import { NotFound } from './NotFound';
 import { 
   Search, 
   Check, 
@@ -27,7 +27,7 @@ import {
   Clock
 } from 'lucide-react';
 
-interface DocsPageProps {
+interface DocsProps {
   onOpenSearch: () => void;
 }
 
@@ -47,7 +47,7 @@ const DEFAULT_FALLBACK_DOC: DocItem = {
   category: 'Introduction & Setup',
 };
 
-export const DocsPage: React.FC<DocsPageProps> = ({
+export const Docs: React.FC<DocsProps> = ({
   onOpenSearch
 }) => {
   const { docId } = useParams();
@@ -122,7 +122,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
 
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const offset = 140; // Navbar (56px) + sticky mobile TOC (~60px) + buffer
+      const offset = 140; // Nav (56px) + sticky mobile TOC (~60px) + buffer
       let currentId = headings[0]?.id || '';
 
       for (const h of headings) {
@@ -182,7 +182,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
 
   // Unknown /docs/:docId URLs render a real 404 page (URL is preserved).
   if (missingDoc) {
-    return <NotFoundPage onOpenSearch={onOpenSearch} />;
+    return <NotFound onOpenSearch={onOpenSearch} />;
   }
 
   const updatedLabel = useRelativeTime(activeDoc?.updatedAt);
@@ -353,7 +353,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({
 
           {/* Rendered MDX Content */}
           <article className="prose-container space-y-4">
-            <MarkdownRenderer
+            <Markdown
               content={activeDoc?.content || ''}
             />
           </article>

@@ -12,7 +12,7 @@ import {
   FileCode2
 } from 'lucide-react';
 
-interface TelemetryBenchmarkProps {
+interface TelemetryProps {
   className?: string;
   onNavigateDocs?: () => void;
 }
@@ -186,7 +186,7 @@ const formatRelativeTime = (isoString?: string): string => {
   return `${days}d ago`;
 };
 
-export const TelemetryBenchmark: React.FC<TelemetryBenchmarkProps> = ({ className = '' }) => {
+export const Telemetry: React.FC<TelemetryProps> = ({ className = '' }) => {
   const [workflows, setWorkflows] = useState<WorkflowRunItem[]>(INITIAL_WORKFLOWS);
   const [now, setNow] = useState<number>(() => Date.now());
 

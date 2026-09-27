@@ -12,7 +12,7 @@ import 'prismjs/components/prism-sql.js';
 import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-ini.js';
 import { Check, Copy } from 'lucide-react';
-import { MermaidDiagram } from './MermaidDiagram';
+import { Mermaid } from './Mermaid';
 
 interface CodeBlockProps {
   language?: string;
@@ -96,7 +96,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language = '', value }) =>
   const isMermaid = language.toLowerCase() === 'mermaid' || isMermaidCode(value);
 
   if (isMermaid) {
-    return <MermaidDiagram code={value} />;
+    return <Mermaid code={value} />;
   }
 
   const cleanLang = language.trim().toLowerCase();

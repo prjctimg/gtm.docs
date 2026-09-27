@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { FileQuestion, ArrowLeft, BookOpen, Search } from 'lucide-react';
 import { usePageMeta } from '../lib/meta';
 
-interface NotFoundPageProps {
+interface NotFoundProps {
   onOpenSearch?: () => void;
 }
 
@@ -11,7 +11,7 @@ interface NotFoundPageProps {
  * Real client-side 404 page. Rendered for unknown /docs/:docId URLs (URL is
  * preserved) and as the catch-all route for every other unknown path.
  */
-export const NotFoundPage: React.FC<NotFoundPageProps> = ({ onOpenSearch }) => {
+export const NotFound: React.FC<NotFoundProps> = ({ onOpenSearch }) => {
   usePageMeta(
     'Page not found | gtm',
     'The page you are looking for does not exist or has moved.'

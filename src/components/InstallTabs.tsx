@@ -5,12 +5,12 @@ import { useAllReleaseTags } from '../lib/version';
 
 export type InstallPkgTab = 'curl' | 'cargo' | 'termux';
 
-export interface InstallTabsWidgetProps {
+export interface InstallTabsProps {
   id?: string;
   className?: string;
 }
 
-export const InstallTabsWidget: React.FC<InstallTabsWidgetProps> = ({
+export const InstallTabs: React.FC<InstallTabsProps> = ({
   id,
   className = '',
 }) => {

@@ -6,7 +6,7 @@ import {
   AlertCircle 
 } from 'lucide-react';
 
-interface EmbeddedAudioPlayerProps {
+interface AudioPlayerProps {
   src: string;
   title?: string;
   artist?: string;
@@ -15,7 +15,7 @@ interface EmbeddedAudioPlayerProps {
   className?: string;
 }
 
-export const EmbeddedAudioPlayer: React.FC<EmbeddedAudioPlayerProps> = ({
+export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   src,
   title: _title = 'Audio Sample',
   artist: _artist = 'gtm.rs Daemon',

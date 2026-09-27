@@ -2,12 +2,12 @@ import React from 'react';
 import { Link, NavLink } from 'react-router';
 import { Search, Github } from 'lucide-react';
 
-interface NavbarProps {
+interface NavProps {
   onOpenSearch: () => void;
   onOpenKeymap: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({
+export const Nav: React.FC<NavProps> = ({
   onOpenSearch,
   onOpenKeymap
 }) => {

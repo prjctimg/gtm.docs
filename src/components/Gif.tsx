@@ -13,7 +13,7 @@ import {
   Film
 } from 'lucide-react';
 
-interface GifPreviewProps {
+interface GifProps {
   src: string;
   alt?: string;
   caption?: string;
@@ -21,7 +21,7 @@ interface GifPreviewProps {
   autoPlay?: boolean;
 }
 
-export const GifPreview: React.FC<GifPreviewProps> = ({
+export const Gif: React.FC<GifProps> = ({
   src,
   alt = 'Animated GIF preview',
   caption,

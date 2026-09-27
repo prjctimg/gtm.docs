@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
-import { Navbar } from './components/Navbar';
+import { Nav } from './components/Nav';
 import { Footer } from './components/Footer';
-import { CommandPalette } from './components/CommandPalette';
-import { KeymapModal } from './components/KeymapModal';
-import { ScrollManager } from './components/ScrollManager';
-import { HomePage } from './pages/HomePage';
-import { DocsPage } from './pages/DocsPage';
-import { InstallPage } from './pages/InstallPage';
-import { BenchmarkPage } from './pages/BenchmarkPage';
-import { NotFoundPage } from './pages/NotFoundPage';
+import { Palette } from './components/Palette';
+import { Keymap } from './components/Keymap';
+import { Scroll } from './components/Scroll';
+import { Home } from './pages/Home';
+import { Docs } from './pages/Docs';
+import { Install } from './pages/Install';
+import { Benchmark } from './pages/Benchmark';
+import { NotFound } from './pages/NotFound';
 
 export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -32,20 +32,20 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-canvas-obsidian text-text-primary flex flex-col font-sans selection:bg-secondary/30 selection:text-secondary transition-colors duration-200">
-      <Navbar
+      <Nav
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenKeymap={() => setIsKeymapOpen(true)}
       />
 
       <div className="flex-grow flex flex-col">
-        <ScrollManager />
+        <Scroll />
         <Routes>
-          <Route path="/" element={<HomePage onOpenKeymap={() => setIsKeymapOpen(true)} />} />
+          <Route path="/" element={<Home onOpenKeymap={() => setIsKeymapOpen(true)} />} />
           <Route path="/docs" element={<Navigate to="/docs/overview" replace />} />
           <Route
             path="/docs/:docId"
             element={
-              <DocsPage
+              <Docs
                 onOpenSearch={() => setIsSearchOpen(true)}
               />
             }
@@ -53,16 +53,16 @@ export default function App() {
           <Route
             path="/install"
             element={
-              <InstallPage
+              <Install
                 onOpenSearch={() => setIsSearchOpen(true)}
               />
             }
           />
-          <Route path="/benchmark" element={<BenchmarkPage />} />
+          <Route path="/benchmark" element={<Benchmark />} />
           <Route
             path="*"
             element={
-              <NotFoundPage onOpenSearch={() => setIsSearchOpen(true)} />
+              <NotFound onOpenSearch={() => setIsSearchOpen(true)} />
             }
           />
         </Routes>
@@ -70,8 +70,8 @@ export default function App() {
 
       <Footer onOpenKeymap={() => setIsKeymapOpen(true)} />
 
-      <CommandPalette isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-      <KeymapModal isOpen={isKeymapOpen} onClose={() => setIsKeymapOpen(false)} />
+      <Palette isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <Keymap isOpen={isKeymapOpen} onClose={() => setIsKeymapOpen(false)} />
     </div>
   );
 }

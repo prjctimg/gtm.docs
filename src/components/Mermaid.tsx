@@ -4,24 +4,24 @@ import React, { useEffect, useRef, useState, useId } from 'react';
 // only download on pages that actually render a diagram — never in the main
 // entry chunk.
 import { Check, Copy } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/Theme';
 
-interface MermaidDiagramProps {
+interface MermaidProps {
   code: string;
 }
 
-type Mermaid = typeof import('mermaid')['default'];
+type MermaidApi = typeof import('mermaid')['default'];
 
 let lastInitializedTheme: 'dark' | 'light' | null = null;
-let mermaidPromise: Promise<Mermaid> | null = null;
+let mermaidPromise: Promise<MermaidApi> | null = null;
 
-function getMermaid(): Promise<Mermaid> {
+function getMermaid(): Promise<MermaidApi> {
   // Cache the chunk across mounts/remounts so repeated navigations are instant.
   mermaidPromise ??= import('mermaid').then((mod) => mod.default);
   return mermaidPromise;
 }
 
-function initializeMermaid(mermaid: Mermaid, theme: 'dark' | 'light') {
+function initializeMermaid(mermaid: MermaidApi, theme: 'dark' | 'light') {
   if (lastInitializedTheme === theme) return;
   try {
     const isLight = theme === 'light';
@@ -87,7 +87,7 @@ function initializeMermaid(mermaid: Mermaid, theme: 'dark' | 'light') {
  * chunk fetches can hiccup transiently). The mermaid module itself is also
  * imported lazily — it only downloads on pages that render a diagram.
  */
-export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
+export const Mermaid: React.FC<MermaidProps> = ({ code }) => {
   const { theme } = useTheme();
   const uniqueId = useId().replace(/[^a-zA-Z0-9]/g, '');
   const [copied, setCopied] = useState<boolean>(false);
@@ -101,7 +101,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code }) => {
     // Render one diagram, but never wait forever: mermaid can wedge on some
     // syntaxes, and a hung promise must not block this diagram's retry.
     async function renderOne(
-      mermaid: Mermaid,
+      mermaid: MermaidApi,
       renderId: string,
       timeoutMs: number
     ) {

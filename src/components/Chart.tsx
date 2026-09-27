@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useId } from 'react';
 import { BenchSeriesPoint, shortTag, formatDate } from '../data/benchmark';
 
-interface BenchmarkChartProps {
+interface ChartProps {
   title: string;
   points: BenchSeriesPoint[];
   formatValue: (v: number) => string;
@@ -18,7 +18,7 @@ const PAD = { top: 16, right: 16, bottom: 34, left: 46 };
  * point highlights it and pins a tooltip. Rounded coordinates keep the SVG
  * path string small for the ~31-point series in stats.json.
  */
-export const BenchmarkChart: React.FC<BenchmarkChartProps> = ({ title, points, formatValue, hint }) => {
+export const Chart: React.FC<ChartProps> = ({ title, points, formatValue, hint }) => {
   const gradId = useId().replace(/[:]/g, '');
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 

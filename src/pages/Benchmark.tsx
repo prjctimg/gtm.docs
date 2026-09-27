@@ -2,10 +2,10 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router';
 import { Activity, Cpu, Gauge, MemoryStick, TrendingUp, GitCommit, FlaskConical, ExternalLink, Ruler } from 'lucide-react';
 import { BENCHMARK_STATS, shortTag, formatKb, formatMs, formatDate, formatDateTime, BenchRun, BenchDelta } from '../data/benchmark';
-import { BenchmarkChart } from '../components/BenchmarkChart';
+import { Chart } from '../components/Chart';
 import { usePageMeta } from '../lib/meta';
 
-interface BenchmarkPageProps {}
+interface BenchmarkProps {}
 
 const METRIC_ROWS: { metric: string; label: string; format: (v: number) => string; good: 'down' | 'up' }[] = [
   { metric: 'peak_rss_kb', label: 'Peak RSS', format: formatKb, good: 'down' },
@@ -24,7 +24,7 @@ function parseRunKey(key: string): { player: string; fixture: string } {
   return { player, fixture: fixture || key };
 }
 
-export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
+export const Benchmark: React.FC<BenchmarkProps> = () => {
   usePageMeta(
     'Benchmarks | gtm',
     'gtm vs cliamp resource-usage benchmarks, tracked release over release. Take it with a grain of salt — it is all in good fun.',
@@ -230,7 +230,7 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {chartSeries.map((c) => (
-              <BenchmarkChart
+              <Chart
                 key={c.key}
                 title={c.title}
                 points={series[c.key] || []}

@@ -29,7 +29,7 @@ export default defineConfig(() => {
         output: {
           // Split the heavy vendor deps out of the main entry chunk so nothing
           // in the initial load exceeds Vite's 500 kB chunk-size threshold:
-          // - mermaid is imported dynamically by MermaidDiagram (it only
+          // - mermaid is imported dynamically by Mermaid (it only
           //   downloads on pages that render a diagram) — its renderers
           //   (elk, dagre, cytoscape, katex) stay separate lazy chunks
           // - react+router runtime, the markdown/unified pipeline,

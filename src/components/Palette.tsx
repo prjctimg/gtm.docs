@@ -5,7 +5,7 @@ import { KEYBINDINGS } from '../data/site';
 import { ALL_DOCS } from '../data/docs';
 import { Search, BookOpen, Keyboard, ArrowRight, X } from 'lucide-react';
 
-interface CommandPaletteProps {
+interface PaletteProps {
   isOpen: boolean;
   onClose: () => void;
 }
@@ -18,7 +18,7 @@ interface SearchItem {
   sectionId?: string;
 }
 
-export const CommandPalette: React.FC<CommandPaletteProps> = ({
+export const Palette: React.FC<PaletteProps> = ({
   isOpen,
   onClose
 }) => {
