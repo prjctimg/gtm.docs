@@ -11,7 +11,7 @@ import 'prismjs/components/prism-python.js';
 import 'prismjs/components/prism-sql.js';
 import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-ini.js';
-import { Check, Copy, Terminal } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import { MermaidDiagram } from './MermaidDiagram';
 
 interface CodeBlockProps {
@@ -126,20 +126,18 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language = '', value }) =>
   const showLineNumbers = lineCount > 4 && cleanLang !== 'bash' && cleanLang !== 'sh';
 
   return (
-    <div className="my-5 rounded-lg border border-hairline-outline bg-code-canvas overflow-hidden font-mono text-xs shadow-xs group">
-      {/* Header Bar */}
-      <div className="flex items-center justify-between px-3.5 py-1.5 bg-surface-elevated border-b border-hairline-outline text-xs text-text-muted">
-        <div className="flex items-center gap-1.5">
-          <Terminal className="w-3 h-3 text-secondary" />
-          <span className="uppercase tracking-wider font-semibold text-secondary">
-            {cleanLang || 'text'}
-          </span>
-        </div>
+    <div className="relative my-5 rounded-lg border border-hairline-outline bg-code-canvas p-4 font-mono text-xs shadow-xs group">
+      {/* Top controls: language as muted text at top left, inlined copy button at top right */}
+      <div className="flex items-center justify-between mb-2 select-none">
+        <span className="text-xs text-text-muted font-mono lowercase">
+          {cleanLang || 'text'}
+        </span>
 
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-surface-container"
+          className="flex items-center gap-1 text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-container"
+          aria-label="Copy code snippet"
           title="Copy code snippet"
         >
           {copied ? (
@@ -157,7 +155,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language = '', value }) =>
       </div>
 
       {/* Code Display with Syntax Highlighting */}
-      <div className="p-4 overflow-x-auto select-all leading-relaxed text-text-body">
+      <div className="overflow-x-auto select-all leading-relaxed text-text-body">
         {showLineNumbers ? (
           <div className="flex text-xs font-mono leading-relaxed">
             <div className="select-none pr-4 text-right text-text-disabled font-mono border-r border-hairline-subtle mr-4">

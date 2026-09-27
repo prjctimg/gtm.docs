@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, NavLink } from 'react-router';
 import { Search, Github } from 'lucide-react';
-import { useLatestReleaseTag, RELEASES_URL } from '../lib/version';
 
 interface NavbarProps {
   onOpenSearch: () => void;
@@ -12,8 +11,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSearch,
   onOpenKeymap
 }) => {
-  const latestTag = useLatestReleaseTag();
-
   return (
     <header className="w-full border-b border-hairline-outline bg-canvas-obsidian sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
@@ -27,20 +24,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <span>gtm</span>
             </Link>
-
-            {/* Latest release tag — subtle, next to the brand */}
-            {latestTag && (
-              <a
-                href={RELEASES_URL}
-                target="_blank"
-                rel="noreferrer"
-                id="nav-version-badge"
-                className="hidden sm:inline-block font-mono text-xs leading-none text-text-disabled hover:text-text-muted border border-hairline-outline rounded px-1.5 py-0.5 transition-colors"
-                title={`Latest release: ${latestTag}`}
-              >
-                {latestTag}
-              </a>
-            )}
           </div>
 
           {/* Navigation Links */}

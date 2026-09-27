@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { motion, type Variants } from 'motion/react';
-import { IMAGES, PACKAGE_COMMANDS, KEYBINDINGS } from '../data/site';
+import { IMAGES, KEYBINDINGS } from '../data/site';
 import { TelemetryBenchmark } from '../components/TelemetryBenchmark';
 import { DoodleBackground } from '../components/DoodleBackground';
+import { InstallTabsWidget } from '../components/InstallTabsWidget';
 import { usePageMeta } from '../lib/meta';
 import { 
   Check, 
@@ -30,14 +31,9 @@ interface HomePageProps {
 }
 
 type TuiTab = 'library' | 'lyrics' | 'fft' | 'search';
-type PkgTab = 'curl' | 'cargo' | 'source' | 'termux';
 
 export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
   usePageMeta('gtm - Docs', '📻 gtm is a feature rich terminal audio player.');
-
-  // Hero package switcher
-  const [heroPkg, setHeroPkg] = useState<PkgTab>('curl');
-  const [heroCopied, setHeroCopied] = useState(false);
 
   // TUI Explorer Tab
   const [activeTuiTab, setActiveTuiTab] = useState<TuiTab>('library');
@@ -45,10 +41,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
   // Interactive Features Showcase scroll-to-review state & refs
   const [activeFeatureIdx, setActiveFeatureIdx] = useState(0);
   const featureItemRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // Footer Install box
-  const [footerPkg, setFooterPkg] = useState<PkgTab>('curl');
-  const [footerCopied, setFooterCopied] = useState(false);
 
   // Animated spectrum bars
   const [barHeights, setBarHeights] = useState<number[]>([
@@ -165,18 +157,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
     }
   };
 
-  const handleCopyHero = () => {
-    navigator.clipboard.writeText(PACKAGE_COMMANDS[heroPkg]);
-    setHeroCopied(true);
-    setTimeout(() => setHeroCopied(false), 2000);
-  };
-
-  const handleCopyFooter = () => {
-    navigator.clipboard.writeText(PACKAGE_COMMANDS[footerPkg]);
-    setFooterCopied(true);
-    setTimeout(() => setFooterCopied(false), 2000);
-  };
-
   return (
     <div className="w-full flex flex-col font-sans space-y-16 sm:space-y-24">
       {/* HERO SECTION */}
@@ -216,52 +196,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
             transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-xl mx-auto pt-2"
           >
-            <div className="bg-surface-container/90 backdrop-blur-md border border-hairline-outline rounded-xl p-3 shadow-2xl">
-              {/* Package Selector Tabs */}
-              <div className="flex items-center justify-start border-b border-hairline-outline pb-2 px-1 font-mono text-xs overflow-x-auto scrollbar-none">
-                <div className="flex items-center gap-1 whitespace-nowrap min-w-max">
-                  {(['curl', 'cargo', 'source', 'termux'] as PkgTab[]).map(pkg => (
-                    <button
-                      key={pkg}
-                      onClick={() => setHeroPkg(pkg)}
-                      className={`px-3 py-1 rounded transition-colors cursor-pointer whitespace-nowrap ${
-                        heroPkg === pkg
-                          ? 'bg-surface-elevated text-text-primary font-bold border border-hairline-outline text-secondary'
-                          : 'text-text-muted hover:text-text-primary'
-                      }`}
-                    >
-                      {pkg}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Command Display + Copy */}
-              <div className="flex items-center justify-between px-3.5 py-2.5 bg-code-canvas rounded-lg mt-2 font-mono text-xs">
-                <div className="flex items-center gap-2.5 overflow-x-auto">
-                  <span className="text-secondary font-bold select-none">$</span>
-                  <span className="text-text-primary select-all font-medium truncate">
-                    {PACKAGE_COMMANDS[heroPkg]}
-                  </span>
-                </div>
-                <button
-                  onClick={handleCopyHero}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-hairline-outline text-text-muted hover:text-primary-container hover:border-primary-container transition-all text-xs shrink-0 ml-3 cursor-pointer bg-surface-elevated"
-                >
-                  {heroCopied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-state-success" />
-                      <span className="text-state-success font-bold">copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>copy</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
+            <InstallTabsWidget id="hero-install-widget" />
           </motion.div>
         </div>
       </motion.section>
@@ -479,20 +414,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
                   isPast ? 'scale-[0.98] opacity-90' : 'scale-100 opacity-100'
                 }`}
               >
-                {/* Terminal Screenshot Frame */}
-                <div 
-                  className={`w-full lg:w-[65%] bg-canvas-obsidian border border-hairline-outline rounded-lg overflow-hidden flex items-center justify-center p-2 sm:p-4 shadow-inner relative transition-all duration-500 ease-out ${
+                {/* Terminal Screenshot */}
+                <img
+                  src={item.img}
+                  alt={item.title}
+                  className={`w-full lg:w-[65%] h-auto max-h-[420px] object-contain rounded-lg border border-hairline-outline bg-canvas-obsidian p-2 sm:p-4 shadow-inner block mx-auto transition-all duration-500 ease-out ${
                     isCurrent 
                       ? 'translate-y-0 opacity-100 scale-100' 
                       : 'translate-y-4 opacity-75 scale-[0.99]'
                   }`}
-                >
-                  <img
-                    src={item.img}
-                    alt={item.title}
-                    className="w-full h-auto max-h-[420px] object-contain rounded border border-hairline-subtle block mx-auto transition-transform duration-300"
-                  />
-                </div>
+                />
 
                 {/* Right Narrative */}
                 <div 
@@ -559,51 +490,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenKeymap }) => {
           </div>
 
           {/* Big Terminal Install Box with tabs */}
-          <div className="max-w-2xl mx-auto bg-surface-container border border-hairline-outline rounded-xl p-3 space-y-2 text-left">
-            {/* Package Selector Tabs */}
-            <div className="flex items-center justify-start border-b border-hairline-outline pb-2 px-1 font-mono text-xs overflow-x-auto scrollbar-none">
-              <div className="flex items-center gap-1 whitespace-nowrap min-w-max">
-                {(['curl', 'cargo', 'source', 'termux'] as PkgTab[]).map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setFooterPkg(t)}
-                    className={`px-3 py-1 rounded transition-colors cursor-pointer whitespace-nowrap ${
-                      footerPkg === t
-                        ? 'bg-surface-elevated text-text-primary font-bold border border-hairline-outline text-secondary'
-                        : 'text-text-muted hover:text-text-primary'
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Command Display + Copy */}
-            <div className="flex items-center justify-between px-3.5 py-2.5 bg-code-canvas rounded-lg mt-2 font-mono text-xs">
-              <div className="flex items-center gap-2.5 overflow-x-auto min-w-0">
-                <span className="text-secondary font-bold select-none">$</span>
-                <span className="text-text-primary select-all font-medium truncate">
-                  {PACKAGE_COMMANDS[footerPkg]}
-                </span>
-              </div>
-              <button
-                onClick={handleCopyFooter}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-hairline-outline text-text-muted hover:text-primary-container hover:border-primary-container transition-all text-xs shrink-0 ml-3 cursor-pointer bg-surface-elevated"
-              >
-                {footerCopied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-state-success" />
-                    <span className="text-state-success font-bold">copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>copy</span>
-                  </>
-                )}
-              </button>
-            </div>
+          <div className="max-w-2xl mx-auto text-left">
+            <InstallTabsWidget id="footer-install-widget" />
           </div>
 
           {/* Platform Badges */}

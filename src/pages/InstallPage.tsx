@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { usePageMeta } from '../lib/meta';
 import { ALL_DOCS, DOC_CATEGORIES, DOCS_BY_CATEGORY } from '../data/docs';
+import { useLatestReleaseTag } from '../lib/version';
 import { 
   ChevronRight, 
   Github, 
@@ -156,15 +157,10 @@ cargo build --release --no-default-features --features pulseaudio
 
 ## Termux (Android)
 
-\`gtm\` can run natively on Android inside the Termux environment:
+\`gtm\` can be installed on Android inside the Termux environment:
 
 \`\`\`bash
-pkg install rust clang pkg-config pulseaudio make
-
-git clone https://github.com/prjctimg/gtm.rs
-cd gtm.rs
-
-make termux
+pkg add gtm
 \`\`\`
 
 The build script auto-detects Termux and configures the PulseAudio backend. At runtime, \`gtmd\` starts the PulseAudio server automatically — no manual \`pulseaudio --start\` command is needed.
@@ -220,6 +216,9 @@ const INSTALL_HEADINGS = [
 ];
 
 export const InstallPage: React.FC<InstallPageProps> = ({ onOpenSearch }) => {
+  const latestTag = useLatestReleaseTag();
+  const version = latestTag || 'v0.2.83';
+
   usePageMeta(
     'Install | gtm',
     'Install methods for gtm: the install script, crates.io, a source build, and Termux.'
@@ -345,7 +344,7 @@ export const InstallPage: React.FC<InstallPageProps> = ({ onOpenSearch }) => {
             </div>
           </div>
 
-          {/* Breadcrumbs with side drawer trigger on desktop */}
+          {/* Breadcrumbs */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <nav
               id="install-breadcrumb-nav"
@@ -368,17 +367,6 @@ export const InstallPage: React.FC<InstallPageProps> = ({ onOpenSearch }) => {
               <ChevronRight className="w-3.5 h-3.5 text-hairline-outline shrink-0" />
               <span className="text-secondary font-semibold">Installation</span>
             </nav>
-
-            {/* Desktop side drawer button */}
-            <button
-              type="button"
-              onClick={() => setIsMobileDrawerOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono text-text-muted hover:text-text-primary bg-surface-container hover:bg-surface-elevated border border-hairline-outline hover:border-secondary/40 rounded transition-colors cursor-pointer"
-              title="Open documentation drawer"
-            >
-              <PanelLeft className="w-3.5 h-3.5 text-secondary" />
-              <span>Docs Index</span>
-            </button>
           </div>
 
           {/* Document Title Header */}
@@ -401,7 +389,7 @@ export const InstallPage: React.FC<InstallPageProps> = ({ onOpenSearch }) => {
           {/* Document Footer: GitHub reference */}
           <div className="mt-14 pt-6 border-t border-hairline-outline flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-mono text-xs">
             <p className="text-text-muted text-xs font-sans">
-              Referencing the official <span className="font-mono text-text-muted font-medium">gtm.rs</span> documentation and repository.
+              Latest version: <span className="font-mono text-text-muted font-medium">{version}</span>{' '}
             </p>
             <a
               href="https://github.com/prjctimg/gtm.rs"

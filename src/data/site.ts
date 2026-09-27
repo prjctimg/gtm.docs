@@ -43,6 +43,5 @@ export const KEYBINDINGS: KeybindingItem[] = [
 export const PACKAGE_COMMANDS = {
   curl: 'curl -fsSL https://gtmd.dev/install.sh | bash',
   cargo: 'cargo install gtm --locked',
-  source: 'git clone https://github.com/prjctimg/gtm.rs && cd gtm.rs && cargo build --release',
-  termux: 'make termux',
+  termux: 'pkg add gtm',
 };

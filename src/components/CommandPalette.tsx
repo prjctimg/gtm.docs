@@ -37,11 +37,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   // Build searchable items
   const installItems: SearchItem[] = [
-    { title: 'Install gtm (curl script, cargo, source, Termux)', category: 'Installation', tab: 'install' },
-    { title: 'Quick Install Script (stable and nightly)', category: 'Installation // Script', tab: 'install' },
+    { title: 'Install gtm (curl script, cargo, Termux)', category: 'Installation', tab: 'install' },
+    { title: 'Quick Install Script (stable, nightly, past versions)', category: 'Installation // Script', tab: 'install' },
     { title: 'Cargo Install (crates.io, locked deps)', category: 'Installation // Cargo', tab: 'install' },
-    { title: 'Build from Source (git clone, cargo build)', category: 'Installation // Source', tab: 'install' },
-    { title: 'Termux Android Build (make termux)', category: 'Installation // Termux', tab: 'install' }
+    { title: 'Termux Android (pkg add gtm)', category: 'Installation // Termux', tab: 'install' }
   ];
 
   // Command palette entries for /benchmark (a top-level route, not a doc)
