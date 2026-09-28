@@ -2,9 +2,9 @@
 # gtm installer — see https://github.com/prjctimg/gtm.rs
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/prjctimg/gtm.rs/main/install.sh | bash
+#   curl -fsSL https://gtmd.dev/install.sh | bash
 #   install.sh                        # download and install the release for this system
-#   install.sh --version 0.2.73       # pin a specific release
+#   install.sh --version 0.2.83       # pin a specific release
 #   install.sh --nightly              # install the latest nightly prerelease
 #   install.sh --prefix ~/.local      # install under a custom prefix
 #
@@ -40,7 +40,7 @@ Usage: install.sh [options]
 
 Options:
   -h, --help            Show this help message
-  -v, --version <ver>   Install a specific version (e.g. 0.2.73)
+  -v, --version <ver>   Install a specific version (e.g. 0.2.83)
       --nightly         Install the latest nightly prerelease
   -p, --prefix <dir>    Install prefix for the tarball (default: \$HOME/.local)
   -y, --yes             Non-interactive: never prompt (e.g. to enable gtmd)
@@ -49,8 +49,8 @@ When run from inside a release archive this file installs the bundled
 binaries, man pages, completions, systemd unit, desktop entry and icon.
 
 Examples:
-  curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash
-  install.sh --version 0.2.73
+  curl -fsSL https://gtmd.dev/install.sh | bash
+  install.sh --version 0.2.83
   install.sh --prefix /usr/local
 EOF
 }
@@ -88,6 +88,10 @@ VERSION=""
 CHANNEL="stable"
 PREFIX="${PREFIX:-$HOME/.local}"
 ASSUME_YES=0
+# Set by `resolve_asset_url`. Script scope, like `BOOTSTRAP_TMPDIR`, so the
+# name survives the call and `set -u` still sees a value.
+ASSET_URL=""
+RELEASE_NAME=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -178,7 +182,7 @@ detect_platform() {
 
 resolve_latest_stable_tag() {
   local tag
-  tag="$(curl -sf "https://api.github.com/repos/${REPO}/releases/latest" \
+  tag="$(curl -sfL "https://api.github.com/repos/${REPO}/releases/latest" \
     | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' || true)"
   [ -n "${tag}" ] || die "could not resolve the latest stable release from GitHub"
   echo "${tag}"
@@ -193,23 +197,34 @@ resolve_latest_stable_tag() {
 # never ask curl to fetch a URL that cannot exist; otherwise (stable) we fall
 # back to the conventional release URL so installs keep working even when the
 # API is unreachable or rate-limited.
+#
+# `-L` is load-bearing: the repository was renamed, and the API answers the
+# old name with a 301 to the new one. Without it every lookup reads as an empty
+# release, which the stable path absorbed via its URL fallback but the nightly
+# path reported as "not published yet" however many builds had succeeded.
+#
+# Sets ASSET_URL and RELEASE_NAME instead of printing the URL: a `$(...)` capture
+# would run this in a subshell, where the release name — the only source of the
+# nightly's commit — is discarded.
 #   resolve_asset_url <tag> <archive> [strict]
 resolve_asset_url() {
   local tag="$1" archive="$2" strict="${3:-0}"
   local direct="https://github.com/${REPO}/releases/download/${tag}/${archive}"
-  local names
-  names="$(curl -sf "https://api.github.com/repos/${REPO}/releases/tags/${tag}" 2>/dev/null \
-    | sed 's/}, *{/\n/g' \
-    | grep -o '"name": *"[^"]*"' \
-    | sed 's/^"name": *"//; s/"$//')" || true
-  if printf '%s\n' "${names}" | grep -qxF "${archive}"; then
-    printf '%s\n' "${direct}"
+  local body head
+  body="$(curl -sfL "https://api.github.com/repos/${REPO}/releases/tags/${tag}" 2>/dev/null)" || body=""
+  # A release shares its `"name"` key with every asset it carries, but the assets
+  # all sit inside the `assets` array, so cutting the body at that key leaves the
+  # release's own name as the only match.
+  head="${body%%\"assets\"*}"
+  RELEASE_NAME="$(printf '%s' "${head}" | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p' | head -1)"
+  if printf '%s' "${body}" | grep -qF "\"name\": \"${archive}\""; then
+    ASSET_URL="${direct}"
     return 0
   fi
   if [ "${strict}" = 1 ]; then
     return 1
   fi
-  printf '%s\n' "${direct}"
+  ASSET_URL="${direct}"
   return 0
 }
 
@@ -233,15 +248,28 @@ bootstrap_install() {
   fi
 
   local archive_name="gtm-${PLATFORM}.tar.gz"
-  local url=""
   if [ "${CHANNEL}" = "nightly" ]; then
     # Resolve strictly against the published nightly so a draft (mid-build)
     # resolves to a clear "try again" instead of a dead 404 URL.
-    url="$(resolve_asset_url "${tag}" "${archive_name}" 1)" || {
+    resolve_asset_url "${tag}" "${archive_name}" 1 || {
       die "nightly archive '${archive_name}' is not published yet — the latest nightly build may still be running or failed. Retry in a few minutes, or install a stable release with: install.sh --version <ver>"
     }
   else
-    url="$(resolve_asset_url "${tag}" "${archive_name}")"
+    resolve_asset_url "${tag}" "${archive_name}"
+  fi
+  local url="${ASSET_URL}"
+
+  # Name the build rather than the file. The platform triple is already decided
+  # by the machine this runs on and says nothing to the person reading it, while
+  # the version is the one fact that tells two installs apart — and on a nightly,
+  # where the version barely moves, only the commit does.
+  local label sha=""
+  if [ "${CHANNEL}" = "nightly" ]; then
+    # Nightly releases are named `<version>+<short sha>+nightly`.
+    sha="$(printf '%s' "${RELEASE_NAME}" | sed -n 's/.*+\([0-9a-f]\{7,\}\)+.*/\1/p')"
+    label="gtm (nightly at ${sha:-unidentified build})"
+  else
+    label="gtm (${tag#v})"
   fi
 
   # Script-scope on purpose (no `local`): the EXIT trap must still read it
@@ -252,11 +280,13 @@ bootstrap_install() {
   BOOTSTRAP_TMPDIR="$(mktemp -d)" || die "mktemp failed"
   trap 'rm -rf "${BOOTSTRAP_TMPDIR:?}"' EXIT
 
-  log "📥 downloading ${archive_name}"
+  log "📥 downloading ${label}"
   if ! download_simple "${url}" "${BOOTSTRAP_TMPDIR}/${archive_name}"; then
     die "download failed: ${url}"
   fi
-  ok "downloaded ${archive_name}"
+  # No label here: the line above already named the build, and repeating the
+  # commit hash on success says nothing the reader does not have.
+  ok "downloaded gtm"
 
   tar -xzf "${BOOTSTRAP_TMPDIR}/${archive_name}" -C "${BOOTSTRAP_TMPDIR}"
 
