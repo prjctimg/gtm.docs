@@ -1,4 +1,3 @@
-import { KeybindingItem } from '../types';
 
 export const IMAGES = {
   themesArt: "https://lh3.googleusercontent.com/aida-public/AB6AXuDLBW2XDyCnRIENZAIHXngeZMEYUcRnInWY8F679xgggSQhIAubP8jw5RnJCneUWLb_STjUTjg4C4G2QYjjHEDlIuOW3OcfAAPgL4ybG86qirdB8wchC3BXxW-pLT5jt5B3GXqI8bg4xuNXRprik_bIzNAV7d1Whq-opKOk2q6SJEfczA9TyXMxbs0cYahoqJYi-44cyI_CJvvM5UtxwnXqiZl75kwcIzenHWzM8_wRFYHxCn2nvtOydTX-aIoVfWZbpA",
@@ -8,45 +7,4 @@ export const IMAGES = {
   lyricsView2: "https://lh3.googleusercontent.com/aida-public/AB6AXuDUAiMC3KvJmnK7ndpU0KD3_1bJFs92Axbi6gAWSp3CeV0tE9QGl-mNmWbO17XyxsUrxV8ohexgtuYveiOgQFpzq24nSV8i6hQ65x_1LcXXwS3VLni98uT5EqnF3mvfHtMBmlMWh6pk79ngAmLrEs9suctRnOsl2T93VSbV3MCRZ6h_hfRL7E0IqbeL5fqRik-kEb1IScy2NAs6ryTLFXGCoWCkL4jBPyFel6ezrlNGEZEtq1jEsLgjYn3I4WOqXkw-Rg"
 };
 
-/**
- * A hand-picked subset of the real default bindings from
- * `gtm/src/keymap.rs::default_keybindings`. The full set, including the vim
- * navigation and Alt+ picker chords, lives in content/interface.mdx — keep the
- * two in sync when upstream changes.
- */
-export const KEYBINDINGS: KeybindingItem[] = [
-  { key: 'Space', action: 'Play / pause', scope: 'Global' },
-  { key: 'n / p', action: 'Next / previous track', scope: 'Global' },
-  { key: 'j / k', action: 'Cursor down / up', scope: 'List' },
-  { key: 'Enter', action: 'Select / play', scope: 'List' },
-  { key: ', / .', action: 'Seek backward / forward', scope: 'Normal' },
-  { key: '+ / -', action: 'Volume up / down', scope: 'Normal' },
-  { key: 'm', action: 'Toggle mute', scope: 'Normal' },
-  { key: '> / <', action: 'Playback speed up / down', scope: 'Normal' },
-  { key: 's', action: 'Stop', scope: 'Normal' },
-  { key: 'r', action: 'Cycle repeat mode', scope: 'Normal' },
-  { key: 'S', action: 'Toggle shuffle', scope: 'Normal' },
-  { key: 'f', action: 'Toggle favourite', scope: 'Normal' },
-  { key: '*', action: 'Love track on Last.fm', scope: 'Normal' },
-  { key: '&', action: 'Toggle Last.fm scrobbling', scope: 'Normal' },
-  { key: 'l', action: 'Fetch lyrics', scope: 'Normal' },
-  { key: 'e', action: 'Edit metadata', scope: 'Normal' },
-  { key: 'a / A', action: 'Add to queue / playlist', scope: 'Normal' },
-  { key: 'x', action: 'Delete from list', scope: 'Normal' },
-  { key: 'v', action: 'Toggle multiselect', scope: 'Normal' },
-  { key: ':', action: 'Open command palette', scope: 'Normal' },
-  { key: 'Tab', action: 'Next pane', scope: 'Normal' },
-  { key: 'Ctrl+V', action: 'Toggle visualizer', scope: 'Normal' },
-  { key: 'Alt+T', action: 'Toggle theme', scope: 'Normal' },
-  { key: 'z', action: 'Toggle Zen mode', scope: 'Normal' },
-  { key: '?', action: 'Toggle help', scope: 'Global' },
-  { key: 'Q', action: 'Quit daemon', scope: 'Global' },
-  { key: 'q', action: 'Quit client', scope: 'Global' },
-];
 
-/** Install methods documented by gtm (README + crates.io). */
-export const PACKAGE_COMMANDS = {
-  curl: 'curl -fsSL https://gtmd.dev/install.sh | bash',
-  cargo: 'cargo install gtm --locked',
-  termux: 'pkg add gtm',
-};

@@ -1,19 +1,11 @@
 ---
 title: MPRIS
 description: "Exposing MPRIS/D-Bus controls and desktop media-key integration."
+category: "System & Daemon"
 sidebar:
   order: 19
 ---
 
-## On this page
-
-- [Availability](#_availability)
-- [Bus & object](#_bus-object)
-- [What you can do](#_what-you-can-do)
-- [Desktop integration](#_desktop-integration)
-- [Limitations](#_limitations)
-
----
 
 ## Availability
 
@@ -96,9 +88,4 @@ playerctl next
 ## Limitations
 
 - Requires a session D-Bus and the `mpris` feature.
-- `set-rate` is a no-op — playback speed stays controlled from the TUI/CLI.
-- `CanPause` is reported `true` even for live streams (pausing a live source
-  is handled by the daemon, not blocked at the MPRIS layer).
-- Track identity is the daemon track id; `SetPosition` with an unknown
-  track id is ignored.
 - MPRIS is strictly one instance; concurrent `gtmd`s conflict (by design).

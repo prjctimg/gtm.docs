@@ -1,23 +1,11 @@
 ---
 title: Theming
 description: "Built-in and user themes, theme-mode detection, reactive theming, progress styles, footer presets, and icons."
+category: "Library & Media"
 sidebar:
   order: 11
 ---
 
-## On this page
-
-- [Built-in themes](#_built-in-themes)
-- [Theme mode & OS detection](#_theme-mode-os-detection)
-- [User themes](#_user-themes)
-- [Reactive theme](#_reactive-theme)
-- [Progress styles](#_progress-styles)
-- [Footer presets](#_footer-presets)
-- [Icons](#_icons)
-- [Transparent mode](#_transparent-mode)
-- [Limitations](#_limitations)
-
----
 
 ## Built-in themes
 
@@ -89,8 +77,8 @@ Drop a TOML file into `~/.config/gtm/themes/` (or
 
 ```toml
 # ~/.config/gtm/themes/mytheme.toml
-# The 18 colour fields below are REQUIRED. A file missing any of them fails to
-# parse and is skipped silently — the theme simply never appears in the picker.
+# The 18 required fields below (name + 17 colours) are REQUIRED. A file missing
+# any of them fails to parse and is skipped silently — the theme never appears.
 name = "My Theme"
 bg = "#101014"
 picker_bg = "#1a1b26"
@@ -196,10 +184,7 @@ Add your own in `~/.config/gtm/footer.toml` (or
 
 ```toml
 # ~/.config/gtm/footer.toml
-[[preset]]
-name = "My Footer"
-left = ["Playback", "Title", "Volume", "Speed", "EqPreset", "Device"]
-right = ["Time", "System"]
+preset = [{ name = "My Footer", left = ["Playback", "Title", "Volume", "Speed", "EqPreset", "Device"], right = ["Time", "System"] }]
 ```
 
 A legacy `middle` key still parses so older files load, but its modules are
@@ -254,11 +239,3 @@ Toggle either in `Alt+,` → Settings → System.
 
 ---
 
-## Limitations
-
-- User theme files must be valid TOML **and** contain all 18 required colour
-  fields. A file missing any of them is skipped without a message — the theme
-  never appears in the picker.
-- Reactive intensity is bounded; very pale covers shift accents less.
-- Footer module names are fixed — arbitrary custom modules are not
-  supported, only the listed ones.

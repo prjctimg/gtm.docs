@@ -1,119 +1,11 @@
 ---
 title: Getting Started
-description: "Install gtm, build from source, Cargo features, and first run."
+description: "What gtm needs before you build it, how to run it for the first time, and where to go to install it."
+category: "Introduction & Setup"
 sidebar:
   order: 2
 ---
 
-## On this page
-
-- [Prerequisites](#_prerequisites)
-- [Install](#_install)
-- [Build from source](#_build-from-source)
-- [Termux (Android)](#_termux-android)
-- [First run](#_first-run)
-- [Limitations](#_limitations)
-
-## Prerequisites
-
-gtm builds for Linux, macOS and Android (Termux). The test suite runs on Linux
-(Ubuntu) only; macOS is covered by the release build matrix, not by tests.
-
-- **Linux (ALSA):** `libasound2-dev` (Debian/Ubuntu) or `alsa-lib-devel`
-  (Fedora) for the Rodio backend.
-- **Linux (PulseAudio):** the `pulseaudio` feature enables the PulseAudio
-  backend and needs `pkg-config` plus your distro's PulseAudio headers
-  (`libpulse-dev` on Debian/Ubuntu, `pulseaudio-libs` on Fedora).
-- **Termux (Android):** `pkg install rust clang pkg-config pulseaudio make`,
-  plus `cargo install cargo-ndk` — the `make termux` target refuses to run
-  without it.
-- **Rust toolchain:** 1.85+ (edition 2024).
-- **pandoc:** required by `make install`, which generates the man pages.
-
----
-
-## Install
-
-The fastest way is the install script, which downloads the latest release
-binary:
-
-```bash
-curl -fsSL https://gtmd.dev/install.sh | bash
-```
-
-For nightly builds:
-
-```bash
-curl -fsSL https://gtmd.dev/install.sh | bash -s -- --nightly
-```
-
-Nightlies are published on every push to the **`dev`** branch, which is where
-active development lands. The **`main`** branch only ever receives tagged
-releases (`v*.*.*`) — so the default install above always gives you the newest
-stable release, and `--nightly` gives you the latest `dev` build. Nightlies are
-therefore newer than, and untested relative to, the latest release.
-
-The script installs the `gtm` and `gtmd` binaries, man pages, shell completions
-(bash/zsh/fish/elvish/powershell), a systemd **user** unit (Linux), a `.desktop`
-entry and an icon, under `$HOME/.local` by default. It adds `$HOME/.local/bin`
-to your shell profile if needed and offers to
-`systemctl --user enable --now gtmd`.
-
----
-
-## Build from source
-
-Requires **Rust 1.85+** (the workspace is edition 2024), plus **pandoc** —
-`make install` generates the man pages and hard-fails without it — and
-`pkg-config` for the `pulseaudio` feature.
-
-```bash
-git clone https://github.com/prjctimg/gtm
-cd gtm
-
-cargo build --release
-
-# Installs binaries, man pages, completions, and the systemd user unit
-sudo make install
-```
-
-Cloning `main` gives you the latest **release**; for the bleeding-edge build
-check out `dev` instead. `main` only ever receives tagged releases.
-
-### Cargo features
-
-The daemon has these optional features:
-
-| Feature | Default | What it enables |
-|---------|---------|-----------------|
-| `mpris` | ✅ | D-Bus MPRIS media controls |
-| `youtube` | ✅ | YouTube search via `innertube-rs` (disabled on Android) |
-| `pulseaudio` | ❌ | PulseAudio audio backend |
-
-To build without YouTube or MPRIS:
-
-```bash
-cargo build --release --no-default-features --features pulseaudio
-```
-
----
-
-## Termux (Android)
-
-```bash
-pkg install rust clang pkg-config pulseaudio make
-cargo install cargo-ndk        # required by `make termux`
-
-make termux
-```
-
-The build script *detects* Termux and warns if the `pulseaudio` feature is
-missing — it cannot enable a feature itself, so pass it explicitly (which is
-what `make termux` does). At runtime `gtmd` **does** auto-select the PulseAudio
-backend on Termux and starts the PulseAudio server automatically, so no manual
-`pulseaudio --start` is needed.
-
----
 
 ## First run
 
@@ -135,13 +27,8 @@ queue, volume, repeat mode, and crossfade settings across restarts in
 
 ---
 
-## Limitations
+## Where next?
 
-- **macOS:** audio works via Rodio (CoreAudio). PulseAudio support is Linux-only.
-  The installer targets **Apple Silicon only** — it fetches the `aarch64-darwin`
-  artifact regardless of `uname -m`, so Intel Macs are not supported by the
-  install script. Published artifacts cover `x86_64` and `aarch64`; Linux builds
-  come in Arch, musl/Alpine and Debian 12 flavours.
-- **Windows:** not officially supported or tested.
-- **YouTube search** requires the `youtube` feature, which is disabled on
-  Android/Termux builds because `rquickjs` does not ship Android bindings.
+Installing is covered in full on the [install page](/install) — the install
+script and its flags, the nightly channel, AUR, Homebrew, crates.io, building
+from source, the optional Cargo features, and Termux on Android.

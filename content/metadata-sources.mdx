@@ -1,20 +1,11 @@
 ---
 title: Metadata Sources
 description: "Deezer, MusicBrainz, and Last.fm enrichment and scrobbling, plus metadata sync."
+category: "Streaming & Integrations"
 sidebar:
   order: 14
 ---
 
-## On this page
-
-- [Best-effort enrichment](#_best-effort-enrichment)
-- [Deezer](#_deezer)
-- [MusicBrainz](#_musicbrainz)
-- [Last.fm scrobbling](#_last-fm-scrobbling)
-- [Metadata sync](#_metadata-sync)
-- [Limitations](#_limitations)
-
----
 
 ## Best-effort enrichment
 
@@ -134,13 +125,3 @@ handy after adding a file with terrible tags.
 
 ---
 
-## Limitations
-
-- Enrichment is best-effort and rate-limited; it cannot fill gaps the
-  providers simply don't have (local releases, small labels).
-- Covers need ≥300px to be accepted.
-- Deezer enforces the 200 ms request interval globally.
-- Last.fm requires manual API-application registration; gtm has no backend
-  of its own.
-- Providers are queried by the **sync pass**, not by scanning — tracks added
-  before a provider became reachable should be re-synced with `metadata-sync`.

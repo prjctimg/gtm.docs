@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { PageTab } from '../types';
-import { KEYBINDINGS } from '../data/site';
-import { ALL_DOCS } from '../data/docs';
-import { Search, BookOpen, Keyboard, ArrowRight, X } from 'lucide-react';
+import { DOCS, EXTRA_PAGES, type PageItem } from '../data/content';
+import { Search, BookOpen, ArrowRight, X } from 'lucide-react';
 
 interface PaletteProps {
   isOpen: boolean;
@@ -13,9 +11,8 @@ interface PaletteProps {
 interface SearchItem {
   title: string;
   category: string;
-  tab: PageTab;
-  docId?: string;
-  sectionId?: string;
+  /** Where selecting the entry navigates, anchor included. */
+  path: string;
 }
 
 export const Palette: React.FC<PaletteProps> = ({
@@ -35,52 +32,27 @@ export const Palette: React.FC<PaletteProps> = ({
     }
   }, [isOpen]);
 
-  // Build searchable items
-  const installItems: SearchItem[] = [
-    { title: 'Install gtm (curl script, cargo, Termux)', category: 'Installation', tab: 'install' },
-    { title: 'Quick Install Script (stable, nightly, past versions)', category: 'Installation // Script', tab: 'install' },
-    { title: 'Cargo Install (crates.io, locked deps)', category: 'Installation // Cargo', tab: 'install' },
-    { title: 'Termux Android (pkg add gtm)', category: 'Installation // Termux', tab: 'install' }
+  // Every content file is searchable: a top-level entry plus one per section.
+  const itemsFor = (page: PageItem): SearchItem[] => [
+    {
+      title: `${page.title} — ${page.description || 'Guide'}`,
+      category: page.isDoc ? `Docs // ${page.category}` : page.title,
+      path: page.path
+    },
+    ...page.headings.map(heading => ({
+      title: `${page.title} > ${heading.text}`,
+      category: page.title,
+      path: `${page.path}#${heading.id}`
+    }))
   ];
 
-  // Command palette entries for /benchmark (a top-level route, not a doc)
-  const benchItems: SearchItem[] = [
-    { title: 'Benchmarks — gtm vs cliamp, release over release', category: 'Benchmarks', tab: 'bench' },
-    { title: 'Benchmark methodology & what is measured', category: 'Benchmarks // Methodology', tab: 'bench' }
+  // Docs first, so the default list leads with the main documentation. Every
+  // content file contributes a top-level entry plus one per section, so the
+  // keybinding page is searchable without a hand-maintained index.
+  const allItems: SearchItem[] = [
+    ...DOCS.flatMap(itemsFor),
+    ...EXTRA_PAGES.flatMap(itemsFor)
   ];
-
-  // Dynamic docs from all live MDX content files
-  const docItems: SearchItem[] = [];
-  ALL_DOCS.forEach(doc => {
-    // Top-level document item
-    docItems.push({
-      title: `${doc.title} — ${doc.description || 'Guide'}`,
-      category: `Docs // ${doc.category}`,
-      tab: 'docs',
-      docId: doc.id
-    });
-
-    // Sub-headings inside document
-    doc.headings.forEach(h => {
-      docItems.push({
-        title: `${doc.title} > ${h.text}`,
-        category: `Docs // ${doc.title}`,
-        tab: 'docs',
-        docId: doc.id,
-        sectionId: h.id
-      });
-    });
-  });
-
-  const keyItems: SearchItem[] = KEYBINDINGS.map(k => ({
-    title: `${k.key}: ${k.action} (${k.scope})`,
-    category: 'Keybindings',
-    tab: 'docs',
-    docId: 'interface',
-    sectionId: 'keybindings'
-  }));
-
-  const allItems: SearchItem[] = [...installItems, ...benchItems, ...docItems, ...keyItems];
 
   const filteredItems = query.trim()
     ? allItems.filter(item =>
@@ -91,13 +63,7 @@ export const Palette: React.FC<PaletteProps> = ({
 
   const handleSelect = (item: SearchItem) => {
     onClose();
-    if (item.tab === 'install') {
-      navigate('/install');
-    } else if (item.tab === 'bench') {
-      navigate('/benchmark');
-    } else {
-      navigate(`/docs/${item.docId}${item.sectionId ? `#${item.sectionId}` : ''}`);
-    }
+    navigate(item.path);
   };
 
   useEffect(() => {
@@ -179,11 +145,7 @@ export const Palette: React.FC<PaletteProps> = ({
                   }`}
                 >
                   <div className="flex items-center gap-2.5 overflow-hidden">
-                    {item.category.includes('Keybinding') ? (
-                      <Keyboard className="w-3.5 h-3.5 text-state-warning shrink-0" />
-                    ) : (
-                      <BookOpen className="w-3.5 h-3.5 text-secondary shrink-0" />
-                    )}
+                    <BookOpen className="w-3.5 h-3.5 text-secondary shrink-0" />
                     <span className="truncate text-text-primary font-medium">
                       {item.title}
                     </span>

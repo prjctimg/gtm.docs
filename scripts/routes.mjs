@@ -5,8 +5,12 @@
  * Consumed by:
  *   - scripts/generate-sitemap.mjs (sitemap entries)
  *
- * So the sitemap can never disagree about what routes exist. Node-only — no
- * dependencies.
+ * The route set is derived from `content/*.mdx` the same way the app derives it
+ * (`src/data/content.ts`): a file is served at its `path:` frontmatter, or at
+ * `/docs/<file-name>` when it declares none. So the sitemap can never disagree
+ * about what routes exist, and a new content file is a new route with no wiring.
+ *
+ * Node-only — no dependencies.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -16,48 +20,58 @@ export const CONTENT_DIR = join(process.cwd(), 'content');
 
 export const HOME_TITLE = 'gtm - Docs';
 export const HOME_DESCRIPTION = '📻 gtm is a feature rich terminal audio player.';
-export const INSTALL_TITLE = 'Install | gtm';
-export const INSTALL_DESCRIPTION =
-  'Install methods for gtm: the install script, crates.io, a source build, and Termux.';
-export const BENCHMARK_TITLE = 'Benchmarks | gtm';
-export const BENCHMARK_DESCRIPTION =
-  'gtm vs cliamp resource-usage benchmarks, charted release over release — a living document, take it with a grain of salt.';
 
 /**
+ * @typedef {{ id: string, path: string, title: string, description: string, order: number }} ContentPage
  * @typedef {{ path: string, file: string, title: string, description: string }} Route
  */
 
-/** Parse `title:` / `description:` out of an MDX frontmatter block. */
+/**
+ * Flat frontmatter keys. Indentation is not significant, so a `sidebar:` block
+ * collapses to its `order` key — nothing reads the block itself.
+ * @returns {Record<string, string>}
+ */
 function frontmatter(mdx) {
-  const fm = mdx.match(/^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]+/)?.[1] ?? '';
-  const match = (key) =>
-    (fm.match(new RegExp(`${key}:\\s*["']?([^"'\r\n]+)["']?`))?.[1] ?? '').trim();
-  return { title: match('title'), description: match('description') };
+  const block = mdx.match(/^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]+/)?.[1] ?? '';
+  const data = {};
+  for (const line of block.split(/\r?\n/)) {
+    const pair = line.match(/^\s*([A-Za-z][\w-]*):\s*(.*)$/);
+    if (pair) data[pair[1]] = pair[2].trim().replace(/^["']/, '').replace(/["']$/, '');
+  }
+  return data;
 }
 
-/** Every doc slug, sorted by name (same set `src/data/docs.ts` exposes). */
-export function docSlugs() {
+/** Every content file as the SPA serves it, in the same order the sidebar uses. */
+export function contentPages() {
   return readdirSync(CONTENT_DIR)
     .filter((f) => f.endsWith('.mdx'))
-    .map((f) => f.replace(/\.mdx$/, ''))
-    .sort();
+    .map((f) => {
+      const data = frontmatter(readFileSync(join(CONTENT_DIR, f), 'utf8'));
+      const id = f.replace(/\.mdx$/, '');
+      const order = Number.parseInt(data.order ?? '', 10);
+      return {
+        id,
+        path: data.path || `/docs/${id}`,
+        title: data.title || id,
+        description: data.description || '',
+        order: Number.isFinite(order) ? order : 999,
+      };
+    })
+    .sort((a, b) => a.order - b.order);
 }
 
-/** The full route set: home + install + benchmark + every /docs/<slug>. */
+/** The full route set: home plus every content page, at its declared path. */
 export function buildRoutes() {
-  const routes = [
-    { path: '/', file: 'index.html', title: HOME_TITLE, description: HOME_DESCRIPTION },
-    { path: '/install', file: 'install/index.html', title: INSTALL_TITLE, description: INSTALL_DESCRIPTION },
-    { path: '/benchmark', file: 'benchmark/index.html', title: BENCHMARK_TITLE, description: BENCHMARK_DESCRIPTION },
-  ];
-  for (const slug of docSlugs()) {
-    const { title, description } = frontmatter(readFileSync(join(CONTENT_DIR, `${slug}.mdx`), 'utf8'));
+  const routes = [{ path: '/', file: 'index.html', title: HOME_TITLE, description: HOME_DESCRIPTION }];
+
+  for (const page of contentPages()) {
     routes.push({
-      path: `/docs/${slug}`,
-      file: `docs/${slug}/index.html`,
-      title: `${title} | gtm`,
-      description,
+      path: page.path,
+      file: `${page.path.replace(/^\//, '')}/index.html`,
+      title: `${page.title} | gtm`,
+      description: page.description,
     });
   }
+
   return routes;
 }

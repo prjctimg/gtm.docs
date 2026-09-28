@@ -1,18 +1,11 @@
 ---
 title: Streams
 description: "Playing direct HTTP(S) audio URLs as live streams."
+category: "Streaming & Integrations"
 sidebar:
   order: 18
 ---
 
-## On this page
-
-- [What "streams" means](#_what-streams-means)
-- [Playing a URL](#_playing-a-url)
-- [How it plays](#_how-it-plays)
-- [Limitations](#_limitations)
-
----
 
 ## What "streams" means
 
@@ -65,8 +58,5 @@ EQ, reverb, volume, and the same mixer path as local files all apply.
 
 - Requires the URL to serve audio directly — no playlisting pages, DRM, or
   redirect-heavy embeds.
-- Live transport: no seeking.
 - No auth/cookie handling for streams (radio uses none by default; podcasts
   handle their own feed auth).
-- Streams are ephemeral: they are not written to `library.db`, and the
-  crossfade into a stream relies on remote resolve succeeding.

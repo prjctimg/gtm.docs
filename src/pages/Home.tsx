@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { motion, type Variants } from 'motion/react';
-import { IMAGES, KEYBINDINGS } from '../data/site';
+import { IMAGES } from '../data/site';
 import { Telemetry } from '../components/Telemetry';
 import { Doodles } from '../components/Doodles';
 import { InstallTabs } from '../components/InstallTabs';
@@ -26,13 +26,9 @@ import {
 } from 'lucide-react';
 import { SiLinux, SiAndroid, SiApple } from 'react-icons/si';
 
-interface HomeProps {
-  onOpenKeymap: () => void;
-}
-
 type TuiTab = 'library' | 'lyrics' | 'fft' | 'search';
 
-export const Home: React.FC<HomeProps> = ({ onOpenKeymap }) => {
+export const Home: React.FC = () => {
   usePageMeta('gtm - Docs', '📻 gtm is a feature rich terminal audio player.');
 
   // TUI Explorer Tab

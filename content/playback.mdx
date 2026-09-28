@@ -1,22 +1,11 @@
 ---
 title: Playback
 description: "Volume and mute, seeking, speed, queue, repeat and shuffle, sleep timer, and low-power mode."
+category: "Audio & Playback"
 sidebar:
   order: 5
 ---
 
-## On this page
-
-- [Volume & mute](#_volume-mute)
-- [Seeking](#_seeking)
-- [Playback speed](#_playback-speed)
-- [Queue](#_queue)
-- [Repeat & shuffle](#_repeat-shuffle)
-- [Sleep timer](#_sleep-timer)
-- [Low-power mode](#_low-power-mode)
-- [Limitations](#_limitations)
-
----
 
 ## How playback is structured
 
@@ -117,6 +106,12 @@ ignored: playback always starts at index 0.
 Adding directories recursively scans for audio files. Library scans pick up
 `mp3, flac, ogg, wav, m4a, aac, opus`; `queue-add` also accepts `wma`.
 
+:::caution
+There is no WMA decoder. `queue-add` will happily take a `.wma` file into the
+queue — the extension is in the accepted list — but decoding fails later at
+playback time, with no error at the point you added it.
+:::
+
 ---
 
 ## Repeat & shuffle
@@ -202,6 +197,3 @@ sleep timer and low-power mode are not.
 - Speed is clamped to 0.25×–2.0×.
 - Volume is an integer 0–100.
 - Shuffle cannot be reversed to a prior order.
-- The sleep timer does not fade — it stops abruptly.
-- The queue is persisted, and playback resumes at the saved position after
-  a daemon restart.

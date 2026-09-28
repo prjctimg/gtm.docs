@@ -1,0 +1,232 @@
+---
+title: Installation
+description: "Official installation methods, package managers, and build configurations for gtm."
+category: "Getting started"
+path: /install
+showVersion: true
+sidebar:
+  order: 0
+---
+
+`gtm` is a terminal audio player and music manager written in Rust. It follows a
+client-daemon architecture: the `gtm` interactive terminal UI connects to a
+background `gtmd` daemon process that handles audio decoding, device output,
+playlist queueing, and state persistence.
+
+A complete installation provides:
+
+- **`gtm`** — Interactive terminal UI player frontend powered by ratatui.
+- **`gtmd`** — Headless audio daemon background service.
+- **Shell completions** — Native completions for Bash, Zsh, Fish, Elvish and PowerShell.
+- **Man pages** — System reference manuals accessible via `man gtm`.
+
+---
+
+## Prerequisites
+
+The install script only needs `curl` and `tar` — everything else ships
+prebuilt, so there is no compiler toolchain to set up.
+
+- **Linux (ALSA):** `libasound2-dev` (Debian/Ubuntu) or `alsa-lib-devel`
+  (Fedora/RHEL) for the Rodio audio backend.
+- **Linux (PulseAudio):** `libpulse-dev` or `pulseaudio-libs-devel` when using
+  the optional `pulseaudio` feature.
+- **macOS:** Audio outputs natively through Rodio and CoreAudio. No additional
+  audio headers are required.
+
+:::note
+Building from source is the only path that needs a toolchain: **Rust 1.85+**
+(edition 2024), plus `pkg-config` for the `pulseaudio` feature. See
+[Build from source](#build-from-source).
+:::
+
+---
+
+## Quick Install Script
+
+The fastest way to install `gtm` on Linux and macOS is the automated install
+script, which downloads pre-compiled release binaries for your architecture:
+
+```bash
+curl -fsSL https://gtmd.dev/install.sh | bash
+```
+
+The script automatically:
+
+1. Detects your OS and CPU architecture (`x86_64`, `aarch64`) and picks the
+   matching release archive. Linux artifacts come in Arch, musl/Alpine and
+   Debian 12 flavours; macOS resolves `aarch64-darwin`.
+2. Downloads and unpacks the latest release binaries into `~/.local/bin` and
+   adds it to your PATH (bash, zsh, or fish).
+3. Installs shell completions for Bash, Zsh, Fish, Elvish and PowerShell, and
+   the manual pages under `~/.local/share/man/`.
+4. Installs a systemd **user** unit (Linux), a `.desktop` entry and an SVG
+   icon, then offers to run `systemctl --user enable --now gtmd`.
+
+Useful flags:
+
+| Flag | Effect |
+|------|--------|
+| `--nightly` | Install the latest nightly prerelease instead of a tagged release |
+| `--version <ver>` | Pin a specific release, e.g. `install.sh --version 0.2.83` |
+| `--prefix <dir>` | Install somewhere other than `$HOME/.local` |
+| `--yes` | Never prompt, e.g. to enable `gtmd` unattended |
+
+:::caution
+On macOS the installer always fetches the `aarch64-darwin` artifact, so it
+works on Apple Silicon only.
+:::
+
+### Nightly Builds
+
+Nightly builds are published on every push to the `dev` branch. The `main`
+branch only ever receives tagged releases, so the default install above always
+gives you the newest stable build, while `--nightly` tracks `dev`:
+
+```bash
+curl -fsSL https://gtmd.dev/install.sh | bash -s -- --nightly
+```
+
+---
+
+## Package Managers
+
+### Arch Linux (AUR)
+
+`gtm` is available in the Arch User Repository as `gtm-bin` (pre-compiled
+binary) or `gtm-git` (compiled from source):
+
+```bash
+# Install binary release via paru
+paru -S gtm-bin
+
+# Or install binary release via yay
+yay -S gtm-bin
+```
+
+### Homebrew (macOS & Linux)
+
+Install via the official Homebrew tap formula (it builds from source, so you
+need `rust` and `pkg-config`):
+
+```bash
+brew tap prjctimg/gtm
+brew install gtm
+```
+
+:::note
+The tap's formula is version-pinned to a git tag and can trail the workspace
+version. Check `brew info gtm` against the current release at
+[gtm/releases](https://github.com/prjctimg/gtm/releases) if you need the
+newest build — the curl installer is always current.
+:::
+
+### crates.io (Cargo)
+
+If you have a configured Rust development environment, install directly from
+crates.io:
+
+```bash
+cargo install gtm --locked
+```
+
+---
+
+## Build From Source
+
+To compile the latest release or bleeding-edge development version locally:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/prjctimg/gtm.git
+cd gtm
+
+# 2. Build the optimized release binaries
+cargo build --release
+
+# 3. Install binaries, man pages, completions, and the systemd user unit
+sudo make install
+```
+
+:::tip
+Cloning `main` gives you the latest **release**; `dev` is the bleeding-edge
+branch. `make install` generates the man pages and therefore needs `pandoc`.
+:::
+
+### Cargo Features
+
+The daemon includes optional build features that can be toggled via Cargo flags:
+
+| Feature | Default | Description |
+|---|---|---|
+| `mpris` | ✅ Enabled | D-Bus MPRIS media controls for hardware media keys and desktop widgets |
+| `youtube` | ✅ Enabled | YouTube search and audio streaming via `innertube-rs` |
+| `pulseaudio` | ❌ Disabled | PulseAudio direct audio backend (defaults to Rodio / ALSA / PipeWire MMAP) |
+
+To compile without YouTube or MPRIS (recommended for minimal headless
+environments):
+
+```bash
+cargo build --release --no-default-features --features pulseaudio
+```
+
+---
+
+## Termux (Android)
+
+`gtm` is published to GitHub releases as a native `aarch64-android` build, and
+the same install script detects Termux and fetches it. There is no Termux
+package, so `pkg add gtm` is not a supported path:
+
+```bash
+curl -fsSL https://gtmd.dev/install.sh | bash
+```
+
+The script detects Termux via `$TERMUX_VERSION` (or `uname -o` reporting
+`Android`) and resolves the `aarch64-android` release archive.
+
+If you would rather build it yourself, the build script *detects* Termux and
+warns if the `pulseaudio` feature is missing — it cannot enable a feature
+itself, so pass it explicitly:
+
+```bash
+pkg install rust clang pkg-config pulseaudio make
+cargo install cargo-ndk        # required by `make termux`
+
+make termux
+```
+
+:::caution
+YouTube search is automatically disabled on Android/Termux builds because
+`rquickjs` does not ship Android bindings. Local audio files, playlists, and
+internet radio streams work without issue.
+:::
+
+---
+
+## First Run
+
+Start the interactive terminal UI:
+
+```bash
+gtm
+```
+
+The client automatically spawns the background `gtmd` daemon process if it is
+not already running.
+
+1. Press `1` to switch to the **Library** tab.
+2. Press `Enter` on a category or directory to drill down into tracks.
+3. Press `Enter` on a track to begin playback.
+4. Press `Space` to pause or resume playback.
+5. Press `n` for next track, or `p` for previous track.
+
+:::note
+The daemon logs to `~/.local/share/gtm/gtmd.log` (or
+`$XDG_DATA_HOME/gtm/gtmd.log`). It automatically persists playback queue,
+volume level, repeat mode, and crossfade settings across restarts in
+`~/.local/share/gtm/state.json`.
+:::
+
+---
+

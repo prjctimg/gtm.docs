@@ -12,6 +12,7 @@ import {
 import { CodeBlock } from './CodeBlock';
 import { Gif } from './Gif';
 import { AudioPlayer } from './AudioPlayer';
+import { DOCS_BY_ID, pageAtPath } from '../data/content';
 
 interface MarkdownProps {
   content: string;
@@ -58,11 +59,7 @@ interface ContentSegment {
 }
 
 function parseContentSegments(rawContent: string): ContentSegment[] {
-  // First, strip the redundant "## On this page\n...\n---" block if present at the top
-  const cleanedContent = (rawContent || '').replace(
-    /^##\s+On this page[\s\S]*?(?:---\s*[\r\n]+)/m,
-    ''
-  );
+  const cleanedContent = rawContent || '';
 
   const segments: ContentSegment[] = [];
   const calloutRegex = /:::(note|tip|caution|warning|audio|sound|gif)\s*([\s\S]*?):::/g;
@@ -249,14 +246,18 @@ export const Markdown = React.memo<MarkdownProps>(
 
             const isExternal = href?.startsWith('http://') || href?.startsWith('https://');
 
-            // Internal doc links like /configuration/ or /configuration/#time_format
+            // Internal links. Content files address each other by file name
+            // (/configuration/), by the route they are served at (/install), or
+            // with an anchor (/interface/#custom-keybindings). Anything that
+            // resolves to no page stays a plain link.
             if (href?.startsWith('/')) {
               const [path, hash] = href.split('#');
-              const docId = path.replace(/^\//, '').replace(/\/$/, '');
-              if (docId) {
+              const slug = path.replace(/^\//, '').replace(/\/$/, '');
+              const target = pageAtPath(`/${slug}`) ?? DOCS_BY_ID[slug];
+              if (target) {
                 return (
                   <Link
-                    to={`/docs/${docId}${hash ? `#${hash}` : ''}`}
+                    to={`${target.path}${hash ? `#${hash}` : ''}`}
                     className="text-secondary hover:text-primary transition-colors underline decoration-secondary/40 underline-offset-2 inline-flex items-center gap-0.5"
                   >
                     <span>{children}</span>

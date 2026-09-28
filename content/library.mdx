@@ -1,22 +1,11 @@
 ---
 title: Library
 description: "Scanning and browsing local files, favourites, playlists, import/export, metadata, and deleting tracks."
+category: "Library & Media"
 sidebar:
   order: 8
 ---
 
-## On this page
-
-- [Scanning](#_scanning)
-- [Categories](#_categories)
-- [Favourites](#_favourites)
-- [Playlists](#_playlists)
-- [Playlist tools](#_playlist-tools)
-- [Metadata](#_metadata)
-- [Deleting tracks](#_deleting-tracks)
-- [Limitations](#_limitations)
-
----
 
 ## Scanning
 
@@ -57,7 +46,7 @@ cover file, not to deduplicate. The same bytes at two paths create two rows.
 
 ### Browsing
 
-The library lists 13 categories in the sidebar:
+The library lists 14 categories in the sidebar:
 
 | Category | Contents |
 |----------|----------|
@@ -74,6 +63,7 @@ The library lists 13 categories in the sidebar:
 | **Genres** | Grouped by genre |
 | **Folders** | Grouped by source folder |
 | **Top Charts** | Provider charts and editorial playlists (Spotify, when linked) |
+| **Podcasts** | Subscribed podcast feeds; drilling in lists that feed's episodes |
 
 `Alt+S` cycles five sort orders in the **List** context only, and applies to
 the flat view of All Tracks / Liked (Playlists, Spotify and Radio sort
@@ -197,10 +187,3 @@ files.
 
 ---
 
-## Limitations
-
-- The library is populated by directory scanning; files added to a watched
-  directory are picked up on the next scan.
-- `update-metadata` writes tags into the file; format support depends on the
-  underlying `lofty` support for the container.
-- Year is clamped to 1000–9999; track numbers must be > 0.

@@ -4,17 +4,14 @@ import { motion } from 'motion/react';
 import { Nav } from './components/Nav';
 import { Footer } from './components/Footer';
 import { Palette } from './components/Palette';
-import { Keymap } from './components/Keymap';
 import { Scroll } from './components/Scroll';
+import { FIRST_DOC } from './data/content';
 import { Home } from './pages/Home';
-import { Docs } from './pages/Docs';
-import { Install } from './pages/Install';
+import { Doc } from './pages/Doc';
 import { Benchmark } from './pages/Benchmark';
-import { NotFound } from './pages/NotFound';
 
 export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isKeymapOpen, setIsKeymapOpen] = useState(false);
   const location = useLocation();
 
   // Global key listener for '/' and 'Ctrl+K'
@@ -34,10 +31,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-canvas-obsidian text-text-primary flex flex-col font-sans selection:bg-secondary/30 selection:text-secondary transition-colors duration-200">
-      <Nav
-        onOpenSearch={() => setIsSearchOpen(true)}
-        onOpenKeymap={() => setIsKeymapOpen(true)}
-      />
+      <Nav onOpenSearch={() => setIsSearchOpen(true)} />
 
       <div className="flex-grow flex flex-col">
         <Scroll />
@@ -49,39 +43,25 @@ export default function App() {
           className="flex-grow flex flex-col"
         >
           <Routes location={location}>
-            <Route path="/" element={<Home onOpenKeymap={() => setIsKeymapOpen(true)} />} />
-            <Route path="/docs" element={<Navigate to="/docs/overview" replace />} />
-            <Route
-              path="/docs/:docId"
-              element={
-                <Docs
-                  onOpenSearch={() => setIsSearchOpen(true)}
-                />
-              }
-            />
-            <Route
-              path="/install"
-              element={
-                <Install
-                  onOpenSearch={() => setIsSearchOpen(true)}
-                />
-              }
-            />
+            <Route path="/" element={<Home />} />
+            <Route path="/docs" element={<Navigate to={FIRST_DOC?.path ?? '/'} replace />} />
             <Route path="/benchmark" element={<Benchmark />} />
+            {/* Every content file is a route; unknown paths 404 inside `Doc`. */}
             <Route
               path="*"
               element={
-                <NotFound onOpenSearch={() => setIsSearchOpen(true)} />
+                <Doc
+                  onOpenSearch={() => setIsSearchOpen(true)}
+                />
               }
             />
           </Routes>
         </motion.div>
       </div>
 
-      <Footer onOpenKeymap={() => setIsKeymapOpen(true)} />
+      <Footer />
 
       <Palette isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-      <Keymap isOpen={isKeymapOpen} onClose={() => setIsKeymapOpen(false)} />
     </div>
   );
 }

@@ -1,0 +1,30 @@
+---
+title: Benchmarks
+description: "gtm vs cliamp resource-usage benchmarks, charted release over release — a living document, take it with a grain of salt."
+category: "Benchmarks"
+path: /benchmark
+sidebar:
+  order: 0
+---
+
+Automated measurements of gtm's resource usage during playback, charted
+release-over-release and compared against the reference CLI player
+[cliamp](https://github.com/bjarneo/cliamp).
+
+## Before you read any of the numbers
+
+Take this with a grain of salt. Like all benchmarks, these checks measure one
+narrow harness on one machine — a fixed FLAC and MP3 fixture, a headless
+daemon, no audio device. They say nothing definitive about your library, your
+machine, or your ears.
+
+The honest framing: this is for fun — a friendly compare of how gtm, a young
+terminal player, fares against the more feature-rich and mature **cliamp**.
+cliamp ships a lot more than gtm does. If gtm holds its own on memory and
+startup latency, great — and the moment it does not, the regression shows up
+in these charts too. That is the point of tracking this over time instead of
+cherry-picking a single run.
+
+The page is a living document: it renders whatever the committed `stats.json`
+contains. cliamp reference runs appear automatically whenever the benchmark
+harness records them.

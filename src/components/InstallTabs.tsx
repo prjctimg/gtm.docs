@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Check, Copy, ChevronDown, FlaskConical, Tag } from 'lucide-react';
 import { useAllReleaseTags } from '../lib/version';
 
-export type InstallPkgTab = 'curl' | 'cargo' | 'termux';
+export type InstallPkgTab = 'curl' | 'cargo';
 
 export interface InstallTabsProps {
   id?: string;
@@ -101,9 +101,6 @@ export const InstallTabs: React.FC<InstallTabsProps> = ({
   const getCommand = (): string => {
     if (activeTab === 'cargo') {
       return 'cargo install gtm --locked';
-    }
-    if (activeTab === 'termux') {
-      return 'pkg add gtm';
     }
     // curl tab
     if (curlVariant === 'nightly') {
@@ -211,7 +208,7 @@ export const InstallTabs: React.FC<InstallTabsProps> = ({
                           </span>
                         </div>
                         <div className="text-[10px] text-text-muted font-sans pt-0.5">
-                          Bleeding-edge builds from main branch
+                          Bleeding-edge builds from the dev branch
                         </div>
                       </div>
                     </div>
@@ -307,22 +304,6 @@ export const InstallTabs: React.FC<InstallTabsProps> = ({
             }`}
           >
             cargo
-          </button>
-
-          {/* TERMUX Tab */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('termux');
-              setIsCurlDropdownOpen(false);
-            }}
-            className={`px-3 py-1 rounded transition-colors cursor-pointer whitespace-nowrap ${
-              activeTab === 'termux'
-                ? 'bg-surface-elevated text-text-primary font-bold border border-hairline-outline text-secondary'
-                : 'text-text-muted hover:text-text-primary'
-            }`}
-          >
-            termux
           </button>
         </div>
       </div>

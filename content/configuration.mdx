@@ -1,23 +1,11 @@
 ---
 title: Configuration
 description: "On-disk files, config.toml and field reference, themes, footer presets, environment variables, and daemon CLI args."
+category: "Interface & Configuration"
 sidebar:
   order: 4
 ---
 
-## On this page
-
-- [Files layout](#_files-layout)
-- [config.toml reference](#_config-toml-reference)
-- [Theme files](#_theme-files)
-- [Footer presets](#_footer-presets)
-- [Custom radio stations](#_custom-radio-stations)
-- [Environment variables](#_environment-variables)
-- [Daemon CLI args](#_daemon-cli-args)
-- [Client CLI flags](#_client-cli-flags)
-- [Limitations](#_limitations)
-
----
 
 ## Files layout
 
@@ -31,23 +19,31 @@ directories:
 | `~/.config/gtm/footer.toml` | Custom footer presets |
 | `~/.config/gtm/radios.toml` | Custom radio stations |
 | `~/.config/gtm/spotify.json` | Spotify access/refresh token (mode 0600) |
+| `~/.config/gtm/spotify_client_id` | Spotify Web API app id, when not set by env |
+| `~/.config/gtm/spotify_playlists.json` | Spotify playlist sync snapshot |
 | `~/.config/gtm/secrets/` | Plaintext secret fallback when no OS keychain |
 | `~/.local/share/gtm/state.json` | Persistent daemon state |
 | `~/.local/share/gtm/library.db` | SQLite library database |
 | `~/.local/share/gtm/gtmd.log` | Daemon log |
+| `~/.local/share/gtm/audio/` | Default library scan directory (see below) |
 | `~/.local/share/gtm/*.m3u8` | Playlist mirror stubs |
 | `~/.cache/gtm/covers/` | Album cover cache (see `cover_cache_mb`) |
 | `~/.cache/gtm/artist_covers/` | Artist portrait cache |
 | `~/.cache/gtm/lyrics/` | Offline lyrics cache |
 | `~/.cache/gtm/spotify/` | yt-dlp audio cache for the Spotify→YouTube fallback |
 
+On a fresh install the daemon scans, in order, `~/.local/share/gtm/audio/`,
+`~/Music` (only if it already exists) and, under Termux, the shared-storage
+music directories. `gtmd --library` does **not** change this list.
+
 :::note
 If `$XDG_CONFIG_HOME` is not set, `~/.config` is used. If `$XDG_DATA_HOME`
 is not set, `~/.local/share` is used. On first run the daemon creates the
-config, data and cache roots (and the parents of its sockets and log). The
-subdirectories — `themes/`, `covers/`, `artist_covers/`, `lyrics/`, `spotify/` —
-are created lazily on first use, and `~/.config/gtm/themes/` is only created if
-you put a theme file there yourself.
+config, data and cache roots (and the parents of its sockets and log), along
+with the `covers/` and `artist_covers/` cache directories. The rest —
+`themes/`, `lyrics/`, `spotify/` — are created lazily on first use, and
+`~/.config/gtm/themes/` is only created if you put a theme file there
+yourself.
 :::
 
 ---
@@ -60,6 +56,11 @@ every 120 frames (~2 s at 60 fps) and changes take effect on that tick.
 
 A `config.toml` is written the first time you run `gtm config` or change a
 setting in the TUI. Launching `gtm` on its own only ever reads it.
+
+:::caution
+Because the whole file is re-read on each reload tick, write it atomically
+(temporary file + rename) — a partially written file can be read mid-write.
+:::
 
 :::caution
 Enum values are **case-sensitive** and several have no serde rename, so they
@@ -94,13 +95,14 @@ icon_style = "mdi"               # "mdi" (nerd fonts); any other value = emoji s
 
 # ─── Cover & Lyrics ─────────────────────────────────────────────────
 cover_provider = "auto"          # "auto" | "deezer" | "mb" | "spotify"
+                                # ("mb" also accepts "musicbrainz")
 cover_cache_mb = 512             # Combined covers/ + artist_covers/ budget
 auto_fetch_lyrics = true         # Auto-fetch lyrics on track change
 
 # ─── Library ─────────────────────────────────────────────────────────
 track_sort = "Recents"           # "Recents" | "RecentlyAdded" | "Alphabetical"
                                 # | "Artist" | "Album"
-left_pane_lists = []             # Sidebar categories to show; empty = all 13
+left_pane_lists = []             # Sidebar categories to show; empty = all 14
 show_preview = true              # Left-pane track preview card
 
 # ─── Notifications ──────────────────────────────────────────────────
@@ -131,23 +133,23 @@ notifications_overlay = true
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `theme_name` | string | `"Chadrula"` | Active theme name |
-| `theme_mode` | string | `"auto"` | `auto` follows OS dark/light mode; `manual` uses the named theme |
+| `theme_mode` | string | `"auto"` | `auto` follows the OS setting, probing `GTM_THEME_MODE`, GNOME `gsettings`, `GTK_THEME`, then Omarchy's `colors.toml` (falling back to `theme_name` if none answer); `dark` / `light` pin the mode; `manual` always uses `theme_name` |
 | `transparent_bg` | bool | `false` | Use terminal background (no fill) |
 | `transparent_pickers` | bool | `false` | Transparent picker overlays |
 | `reactive_theme` | bool | `false` | Derive accents from cover art |
 | `reactive_theme_intensity` | float | `0.34` | Background wash strength; TUI cycles 0.15/0.25/0.34/0.45/0.6 |
-| `footer_preset_name` | string | `"Default"` | Active footer preset |
+| `footer_preset_name` | string | `"Default"` | Active footer preset: `Default`, `Minimal`, `Full`, or a user preset |
 | `footer_key_action` | string | `"action"` | `action` renders the last action name, `keys` the key |
 | `hide_footer` | bool | `false` | Hide the footer bar |
 | `progress_style` | string | `"TrueGradient"` | `SeekHead` / `Classic` / `Dots` / `TrueGradient` |
 | `visualizer_preset` | string | `"braille"` | `braille`, `blocks`, `mirror`, `gradient`, `spectrum`, `barsdot`, `classicpeak`, `columns`, `wave`, `stereo`, `retro`, `flame` |
 | `time_format` | string | `"%H:%M"` | Clock format |
 | `icon_style` | string | `"mdi"` | Only `mdi` is special-cased; anything else gives the emoji set |
-| `cover_provider` | string | `"auto"` | `auto` / `deezer` / `mb` (MusicBrainz) / `spotify` |
-| `cover_cache_mb` | int | `512` | Combined on-disk cover budget; TUI offers 128/256/512/1024/2048 |
+| `cover_provider` | string | `"auto"` | `auto` / `deezer` / `mb` or `musicbrainz` (also `musicbrainz/cover-art-archive`) / `spotify` |
+| `cover_cache_mb` | int | `512` | Combined on-disk budget over `covers/` **and** `artist_covers/`, oldest evicted first; TUI offers 128/256/512/1024/2048 |
 | `auto_fetch_lyrics` | bool | `true` | Auto-fetch lyrics on track change |
 | `track_sort` | string | `"Recents"` | `Recents` / `RecentlyAdded` / `Alphabetical` / `Artist` / `Album` |
-| `left_pane_lists` | array | (all 13) | Sidebar categories to show, in display order |
+| `left_pane_lists` | array | (all 14) | Sidebar categories to show, in display order; unknown names are dropped and an empty result falls back to all 14 |
 | `show_preview` | bool | `true` | Left-pane track preview card |
 | `notification_modes` | table | (all `"footer"`) | Per-category notification mode |
 | `extensions` | table | (all `true`) | Optional TUI surfaces |
@@ -162,7 +164,7 @@ defines one theme. User themes replace built-in themes with the same name.
 
 ```toml
 name = "My Theme"
-# 18 required colour fields
+# 18 required fields: `name` plus the 17 colours below
 bg = "#1a1b26"
 picker_bg = "#24283b"
 fg = "#c0caf5"
@@ -203,10 +205,7 @@ hex.
 Custom footer presets are defined in `~/.config/gtm/footer.toml`:
 
 ```toml
-[[preset]]
-name = "My Preset"
-left = ["Playback", "Volume", "EqPreset"]
-right = ["Queue", "Time", "Backend"]
+preset = [{ name = "My Preset", left = ["Playback", "Volume", "EqPreset"], right = ["Queue", "Time", "Backend"] }]
 ```
 
 Use any of the module names listed in the [Footer bar](/interface/#footer-bar)
@@ -220,12 +219,17 @@ Stations added with `gtm radio add` are stored in
 `~/.config/gtm/radios.toml`:
 
 ```toml
-[[station]]
-name = "NTS Radio"
-url = "https://stream-relay-geo.ntslive.net/stream"
+station = [{ name = "NTS Radio", url = "https://stream-relay-geo.ntslive.net/stream" }]
 ```
 
 Each station is referenced by `custom:N` where `N` is its 1-based index.
+Manage the file with `gtm radio add`, `gtm radio list` and `gtm radio rm`.
+
+Two further keys are optional per station: `uuid` (the Radio Browser
+`stationuuid`, written automatically when a directory station is saved from
+the TUI, so the playable URL and favicon can be re-resolved later) and
+`tracklist` (a now-playing/recent-tracks endpoint, which overrides the
+built-in source registry).
 
 ---
 
@@ -244,6 +248,7 @@ Each station is referenced by `custom:N` where `N` is its 1-based index.
 | `GTM_SPOTIFY_PORT` | OAuth flow | Override the OAuth callback port (default: 8990) |
 | `GTM_LASTFM_PORT` | OAuth flow | Override the Last.fm callback port (default: 8991) |
 | `GTK_THEME` | Client | Second-choice OS theme probe; a trailing `-dark` means dark |
+| `GTM_SPOTIFY_CLIENT_ID` | Daemon | Spotify Web API app id; falls back to the bundled id file, then librespot's |
 | `NVIM` | Client | Disables cover art rendering (Neovim) |
 | `ZELLIJ` | Client | Disables cover art rendering (Zellij) |
 | `RUST_LOG` | Daemon | Controls log verbosity (`gtm=debug`, etc.); overrides `--verbose` |
@@ -259,8 +264,8 @@ gtmd [OPTIONS]
 
 Options:
   --socket <PATH>      Unix socket path
-  --library <PATH>     Accepted but currently ignored — library.db always
-                       lands in the data dir
+  --library <PATH>     Accepted but never read — the scan list is fixed (see
+                       Files layout) and always starts at the data dir
   --config <DIR>       Config, data AND cache directory root
                        (cache becomes <DIR>/cache)
   --backend <BACKEND>  Audio backend: "rodio" or "pulseaudio"
@@ -272,10 +277,13 @@ Options:
   -h, --help           Show help
 ```
 
-There is no `--version` flag on `gtmd`. The daemon auto-starts when `gtm` is
-launched and no daemon is running; if one is already alive, a second `gtmd`
-**refuses to start** (`gtmd already running (pid N)`) and the client kills the
-stale PID and respawns instead.
+`gtmd` accepts `--version` / `-V`, but it is handled before argument parsing
+rather than by the flag parser, so it does not appear in `--help` output.
+
+The daemon auto-starts when `gtm` is launched and no daemon is running; if one
+is already alive, a second `gtmd` **refuses to start** (`gtmd already running
+(pid N); connect to the existing daemon`) and the client instead kills the
+running PID and respawns.
 
 ---
 
@@ -294,19 +302,3 @@ Options:
 ```
 
 Run `gtm --cli --help` for the full list of CLI commands.
-
----
-
-## Limitations
-
-- `config.toml` is re-read every 120 frames (~2 s at 60 fps) and only when the
-  file's mtime changed; write it atomically to avoid a partial read.
-- Keybinding changes take effect on that same reload tick (up to ~2 s later).
-- Unknown TOML keys are silently ignored. But a malformed **value** for a known
-  key discards the entire file and falls back to defaults with no error and no
-  log line — check with `gtm config --validate`.
-- `theme_mode = "auto"` probes, in order: `GTM_THEME_MODE`, `gsettings`
-  (GNOME), `GTK_THEME`, then Omarchy's `colors.toml`. On systems without any of
-  these, it falls back to the user-specified theme.
-- `cover_cache_mb` is a budget over `covers/` **and** `artist_covers/`
-  combined; old entries are evicted by mtime when it is exceeded.

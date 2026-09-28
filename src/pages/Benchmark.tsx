@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router';
-import { Activity, Cpu, Gauge, MemoryStick, TrendingUp, GitCommit, FlaskConical, ExternalLink, Ruler } from 'lucide-react';
+import { Activity, Cpu, Gauge, MemoryStick, TrendingUp, GitCommit, FlaskConical, ExternalLink } from 'lucide-react';
 import { BENCHMARK_STATS, shortTag, formatKb, formatMs, formatDate, formatDateTime, BenchRun, BenchDelta } from '../data/benchmark';
+import { FIRST_DOC, PAGES_BY_PATH } from '../data/content';
 import { Chart } from '../components/Chart';
+import { Markdown } from '../components/Markdown';
 import { usePageMeta } from '../lib/meta';
 
 interface BenchmarkProps {}
@@ -25,9 +27,14 @@ function parseRunKey(key: string): { player: string; fixture: string } {
 }
 
 export const Benchmark: React.FC<BenchmarkProps> = () => {
+  // Title, description and methodology live in content/benchmark.mdx; the
+  // sections below are bound to specific series in stats.json.
+  const page = PAGES_BY_PATH['/benchmark'];
+
   usePageMeta(
-    'Benchmarks | gtm',
-    'gtm vs cliamp resource-usage benchmarks, tracked release over release. Take it with a grain of salt — it is all in good fun.',
+    `${page?.title ?? 'Benchmarks'} | gtm`,
+    page?.description ||
+      'gtm vs cliamp resource-usage benchmarks, tracked release over release. Take it with a grain of salt — it is all in good fun.',
   );
 
   const stats = BENCHMARK_STATS;
@@ -88,54 +95,12 @@ export const Benchmark: React.FC<BenchmarkProps> = () => {
           </div>
           <h1 className="font-mono text-2xl sm:text-3xl font-bold text-text-primary tracking-tight flex items-center gap-2">
             <Activity className="w-6 h-6 text-secondary" />
-            gtm Benchmarks
+            {page?.title ?? 'gtm Benchmarks'}
           </h1>
-          <p className="text-sm sm:text-base text-text-muted leading-relaxed max-w-3xl">
-            Automated measurements of gtm’s resource usage during playback,
-            charted release-over-release and compared against the reference CLI
-            player{' '}
-            <a
-              href="https://github.com/bjarneo/cliamp"
-              target="_blank"
-              rel="noreferrer"
-              className="text-secondary hover:text-primary underline decoration-secondary/40 underline-offset-2"
-            >
-              cliamp
-            </a>
-            .
-          </p>
         </div>
 
-        {/* ── The required write-up: read this before the data ───── */}
-        <section className="rounded-xl border border-hairline-outline bg-surface-container p-5 sm:p-6 space-y-4">
-          <h2 className="font-mono text-sm font-bold text-text-primary flex items-center gap-2">
-            <Ruler className="w-4 h-4 text-secondary" />
-            Before you read any of the numbers
-          </h2>
-          <div className="space-y-3 text-sm text-text-body leading-relaxed">
-            <p>
-              Take this with a grain of salt. Like all benchmarks, these checks
-              measure one narrow harness on one machine — a fixed FLAC and MP3
-              fixture, a headless daemon, no audio device. They say nothing
-              definitive about your library, your machine, or your ears.
-            </p>
-            <p>
-              The honest framing: this is for fun — a friendly compare of how
-              gtm, a young terminal player, fares against the more feature-rich
-              and mature <span className="text-text-primary font-semibold">cliamp</span>.
-              cliamp ships a lot more than gtm does. If gtm holds its own on
-              memory and startup latency, great — and the moment it does not,
-              the regression shows up in these charts too. That is the point of
-              tracking this over time instead of cherry-picking a single run.
-            </p>
-            <p className="text-text-muted text-xs font-mono">
-              The page is a living document: it renders whatever the committed{' '}
-              <code className="px-1.5 py-0.5 rounded bg-surface-elevated border border-hairline-outline text-secondary">stats.json</code>{' '}
-              contains. cliamp reference runs appear automatically whenever the
-              benchmark harness records them.
-            </p>
-          </div>
-        </section>
+        {/* ── Methodology, from content/benchmark.mdx ───────────── */}
+        <Markdown content={page?.content ?? ''} />
 
         {/* ── This run vs previous────────────────────────────────── */}
         <section className="rounded-xl border border-hairline-outline bg-surface-container overflow-hidden">
@@ -401,7 +366,7 @@ export const Benchmark: React.FC<BenchmarkProps> = () => {
             Data: <span className="text-text-muted">src/data/benchmark-stats.json</span> (from gtm{' '}
             <code className="px-1 rounded bg-surface-elevated border border-hairline-outline">stats.json</code>)
           </span>
-          <Link to="/docs/overview" className="text-text-muted hover:text-text-primary transition-colors cursor-pointer">
+          <Link to={FIRST_DOC?.path ?? '/docs'} className="text-text-muted hover:text-text-primary transition-colors cursor-pointer">
             ← Back to docs
           </Link>
         </div>

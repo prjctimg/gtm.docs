@@ -1,19 +1,11 @@
 ---
 title: Lyrics
 description: "Lyrics resolution order, sidecar files, offline cache, and timing."
+category: "Library & Media"
 sidebar:
   order: 9
 ---
 
-## On this page
-
-- [Resolution order](#_resolution-order)
-- [Sidecar files](#_sidecar-files)
-- [Offline cache](#_offline-cache)
-- [Timing & sync](#_timing-sync)
-- [Limitations](#_limitations)
-
----
 
 ## Resolution order
 
@@ -117,13 +109,4 @@ there.
 
 ## Limitations
 
-- Un-timed plain lyrics are shown too, as untimestamped lines — they just
-  never get a synced highlight or karaoke cursor. Only *highlighting* requires
-  timed lines.
-- Remote/provider tracks (no library row, no file) are searched by artist +
-  title through the same chain: a 10 s timeout for synced Spotify playlist
-  rows, 12 s for the library route.
-- Network lookups require LRCLIB reachability; tune in offline and the
-  offline cache is your ceiling.
-- Fuzzy matching thresholds mean very new or obscure releases may miss and
-  fall through without displaying lyrics rather than showing wrong ones.
+- Fuzzy matching thresholds mean very new or obscure releases may miss and fall through without displaying lyrics rather than showing wrong ones.

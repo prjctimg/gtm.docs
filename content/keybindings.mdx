@@ -1,0 +1,172 @@
+---
+title: Keybindings
+description: "Every default gtm keybinding, the contexts behind them, and how to remap them in config.toml."
+category: "Interface & Configuration"
+sidebar:
+  order: 3
+---
+
+---
+
+## How bindings are resolved
+
+gtm stores each binding as a `(key, action, contexts)` triple. A key press is
+matched against the table in order and **the first match wins**. If two
+bindings claim the same key, only the one listed first can ever fire.
+
+Most keys carry no modifier, so a binding matches regardless of `Shift`. Chord
+bindings (`Ctrl`, `Alt`, `Cmd`) must match exactly — a binding recorded with
+`Alt+,` never fires from a bare `,`, and a bare-`,` binding never swallows
+`Ctrl+,`.
+
+:::note
+Contexts are metadata, not live modes. gtm dispatches every key press as
+`Normal`, so a binding tagged `List` or `Global` is reachable everywhere —
+they exist to document intent and to make clash detection meaningful. The
+four bindings tagged `List`-only (the queue-move keys) are never dispatched by
+the keymap at all; the queue picker handles those presses itself.
+:::
+
+### A binding with no default
+
+`check_health` has no default key. The help screen advertises `Alt+H`, but no
+such binding exists — assign one yourself if you want it:
+
+```toml
+[keybindings]
+"alt+h" = "check_health"
+```
+
+Two overlays have **no action name at all**, so they cannot be remapped:
+`Alt+o` (load a stream URL) and `Alt+.` (library categories). Every other
+overlay below has one.
+
+## Playback
+
+| Key | Action |
+|-----|--------|
+| `Space` | Play / pause |
+| `n` | Next track |
+| `p` | Previous track |
+| `s` | Stop |
+| `+` / `=` | Volume up |
+| `-` | Volume down |
+| `m` | Toggle mute |
+| `>` | Speed up (pitch-preserving) |
+| `<` | Speed down |
+| `.` | Seek forward |
+| `,` | Seek backward |
+| `f` | Toggle favourite |
+| `*` | Love track on Last.fm |
+| `L` | Like on Spotify |
+| `Alt+l` | Add the playing track to Spotify |
+| `&` | Toggle Last.fm scrobbling |
+| `Alt+1` | Toggle mono downmix |
+| `z` | Toggle Zen mode |
+| `Ctrl+v` | Toggle visualizer |
+| `Alt+T` | Cycle theme name |
+
+`toggle_low_power` also has no default key.
+
+## Navigation and panes
+
+| Key | Action |
+|-----|--------|
+| `Tab` / `Shift+Tab` | Next / previous pane |
+| `[` / `]` | Focus left / right pane |
+| `j` / `k` or `↓` / `↑` | Move down / up |
+| `PageDown` / `PageUp` or `Ctrl+d` / `Ctrl+u` | Page down / up |
+| `Home` / `End` | Jump to top / bottom |
+| `G` | Jump to end |
+| `Enter` | Select / drill down |
+| `Backspace` | Go back |
+| `/` or `Alt+/` | Search the focused list |
+| `Ctrl+f` | Enter filter mode |
+| `Alt+s` | Cycle library sort |
+
+## Library and queue
+
+| Key | Action |
+|-----|--------|
+| `a` | Add selected to queue |
+| `A` | Add to playlist |
+| `x` | Delete from list |
+| `d` or `Delete` | Delete / remove item |
+| `e` | Edit metadata |
+| `v` | Toggle multiselect mode |
+| `Shift+↓` / `Shift+↑` | Extend multiselect |
+| `D` | Clear queue |
+| `Alt+q` | Open the queue |
+| `Alt+.` | Open library categories *(not remappable)* |
+
+### Reordering the queue
+
+These four are handled by the queue picker itself, not the keymap, and are
+inert while a live stream is playing:
+
+| Key | Action |
+|-----|--------|
+| `Ctrl+j` | Move item down |
+| `Ctrl+k` | Move item up |
+| `Enter` | Confirm the move |
+| `Esc` | Cancel the move |
+
+## Overlays
+
+Every `Alt` overlay, including the two that shadow each other:
+
+| Key | Overlay |
+|-----|---------|
+| `Alt+,` | Settings |
+| `:` | Command palette |
+| `Alt+/` | Search *(same action as `/`)* |
+| `Alt+y` | YouTube search |
+| `Alt+s` | Spotify search |
+| `Alt+r` | Radio — browse, tags and countries are sections inside this one picker |
+| `Alt+e` | Equalizer |
+| `Alt+v` | Visualizer preset |
+| `Alt+p` | **Progress style** |
+| `Alt+p` | Podcasts — *shadowed and unreachable by default*; bind `open_podcast` to a free key |
+| `Alt+o` | Load a stream URL *(not remappable)* |
+| `Alt+.` | Library categories *(not remappable)* |
+| `Alt+c` | Theme picker |
+| `Alt+z` | Sleep timer |
+| `Alt+n` | Notifications |
+| `Alt+a` | About |
+| `Alt+x` | Setup |
+
+## Global
+
+| Key | Action |
+|-----|--------|
+| `?` | Toggle the help buffer |
+| `Ctrl+h` | Hide the help bar *(this is the footer hint bar, not the `?` buffer)* |
+| `q` | Quit the client |
+| `Q` or `Ctrl+q` | Quit the client and stop the daemon |
+
+`Ctrl+z` suspends the client to the background with `SIGTSTP`. It is handled
+before the keymap is consulted, so it works in every context — including while
+an overlay is open — and cannot be remapped.
+
+## Remapping
+
+Remap any action that has a name under the `[keybindings]` table in
+`~/.config/gtm/config.toml`. Keys are spelled with `+` between modifiers, and
+modifiers match case-insensitively:
+
+```toml
+[keybindings]
+"ctrl+space" = "play_pause"
+"shift+Right" = "next"
+"q" = "quit"
+```
+
+:::caution
+An unknown key or action name is not fatal. gtm prints
+`gtm: unknown key "play_pause" in config keybindings` to stderr and drops
+that one entry, leaving the rest of your bindings in place. Two custom
+bindings that claim the same key print a clash warning.
+:::
+
+Changes are picked up by the config hot-reload, which re-checks the file's
+mtime every 120 frames — about 2 s at 60 fps.

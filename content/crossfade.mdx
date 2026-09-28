@@ -1,18 +1,11 @@
 ---
 title: Crossfade
 description: "How crossfade works, its countdown, configuration, CLI control, and gapless mode."
+category: "Audio & Playback"
 sidebar:
   order: 6
 ---
 
-## On this page
-
-- [How it works](#_how-it-works)
-- [Configuration](#_configuration)
-- [Gapless mode](#_gapless-mode)
-- [Limitations](#_limitations)
-
----
 
 ## How it works
 
@@ -87,20 +80,3 @@ transitions on lossless files once exposed.
 
 ---
 
-## Limitations
-
-- Crossfade duration is an integer number of seconds, clamped to 1–30.
-- A zero-duration crossfade never starts: `try_start_crossfade` bails on
-  `dur <= 0.0`, and the mixer would coerce any surviving value to 1 s anyway.
-  In debug builds a debug-only invariant additionally panics.
-- Crossfade requires the next track to be probed and decoded ahead of time.
-  If decoding fails (corrupt file, interrupted network stream), the daemon
-  falls back to a normal hard transition — it never stalls playback.
-- Remote/live streams (podcasts, radio) use a different pipeline
-  (ring-buffer decoding); crossfade standby is attempted with best effort
-  and skipped when the remote resolve fails.
-- **Crossfade is skipped entirely for Spotify tracks** (`spotify:` URIs) —
-  librespot keeps a single player per session, so pre-decoding a standby source
-  would drop the currently-playing track.
-- Only one crossfade can be in flight (`crossfade_loaded_for` guards against
-  double-loading).

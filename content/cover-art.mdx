@@ -1,20 +1,11 @@
 ---
 title: Cover Art
 description: "Cover art resolution order, providers, caching, the album art viewer, and limitations."
+category: "Library & Media"
 sidebar:
   order: 10
 ---
 
-## On this page
-
-- [Resolution order](#_resolution-order)
-- [Providers](#_providers)
-- [Choosing a provider](#_choosing-a-provider)
-- [Caching](#_caching)
-- [Album art viewer](#_album-art-viewer)
-- [Limitations](#_limitations)
-
----
 
 ## Resolution order
 
@@ -116,18 +107,3 @@ surface — `z` cycles cover → visualizer → lyrics. There is no cover-only k
 
 ---
 
-## Limitations
-
-- Requires network for anything not already in cache or embedded.
-- The 300px minimum means tiny or malformed source art is skipped.
-- Deezer requests each carry a 200 ms pre-request sleep; the other providers
-  are unthrottled.
-- Spotify artwork requires an active linked account.
-- Inside Neovim (`$NVIM`) or Zellij (`$ZELLIJ`) **all** image protocols are
-  suppressed: cover fetches are skipped entirely and the tile renders
-  "♪ Cover art unavailable in this terminal".
-- Radio stations resolve art through a four-step chain — the tracklist's
-  advertised image for the current track, then that track's own cover, then the
-  station homepage's `og:image`, and only last the directory favicon. Each step
-  is cached under a SHA-256 of `station:<uuid>` in the ordinary album cache.
-  There is no `radio:<uuid>` cache key.

@@ -1,20 +1,11 @@
 ---
 title: Spotify
 description: "Linking a Spotify account, search and streaming, playlist sync, and cover art."
+category: "Streaming & Integrations"
 sidebar:
   order: 13
 ---
 
-## On this page
-
-- [Linking your account](#_linking-your-account)
-- [Search & streaming](#_search-streaming)
-- [Playlist sync](#_playlist-sync)
-- [The Spotify Web cache](#_the-spotify-web-cache)
-- [Covers from Spotify](#_covers-from-spotify)
-- [Limitations](#_limitations)
-
----
 
 ## Linking your account
 
@@ -112,15 +103,5 @@ cover. See [Cover Art](/cover-art/).
 
 ## Limitations
 
-- Requires a Spotify **Premium** account for **remote playback control**
-  (probed from `/me/player`; without it the playback-control rows are disabled).
-  There is no bitrate selection anywhere in the path. Native streaming instead
-  requires the `streaming` scope at link time.
-- The `youtube` feature must be enabled for the decipher step used by the
-  Web stream (same restriction as YouTube on Android builds).
+- The `youtube` feature must be enabled for the decipher step (same restriction as YouTube on Android builds).
 - Search returns a bounded set — 10 per kind, see above.
-- Login is time-boxed to 120 seconds.
-- Spotify is not a full music source for *this* account — it syncs your
-  playlists, doesn't sync the whole discography.
-- Scrobbling to Last.fm and Spotify link are separate accounts; see
-  [Metadata sources](/metadata-sources/).

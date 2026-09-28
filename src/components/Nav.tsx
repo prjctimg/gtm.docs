@@ -1,16 +1,13 @@
 import React from 'react';
 import { Link, NavLink } from 'react-router';
 import { Search, Github } from 'lucide-react';
+import { FIRST_DOC } from '../data/content';
 
 interface NavProps {
   onOpenSearch: () => void;
-  onOpenKeymap: () => void;
 }
 
-export const Nav: React.FC<NavProps> = ({
-  onOpenSearch,
-  onOpenKeymap
-}) => {
+export const Nav: React.FC<NavProps> = ({ onOpenSearch }) => {
   return (
     <header className="w-full border-b border-hairline-outline bg-canvas-obsidian sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
@@ -29,7 +26,7 @@ export const Nav: React.FC<NavProps> = ({
           {/* Navigation Links */}
           <nav className="flex items-center gap-4 sm:gap-6 font-mono text-sm">
             <NavLink
-              to="/docs"
+              to={FIRST_DOC?.path ?? '/docs'}
               id="nav-docs-link"
               className={({ isActive }) =>
                 `py-1 cursor-pointer transition-colors ${
@@ -55,13 +52,12 @@ export const Nav: React.FC<NavProps> = ({
             >
               Install
             </NavLink>
-            <button
-              id="nav-keymap-link"
-              onClick={onOpenKeymap}
+            <Link
+              to="/keybindings/"
               className="py-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
             >
               Keymap
-            </button>
+            </Link>
           </nav>
         </div>
 

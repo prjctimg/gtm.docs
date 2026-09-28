@@ -1,15 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router';
 import { Github, Sun, Moon } from 'lucide-react';
+import { FIRST_DOC } from '../data/content';
 import { useTheme } from '../context/Theme';
 
-interface FooterProps {
-  onOpenKeymap?: () => void;
-}
-
-export const Footer: React.FC<FooterProps> = ({ 
-  onOpenKeymap
-}) => {
+export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { theme, toggleTheme } = useTheme();
 
@@ -52,7 +47,7 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Navigation links matching the navbar */}
           <nav className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 text-xs text-text-muted">
             <Link
-              to="/docs/overview"
+              to={FIRST_DOC?.path ?? '/docs'}
               className="text-text-muted hover:text-text-primary transition-colors"
             >
               Docs
@@ -63,15 +58,12 @@ export const Footer: React.FC<FooterProps> = ({
             >
               Install
             </Link>
-            {onOpenKeymap && (
-              <button
-                type="button"
-                onClick={onOpenKeymap}
-                className="text-text-muted hover:text-text-primary transition-colors cursor-pointer"
-              >
-                Keymap
-              </button>
-            )}
+            <Link
+              to="/keybindings/"
+              className="text-text-muted hover:text-text-primary transition-colors"
+            >
+              Keymap
+            </Link>
             <a
               href="https://github.com/prjctimg/gtm"
               target="_blank"

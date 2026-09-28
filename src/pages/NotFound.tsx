@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import { FileQuestion, ArrowLeft, BookOpen, Search } from 'lucide-react';
+import { FIRST_DOC } from '../data/content';
 import { usePageMeta } from '../lib/meta';
 
 interface NotFoundProps {
@@ -42,7 +43,7 @@ export const NotFound: React.FC<NotFoundProps> = ({ onOpenSearch }) => {
         </Link>
 
         <Link
-          to="/docs/overview"
+          to={FIRST_DOC?.path ?? '/docs'}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 border border-secondary/30 hover:bg-secondary/20 text-xs font-mono text-secondary font-bold transition-colors cursor-pointer"
         >
           <BookOpen className="w-3.5 h-3.5" />
