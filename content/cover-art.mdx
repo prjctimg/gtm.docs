@@ -20,15 +20,19 @@ sidebar:
 
 For a local track, the daemon serves cover art in this order:
 
-1. **Embedded artwork** already in the audio file (from scan/DB)
-2. **Radio favicon** — for `radio://` URIs, the station's own favicon,
-   fetched once and cached under `radio:<uuid>`
+1. **Embedded artwork** from the library row's `cover_path`, else an audio
+   **sidecar** next to the file (`<stem>.jpg|.jpeg|.png|.webp`), else the
+   queue entry's already-known `cover_path` (Spotify playlist syncs point this
+   at CDN art specifically so a playing track is never left blank)
+2. For `radio://` URIs, the station's own art — see the four-step chain under
+   [Limitations](#_limitations)
 3. If a **Spotify** account is linked and the provider is `Auto` (default)
-   or `Spotify`, a search of the Spotify API for 640×640 original artwork
+   or `Spotify`, a Spotify search for the **largest artwork variant the API
+   offers** (there is no fixed 640×640 assumption)
 4. The configured **metadata provider(s)** (MusicBrainz then Deezer by
    default, see below)
 
-Each provider lookup is bounded by a 5-second timeout; the Spotify lookup
+Each metadata lookup is bounded by a 5-second timeout; the Spotify lookup
 is bounded at 8 seconds. Misses fall through instead of stalling the view.
 
 ---
@@ -39,7 +43,13 @@ is bounded at 8 seconds. Misses fall through instead of stalling the view.
 |----------|--------|
 | **MusicBrainz** | Cover Art Archive (`https://coverartarchive.org`) |
 | **Deezer** | `https://api.deezer.com/search` |
-| **Spotify** | Spotify API (requires a linked account; 640×640 originals) |
+| **Spotify** | Spotify API (requires a linked account) |
+
+**Artist portraits** are a separate resolution path: Deezer's `/artist` image
+first, then a Spotify artist search. They cache under `artist_covers/` with
+their own 30-entry / 2 MiB in-memory LRU and a different key
+(`sha256("artist:<name>")`), so artist art is stored and evicted independently
+of album art.
 
 `CoverProvider::Auto` (the default) starts with MusicBrainz and falls back
 to Deezer. `Deezer` sweeps Deezer first, then MusicBrainz.
@@ -60,16 +70,8 @@ favor of the next source.
 
 From the TUI:
 
-- `Alt+,` → Settings → Playback → `Cover Source`
-
-From the CLI:
-
-```bash
-gtm --cli set-cover-provider auto
-gtm --cli set-cover-provider deezer
-gtm --cli set-cover-provider musicbrainz
-gtm --cli set-cover-provider spotify
-```
+- `Alt+,` → Settings → Playback → `Cover Source` — cycles
+  auto → musicbrainz → deezer → spotify → auto and pushes the change live
 
 Or set it in `config.toml`:
 
@@ -91,10 +93,12 @@ Covers are cached in two layers:
 | Layer | Bound |
 |-------|-------|
 | In-memory LRU | 64 entries, ≤ 8 MiB (artist tiles: 30 entries, ≤ 2 MiB) |
-| Disk (`$XDG_CACHE_HOME/gtm/covers/`) | evicts oldest by mtime above 512 MiB |
+| Disk (`$XDG_CACHE_HOME/gtm/covers/` + `artist_covers/`) | combined budget, default 512 MiB (`cover_cache_mb`); oldest-by-mtime pruned when over |
 
-Requests are rate-limited to **one per 200 ms** (`RATE_LIMIT_MS`) so a
-long track list does not hammer providers.
+Each Deezer request is preceded by a fixed 200 ms sleep (`RATE_LIMIT_MS`) — a
+floor, not a global rate limiter. Concurrent callers each pay their own 200 ms
+rather than being spaced out, and MusicBrainz, Spotify and artist-image
+requests are unthrottled.
 
 The album-art viewer and the album cover tiles in the library both read
 through this same cache, so artwork appears without re-fetching.
@@ -105,8 +109,10 @@ through this same cache, so artwork appears without re-fetching.
 
 A track cover popup opens when the track pane gains focus, showing the same
 cover the now-playing pane uses. In a normal TUI pane the cover is
-letterboxed to the available height. There is no dedicated keybinding for a
-full-screen artwork viewer.
+letterboxed to the available height.
+
+For a full-screen artwork viewer press `z` for Zen mode and cycle to the cover
+surface — `z` cycles cover → visualizer → lyrics. There is no cover-only key.
 
 ---
 
@@ -114,7 +120,14 @@ full-screen artwork viewer.
 
 - Requires network for anything not already in cache or embedded.
 - The 300px minimum means tiny or malformed source art is skipped.
-- Deezer is rate-limited to one request per 200 ms.
+- Deezer requests each carry a 200 ms pre-request sleep; the other providers
+  are unthrottled.
 - Spotify artwork requires an active linked account.
-- Radio stations use their favicon as a stand-in when the directory lists
-  none.
+- Inside Neovim (`$NVIM`) or Zellij (`$ZELLIJ`) **all** image protocols are
+  suppressed: cover fetches are skipped entirely and the tile renders
+  "♪ Cover art unavailable in this terminal".
+- Radio stations resolve art through a four-step chain — the tracklist's
+  advertised image for the current track, then that track's own cover, then the
+  station homepage's `og:image`, and only last the directory favicon. Each step
+  is cached under a SHA-256 of `station:<uuid>` in the ordinary album cache.
+  There is no `radio:<uuid>` cache key.

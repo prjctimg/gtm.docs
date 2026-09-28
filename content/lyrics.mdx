@@ -56,9 +56,9 @@ track.flac
 track.lrc      ← matched by filename stem
 ```
 
-`.srt` and timed `.json` sidecars are also recognized. Char-detection guess
-themselves: the sidecar reader guesses the encoding/text source and falls
-back to a plain-text lookup if that margin is thin.
+`.srt` and timed `.json` sidecars are also recognized. There is **no encoding
+detection**: a sidecar is read as strict UTF-8, and one that fails to decode is
+simply skipped (the offline cache and the network are still consulted).
 
 You can also pass a sidecar explicitly by opening it from the file picker —
 it attaches as synced `.lrc` data for the current track.
@@ -91,27 +91,38 @@ when the local copy is missing.
   roughly once per second.
 - During crossfade, the lyric auto-scroll cues toward the incoming track.
 
-The daemon broadcasts a `lyrics` event whenever the resolved lyrics change,
-so the TUI view swaps instantly on track changes.
+The daemon replies to each lyrics request with a `DaemonRes::Lyrics`; there is
+no `lyrics` **event**. The TUI tags every request with a generation counter, so
+a late reply is discarded rather than flashing the wrong lyrics.
+
+Press `[` / `]` to nudge the lyric clock by up to ±120 s when lyrics are early
+or late. The first nudge re-engages auto-follow and raises an offset toast.
 
 ---
 
 ## CLI
 
 ```bash
-gtm --cli lyrics             # print the current track's synced lyrics
+gtm --cli status --stream   # shows the current track's active lyric line
+gtm --cli lyrics "artist - title"   # look up lyrics for any track
 gtm lyrics "artist - title"  # search LRCLIB and print
 ```
 
-The standalone `lyrics` command takes a single `artist - title` query
-string.
+The standalone `lyrics` command takes a **required** `artist - title` query
+string — there is no no-argument form, so `gtm --cli lyrics` on its own is a
+usage error. Any subcommand implies CLI mode, so the `--cli` flag is optional
+there.
 
 ---
 
 ## Limitations
 
-- Only `.lrc` (and `.srt` / timed `.json`) formats are shown in the now
-  playing pane; plain un-timed lyrics are not diagrammed.
+- Un-timed plain lyrics are shown too, as untimestamped lines — they just
+  never get a synced highlight or karaoke cursor. Only *highlighting* requires
+  timed lines.
+- Remote/provider tracks (no library row, no file) are searched by artist +
+  title through the same chain: a 10 s timeout for synced Spotify playlist
+  rows, 12 s for the library route.
 - Network lookups require LRCLIB reachability; tune in offline and the
   offline cache is your ceiling.
 - Fuzzy matching thresholds mean very new or obscure releases may miss and

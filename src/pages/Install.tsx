@@ -61,14 +61,22 @@ curl -fsSL https://gtmd.dev/install.sh | bash
 \`\`\`
 
 The script automatically:
-1. Detects your OS and CPU architecture (x86_64, aarch64).
+1. Detects your OS and CPU architecture (x86_64, aarch64). Linux artifacts come in Arch, musl/Alpine and Debian 12 flavours.
 2. Downloads and unpacks the latest release binaries into \`~/.local/bin\` and adds it to your PATH (bash, zsh, or fish).
-3. Installs shell completions into standard completion directories for Bash, Zsh, and Fish.
-4. Installs the manual page to \`~/.local/share/man/man1/gtm.1\`.
+3. Installs shell completions for Bash, Zsh, Fish, Elvish and PowerShell.
+4. Installs the manual pages under \`~/.local/share/man/\`.
+5. Installs a systemd **user** unit (Linux), a \`.desktop\` entry and an SVG icon, then offers to run \`systemctl --user enable --now gtmd\`.
+
+:::caution
+On macOS the installer always fetches the \`aarch64-darwin\` artifact, so it
+works on Apple Silicon only.
+:::
 
 ### Nightly Builds
 
-Nightly builds are automatically compiled and published on every commit to \`main\`:
+Nightly builds are published on every push to the \`dev\` branch. The \`main\`
+branch only ever receives tagged releases, so the default install above always
+gives you the newest stable build, while \`--nightly\` tracks \`dev\`:
 
 \`\`\`bash
 curl -fsSL https://gtmd.dev/install.sh | bash -s -- --nightly
@@ -92,12 +100,20 @@ yay -S gtm-bin
 
 ### Homebrew (macOS & Linux)
 
-Install via the official Homebrew tap formula:
+Install via the official Homebrew tap formula (it builds from source, so you
+need \`rust\` and \`pkg-config\`):
 
 \`\`\`bash
 brew tap prjctimg/gtm
 brew install gtm
 \`\`\`
+
+:::note
+The tap's formula is version-pinned to a git tag and can trail the workspace
+version. Check \`brew info gtm\` against the current release at
+[gtm.rs/releases](https://github.com/prjctimg/gtm.rs/releases) if you need the
+newest build — the curl installer is always current.
+:::
 
 ### crates.io (Cargo)
 
@@ -126,8 +142,11 @@ cp target/release/gtm target/release/gtmd ~/.local/bin/
 \`\`\`
 
 :::tip
-By default, building from source produces a **nightly** build from the \`main\` branch. To build a specific tagged release, check out the tag first:
+Cloning \`main\` gives you the latest **release**; \`dev\` is the bleeding-edge
+branch. Build with Rust 1.85+ (edition 2024).
 \`\`\`bash
+git checkout dev        # for the latest dev build
+# or pin a specific release
 git checkout v0.2.83
 cargo build --release
 \`\`\`

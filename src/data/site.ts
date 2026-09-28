@@ -8,7 +8,12 @@ export const IMAGES = {
   lyricsView2: "https://lh3.googleusercontent.com/aida-public/AB6AXuDUAiMC3KvJmnK7ndpU0KD3_1bJFs92Axbi6gAWSp3CeV0tE9QGl-mNmWbO17XyxsUrxV8ohexgtuYveiOgQFpzq24nSV8i6hQ65x_1LcXXwS3VLni98uT5EqnF3mvfHtMBmlMWh6pk79ngAmLrEs9suctRnOsl2T93VSbV3MCRZ6h_hfRL7E0IqbeL5fqRik-kEb1IScy2NAs6ryTLFXGCoWCkL4jBPyFel6ezrlNGEZEtq1jEsLgjYn3I4WOqXkw-Rg"
 };
 
-/** Real default bindings, sourced from gtm/src/keymap.rs (`default_keybindings`). */
+/**
+ * A hand-picked subset of the real default bindings from
+ * `gtm/src/keymap.rs::default_keybindings`. The full set, including the vim
+ * navigation and Alt+ picker chords, lives in content/interface.mdx — keep the
+ * two in sync when upstream changes.
+ */
 export const KEYBINDINGS: KeybindingItem[] = [
   { key: 'Space', action: 'Play / pause', scope: 'Global' },
   { key: 'n / p', action: 'Next / previous track', scope: 'Global' },
@@ -33,7 +38,7 @@ export const KEYBINDINGS: KeybindingItem[] = [
   { key: 'Tab', action: 'Next pane', scope: 'Normal' },
   { key: 'Ctrl+V', action: 'Toggle visualizer', scope: 'Normal' },
   { key: 'Alt+T', action: 'Toggle theme', scope: 'Normal' },
-  { key: 'z', action: 'Toggle low-power mode', scope: 'Normal' },
+  { key: 'z', action: 'Toggle Zen mode', scope: 'Normal' },
   { key: '?', action: 'Toggle help', scope: 'Global' },
   { key: 'Q', action: 'Quit daemon', scope: 'Global' },
   { key: 'q', action: 'Quit client', scope: 'Global' },

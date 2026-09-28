@@ -23,7 +23,7 @@ gtm is two processes:
 
 | Process | Binary | Role |
 |---------|--------|------|
-| **Daemon** | `gtmd` | Decodes audio, drives the state machine, owns the mixer/EQ/crossfade, and all integrations (Spotify, Last.fm, covers, lyrics, subsonic, podcasts, radio, MPRIS) |
+| **Daemon** | `gtmd` | Decodes audio, drives the state machine, owns the mixer/EQ/crossfade, and all integrations (Spotify, Last.fm, covers, lyrics, podcasts, radio, MPRIS) |
 | **Client** | `gtm` | TUI/CLI that talks to the daemon over a Unix socket |
 
 The daemon keeps playing even when the TUI closes. The client auto-starts
@@ -103,7 +103,6 @@ Config dir (`~/.config/gtm/`):
 | `config.toml` | Client settings incl. `cover_provider` |
 | `footer.toml` | Footer presets |
 | `themes/*.toml` | User themes |
-| `subsonic.json` | Subsonic/Navidrome credentials |
 | `podcast.json` | Podcast subscriptions |
 | `radios.toml` | Custom radio stations |
 

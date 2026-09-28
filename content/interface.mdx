@@ -38,11 +38,14 @@ The TUI has a single workspace split into panes:
 ```
 
 - **Now Playing** — cover art, animated marquee title, progress bar. Height
-  adapts: `min(area_height / 3, 14)`.
-- **Sidebar** — categories: All Tracks, Liked, Albums, Artists, Playlists,
-  Spotify, Radio. Shows item counts.
-- **Results pane** — tracks, albums, or artists depending on the selected
-  category.
+  adapts: 5 rows under 60 columns, 6 rows under 22 rows, otherwise
+  `clamp(area_height / 3, 8, 14)`.
+- **Sidebar** — 13 categories: All Tracks, Liked, Albums, Artists, Playlists,
+  Spotify, Radio, Most Played, Recently Played, Recently Added, Genres, Folders,
+  Top Charts. Shows item counts. Filter and reorder the list with
+  `left_pane_lists` in `config.toml`.
+- **Results pane** — tracks, albums, artists, playlists, genres, folders or
+  chart entries depending on the selected category.
 - **Visualizer** — shown right of Now Playing when enabled and terminal width
   ≥ 80 columns.
 - **Lyrics pane** — shown when lyrics are loaded and terminal width ≥ 100
@@ -77,7 +80,7 @@ The first matching binding wins.
 | `n` | Next track |
 | `p` | Previous track |
 | `q` | Quit |
-| `Q` | Quit and stop daemon |
+| `Q` / `Ctrl+Q` | Quit and stop daemon |
 | `?` | Toggle help buffer |
 
 ### Normal / List keys
@@ -85,7 +88,7 @@ The first matching binding wins.
 | Key | Action |
 |-----|--------|
 | `Tab` / `Shift+Tab` | Next / previous pane |
-| `j` / `k` or `↑` / `↓` | Move up / down |
+| `k` / `j` or `↑` / `↓` | Move up / down |
 | `PgUp` / `PgDn` or `Ctrl+U` / `Ctrl+D` | Page up / down |
 | `Home` / `End` or `gg` / `G` | Jump to top / bottom |
 | `Enter` | Select / drill down |
@@ -97,23 +100,37 @@ The first matching binding wins.
 | `r` / `R` | Cycle repeat mode |
 | `S` | Toggle shuffle |
 | `m` | Toggle mute |
+| `Alt+1` | Toggle mono downmix |
 | `.` / `,` | Seek forward / backward |
-| `z` | Toggle low-power mode |
+| `z` | Toggle Zen mode (fullscreen cover / lyrics / visualizer) |
 | `f` | Toggle favourite |
+| `*` | Love track on Last.fm |
+| `L` | Like on Spotify |
+| `Alt+L` | Add the live track to Spotify |
+| `&` | Toggle Last.fm scrobbling |
 | `D` | Clear queue |
 | `v` | Toggle multiselect mode |
+| `Shift+↑` / `Shift+↓` | Extend multiselect |
 | `a` | Add selected to queue |
 | `A` | Add to playlist |
 | `x` | Delete from list |
 | `l` | Fetch lyrics for current track |
 | `e` | Edit metadata |
 | `Ctrl+V` | Toggle visualizer |
+| `Ctrl+z` | Suspend to background |
 | `Alt+T` | Cycle theme |
-| `Alt+S` | Cycle library sort |
+| `Alt+S` | Cycle library sort (List context only) |
 | `Ctrl+H` | Toggle help bar |
-| `/` | Open library search picker |
+| `Ctrl+f` | Enter filter mode |
+| `/` | Contextual search — library, or Spotify/Radio search in those categories |
+| `Ctrl+j` / `Ctrl+k` | Reorder in queue |
 | `:` | Open command palette |
 | `[` / `]` | Focus left / right pane |
+
+:::note
+There is **no default key for low-power mode** — reach it with
+`gtm --cli low-power` or by binding `toggle_low_power` yourself. `z` is Zen mode.
+:::
 
 ### Overlay shortcuts (Alt+key)
 
@@ -122,10 +139,8 @@ The first matching binding wins.
 | `Alt+q` | Queue |
 | `Alt+y` | YouTube search |
 | `Alt+s` | Spotify search |
-| `Alt+u` | Subsonic search |
 | `Alt+o` | Load stream URL |
-| `Alt+r` | Top radio stations |
-| `Alt+t` | Radio browse |
+| `Alt+r` | Radio Browser — custom + top stations, tags/countries, search |
 | `Alt+e` | Equalizer |
 | `Alt+p` | Progress style |
 | `Alt+v` | Visualizer preset |
@@ -141,16 +156,22 @@ The first matching binding wins.
 ## Custom keybindings
 
 You can remap any binding in `config.toml` under the `[keybindings]` table.
-Action names and key syntax are listed in the help buffer (`?` →
-Keybindings section).
+The map is **key → action name** (not the other way round):
 
 ```toml
+# ~/.config/gtm/config.toml
 [keybindings]
-play_pause = "Space"
-volume_up = "Up"
-open_queue = "Alt+q"
-quit = "Ctrl+q"
+"Space"  = "play_pause"
+"Up"     = "volume_up"
+"Alt+q"  = "open_queue"
+"Ctrl+q" = "quit"
 ```
+
+:::caution
+The direction matters. Written the other way round (`play_pause = "Space"`),
+every entry is rejected: the client tries to parse `play_pause` as a key, fails,
+prints `gtm: unknown key "play_pause"` and silently drops the binding.
+:::
 
 Available action names include: `play_pause`, `next`, `prev`, `stop`,
 `volume_up`, `volume_down`, `speed_up`, `speed_down`, `seek_forward`,
@@ -162,7 +183,8 @@ Available action names include: `play_pause`, `next`, `prev`, `stop`,
 `open_progress_style`, `open_visualizer_preset`, `open_theme_picker`,
 `open_about`, `open_sleep_timer`, `open_command_palette`, `open_setup`,
 `open_notifications`, `open_radio`, `open_radio_browse`, `open_podcast`,
-`open_subsonic_search`, and more.
+and more. `toggle_low_power` has **no default key binding** — this is the only
+way to reach low-power mode from the keyboard.
 
 :::note
 User bindings bind in Normal + List contexts only. Global keys (`q`, `?`,
@@ -173,24 +195,22 @@ User bindings bind in Normal + List contexts only. Global keys (`q`, `?`,
 
 ## Command palette
 
-Press `:` to open the command palette. It lists every action with an icon
-(Material Design Icons by default, emoji via `icon_style = "emoji"`).
-Type to filter, then press `Enter` to execute.
+Press `:` to open the command palette. It lists 47 of the available actions
+with an icon (Material Design Icons by default; any non-`mdi` value of
+`icon_style` gives the emoji set). Type to filter, then press `Enter` to
+execute.
 
 ---
 
 ## Help buffer
 
-Press `?` to open a full-screen help buffer. It covers:
+Press `?` to open a full-screen help buffer. It is a static list of every
+default keybinding, grouped by topic (Playback, Navigation, Playlists, View,
+Queue, System). It contains no configuration reference and no setup
+instructions — see [Configuration](/configuration/) for that.
 
-- All keybindings grouped by topic (Playback, Navigation, View, Queue,
-  System).
-- Configuration reference.
-- Setup instructions.
-
-The help buffer supports vim motions (`j`/`k`, `gg`/`G`,
-`Home`/`End`), search (`/`), and next/previous match (`n`/`N`). Close it
-with `Esc` or `q`.
+`j`/`k`/arrows scroll, `G`/`$` jump to the end, `0`/`Ctrl+g` to the top, and
+`n`/`N` step one line. Close it with `Esc` (`q` does nothing here).
 
 ---
 
@@ -240,17 +260,20 @@ backgrounds.
 | `Shuffle` | Shuffle on/off |
 | `Progress` | Mini progress bar |
 | `Queue` | Queue length |
-| `KeyAction` | Last key pressed |
+| `KeyAction` | Last action name (set `footer_key_action = "keys"` for the key) |
 | `Backend` | Audio backend (Rodio / PulseAudio) |
-| `System` | Daemon uptime |
+| `System` | Platform icon |
 | `EqPreset` | Current EQ preset name |
 | `SleepTimer` | Remaining sleep time |
 | `LowPower` | Low-power mode indicator |
+| `Mono` | Mono downmix indicator |
 | `Device` | Active audio device |
 | `Notification` | Notification badge |
 | `Time` | Clock |
 | `Multiselect` | Selection count |
 | `Download` | Download progress |
+| `Network` | Network status |
+| `Source` | Active source provider |
 
 ### Footer presets
 

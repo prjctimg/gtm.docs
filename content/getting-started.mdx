@@ -16,15 +16,19 @@ sidebar:
 
 ## Prerequisites
 
-gtm is tested on Linux and macOS.
+gtm builds for Linux, macOS and Android (Termux). The test suite runs on Linux
+(Ubuntu) only; macOS is covered by the release build matrix, not by tests.
 
 - **Linux (ALSA):** `libasound2-dev` (Debian/Ubuntu) or `alsa-lib-devel`
   (Fedora) for the Rodio backend.
 - **Linux (PulseAudio):** the `pulseaudio` feature enables the PulseAudio
-  backend; `libpulse-dev` is required.
-- **Termux (Android):** PulseAudio support is compiled in automatically by the
-  Termux build target.
-- **Rust toolchain:** 1.81+ (edition 2024).
+  backend and needs `pkg-config` plus your distro's PulseAudio headers
+  (`libpulse-dev` on Debian/Ubuntu, `pulseaudio-libs` on Fedora).
+- **Termux (Android):** `pkg install rust clang pkg-config pulseaudio make`,
+  plus `cargo install cargo-ndk` — the `make termux` target refuses to run
+  without it.
+- **Rust toolchain:** 1.85+ (edition 2024).
+- **pandoc:** required by `make install`, which generates the man pages.
 
 ---
 
@@ -37,18 +41,31 @@ binary:
 curl -fsSL https://gtmd.dev/install.sh | bash
 ```
 
-For nightly builds (released on every push to `main`):
+For nightly builds:
 
 ```bash
 curl -fsSL https://gtmd.dev/install.sh | bash -s -- --nightly
 ```
 
-The script installs the `gtm` and `gtmd` binaries, shell completions, and
-man pages.
+Nightlies are published on every push to the **`dev`** branch, which is where
+active development lands. The **`main`** branch only ever receives tagged
+releases (`v*.*.*`) — so the default install above always gives you the newest
+stable release, and `--nightly` gives you the latest `dev` build. Nightlies are
+therefore newer than, and untested relative to, the latest release.
+
+The script installs the `gtm` and `gtmd` binaries, man pages, shell completions
+(bash/zsh/fish/elvish/powershell), a systemd **user** unit (Linux), a `.desktop`
+entry and an icon, under `$HOME/.local` by default. It adds `$HOME/.local/bin`
+to your shell profile if needed and offers to
+`systemctl --user enable --now gtmd`.
 
 ---
 
 ## Build from source
+
+Requires **Rust 1.85+** (the workspace is edition 2024), plus **pandoc** —
+`make install` generates the man pages and hard-fails without it — and
+`pkg-config` for the `pulseaudio` feature.
 
 ```bash
 git clone https://github.com/prjctimg/gtm.rs
@@ -56,12 +73,12 @@ cd gtm.rs
 
 cargo build --release
 
-# Installs binaries, completions, and man pages
+# Installs binaries, man pages, completions, and the systemd user unit
 sudo make install
 ```
 
-By default this produces a **nightly** build. To build a tagged release,
-check out the tag first (`git checkout v0.2.83`).
+Cloning `main` gives you the latest **release**; for the bleeding-edge build
+check out `dev` instead. `main` only ever receives tagged releases.
 
 ### Cargo features
 
@@ -85,12 +102,15 @@ cargo build --release --no-default-features --features pulseaudio
 
 ```bash
 pkg install rust clang pkg-config pulseaudio make
+cargo install cargo-ndk        # required by `make termux`
 
 make termux
 ```
 
-The build script auto-detects Termux and picks the PulseAudio backend. At
-runtime `gtmd` starts the PulseAudio server automatically — no manual
+The build script *detects* Termux and warns if the `pulseaudio` feature is
+missing — it cannot enable a feature itself, so pass it explicitly (which is
+what `make termux` does). At runtime `gtmd` **does** auto-select the PulseAudio
+backend on Termux and starts the PulseAudio server automatically, so no manual
 `pulseaudio --start` is needed.
 
 ---
@@ -102,20 +122,26 @@ runtime `gtmd` starts the PulseAudio server automatically — no manual
 gtm
 ```
 
-1. Press `1` to open the **Library** tab.
+1. The **Library** view opens automatically — there are no tabs.
 2. Press `Enter` on a category to drill down into a track list.
 3. Press `Enter` on a track to play it.
 4. Press `Space` to pause/resume; `n`/`p` for next/previous.
+5. `Alt+,` opens Settings; `?` shows the full keybinding list.
 
 The daemon writes its log to `$XDG_DATA_HOME/gtm/gtmd.log` (or
-`~/.local/share/gtm/gtmd.log`). It persists queue, volume, repeat mode, and
-crossfade settings across restarts in `state.json`.
+`~/.local/share/gtm/gtmd.log`), truncating it on every start. It persists
+queue, volume, repeat mode, and crossfade settings across restarts in
+`state.json`.
 
 ---
 
 ## Limitations
 
-- **macOS:** audio works via Rodio. PulseAudio support is Linux-only.
+- **macOS:** audio works via Rodio (CoreAudio). PulseAudio support is Linux-only.
+  The installer targets **Apple Silicon only** — it fetches the `aarch64-darwin`
+  artifact regardless of `uname -m`, so Intel Macs are not supported by the
+  install script. Published artifacts cover `x86_64` and `aarch64`; Linux builds
+  come in Arch, musl/Alpine and Debian 12 flavours.
 - **Windows:** not officially supported or tested.
 - **YouTube search** requires the `youtube` feature, which is disabled on
   Android/Termux builds because `rquickjs` does not ship Android bindings.

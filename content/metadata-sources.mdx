@@ -22,16 +22,28 @@ Embedded tags in audio files are not always reliable: artists like "Feat.
 DJB", genres rendered as "unknown", or album names truncated. The daemon
 treats provider lookups as **best-effort enrichment**: any track whose tags
 are missing, partial, or filename-like (e.g. a bare filename with no real
-tags) gets probed when the file is scanned.
+tags) gets probed by the **metadata-sync pass** — `gtm --cli metadata-sync`, or
+Settings → System → Sync Metadata. **Scanning itself never contacts a
+provider.**
 
-Enrichment only *fills gaps* — it never overwrites credible embedded values.
-When a better candidate is found, it is both:
+:::caution
+The gate is per-track, not per-field. Once a track qualifies and Deezer
+answers, title, artist, album, genre, year, track number and `album_id` are
+written **wholesale** — to both the file tags and the database. Embedded values
+survive only because the *whole track* was gated out, not because individual
+fields are protected.
+:::
+
+The result is both:
 
 1. Written back into the **audio file tags** (`lofty`: title, artist,
    album, genre, year 1000–9999, track > 0, cover PNG/GIF/JPEG)
 2. Recorded in the **library database**
 
-A per-track guard prevents hammering providers on every scan.
+The only guard is `tags_need_enrichment` — empty title, artist or album, a
+title still equal to the raw filename stem, an empty genre, or `track_number
+<= 0`. It is re-evaluated on **every** sync run and nothing is memoised
+between runs, so a file that still looks incomplete is re-queried each time.
 
 ---
 
@@ -53,14 +65,28 @@ MusicBrainz web-service endpoints.
 
 - Used for cover art and album metadata
 - Artwork candidates below 300×300px are rejected
-- Lookups are time-boxed (5s per provider) and cached like covers
+- The whole MusicBrainz→Deezer fallback shares **one 5 s budget**; each
+  provider's own HTTP client separately times out at 15 s. Spotify's lookup is
+  capped at 8 s. Results are cached like covers
 
 ---
 
 ## Last.fm scrobbling
 
 Last.fm integration records your **scrobbles**: what you listen to, as
-`track.scrobble` / `track.updateNowPlaying` per the Last.fm Web API.
+`track.scrobble` / `track.updateNowPlaying` per the Last.fm Web API (base
+endpoint `https://ws.audioscrobbler.com/2.0/`). It also implements
+`track.love` / `track.unlove`, and `gtm --cli love` also immediate-scrobbles
+the current play session.
+
+```bash
+gtm --cli setup lastfm      # enter your API key + secret
+gtm --cli love              # love the current track (also scrobbles it)
+gtm --cli unlove            # remove the love
+gtm --cli scrobble          # toggle scrobbling on/off
+```
+
+In the TUI: `*` toggles love and `&` toggles scrobbling.
 
 ### Setting it up
 
@@ -77,8 +103,17 @@ The guided flow:
    grant access
 4. The daemon captures the callback token and swaps it for a session
 
-After that, `gtm --cli status` reports scrobbling state. Now-playing
-updates and completed-track scrobbles are pushed automatically.
+The loopback callback is served on `127.0.0.1:8991` (`$GTM_LASTFM_PORT` to
+override) with a five-minute window, and the redirect is matched on a `token`
+query param. If the browser does not redirect, you can paste the token from the
+address bar instead — the CLI accepts a manual token on stdin.
+
+After that, re-running `gtm --cli setup lastfm` or `gtm --cli scrobble` reports
+scrobbling state (`Ready (scrobbling enabled|disabled)`, `API key set, not yet
+authorized`, or `Not configured`). `gtm --cli status` shows playback state only
+— Playback, Track, Volume, Repeat, Shuffle and Queue — and no Last.fm
+information. Now-playing updates and completed-track scrobbles are pushed
+automatically.
 
 :::tip
 Scrobbling needs an active last.fm session; `lastfm.status()` shows
@@ -107,5 +142,5 @@ handy after adding a file with terrible tags.
 - Deezer enforces the 200 ms request interval globally.
 - Last.fm requires manual API-application registration; gtm has no backend
   of its own.
-- Providers are queried on *scan* — tracks added before a provider becomes
-  reachable should be re-synced with `metadata-sync`.
+- Providers are queried by the **sync pass**, not by scanning — tracks added
+  before a provider became reachable should be re-synced with `metadata-sync`.

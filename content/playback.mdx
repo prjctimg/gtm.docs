@@ -39,8 +39,9 @@ explicitly play or enqueue again.
 - `-` — volume down
 - `m` — toggle mute
 
-Volume range is 0–100 and is persisted across restarts. The CLI equivalents
-are `gtm --cli volume <vol>` and `gtm --cli mute`.
+Volume range is 0–100 and is persisted across restarts. Each `+`/`-` press
+changes it by 5. The CLI equivalents are `gtm --cli volume <vol>` and
+`gtm --cli mute`.
 
 ---
 
@@ -49,9 +50,11 @@ are `gtm --cli volume <vol>` and `gtm --cli mute`.
 - `.` — seek forward
 - `,` — seek backward
 
-CLI: `gtm --cli seek <seconds>`. Seek granularity is per-second; the daemon
-re-anchors client clocks roughly once per second so the TUI position never
-drifts by more than a fraction of a second.
+CLI: `gtm --cli seek <seconds>`. Each `.`/`,` press seeks **±5 s**; repeated
+presses accumulate and are coalesced into a single daemon seek, flushed 160 ms
+after the last press. The daemon separately re-anchors client clocks roughly
+once per second so the TUI position never drifts by more than a fraction of a
+second.
 
 :::note
 Live streams (radio, internet radio) do not support seeking back. Seeking
@@ -65,7 +68,8 @@ forward to the live edge is generally safe.
 - `>` / `<` — speed up / down (pitch-preserving)
 
 Speed is pitch-preserving (time-stretch, not resample) and clamped to
-**0.25×–2.0×**. The `speed` CLI command reports or sets the rate:
+**0.25×–2.0×**. Each `>`/`<` press steps by 0.25×. The `speed` CLI command
+reports or sets the rate:
 
 ```bash
 gtm --cli speed          # print current rate
@@ -91,15 +95,27 @@ The queue is a picker overlay opened with `Alt+q`. From the queue you can:
 CLI:
 
 ```bash
-gtm --cli queue                         # print the queue
-gtm --cli queue-add ~/Music/song.flac   # add to queue
-gtm --cli queue-remove 0                # remove by index
-gtm --cli queue-move 0 2                # move entry
-gtm --cli queue-clear                   # clear the queue
-gtm --cli queue-set ~/Music/*.flac 0    # replace the queue and start at index 0
+gtm --cli queue                              # print the queue
+gtm --cli queue-add ~/Music/song.flac        # add to queue (play-next)
+gtm --cli queue-remove 0                     # remove by index
+gtm --cli queue-move 0 2                     # move entry
+gtm --cli queue-clear                        # clear the queue
+gtm --cli queue-set ~/Music/*.flac --start-idx 0   # replace the queue
 ```
 
-Adding directories recursively scans for audio files.
+:::note
+Queue indices are positions in the **merged view** — the user queue first,
+then the default library list — not queue-relative. With an empty user queue,
+`queue-remove 0` removes the first track of the library list. Out-of-range
+indices are silently ignored.
+
+`queue-add` inserts *play-next* (right after the current entry) unless you pass
+`--position <INDEX>`. `queue-set`'s `--start-idx` is currently accepted and
+ignored: playback always starts at index 0.
+:::
+
+Adding directories recursively scans for audio files. Library scans pick up
+`mp3, flac, ogg, wav, m4a, aac, opus`; `queue-add` also accepts `wma`.
 
 ---
 
@@ -139,14 +155,20 @@ once per second. Arming a new timer replaces the old one; cancel bumps an
 internal generation counter so a stale countdown cannot stop playback.
 
 :::note
-The sleep timer hard-stops output — it does **not** fade out gradually.
+By default the timer hard-stops at expiry — it does **not** fade out
+gradually. The picker's immediate-stop toggle instead defers the stop to the
+natural end of the current track, in which case a crossfade that would revive
+playback is refused.
 :::
 
 ---
 
 ## Low-power mode
 
-- `z` — toggle low-power mode
+Low-power mode has **no default key binding**. Reach it with the CLI or by
+binding `toggle_low_power` in `config.toml` (see
+[Interface](/interface/#custom-keybindings)). `z` toggles **Zen** mode, not
+low-power.
 
 Enabling low-power pauses playback and eases up on background work (it also
 cancels any armed sleep timer). Disabling just clears the flag so you can
@@ -163,9 +185,12 @@ The daemon persists the following to `state.json` on every change:
 - Queue and cursor
 - Volume, mute
 - Repeat mode, shuffle
+- Mono downmix flag
 - Crossfade configuration
-- Audio settings (EQ preset, speed, device, reverb, loudness)
-- Gapless flag
+- Dynamic-mode and scrobble configuration
+- Audio settings (EQ preset, speed, device, reverb, loudness, pre-gain)
+- Gapless flag (persisted, but not consulted by playback — see
+  [Crossfade](/crossfade/))
 
 The current track and position **are** persisted and resumed on restart; the
 sleep timer and low-power mode are not.

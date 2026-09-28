@@ -14,6 +14,7 @@ sidebar:
 - [Progress styles](#_progress-styles)
 - [Footer presets](#_footer-presets)
 - [Icons](#_icons)
+- [Transparent mode](#_transparent-mode)
 - [Limitations](#_limitations)
 
 ---
@@ -41,14 +42,17 @@ sidebar:
 | Solarized Dark | dark |
 | Monochrome | dark |
 
-Switch themes from the theme picker (`Alt+T` cycles through the built-in
-themes in order and sets `theme_mode` to `"manual"`, `Alt+C` opens the full
-picker with live preview) or persist a name:
+Switch themes from the theme picker (`Alt+T` cycles **every registered theme**
+— the 16 built-ins plus any of your own user themes, in load order — and sets
+`theme_mode` to `"manual"`; `Alt+C` opens the full picker with live preview) or
+persist a name:
 
 ```toml
 # config.toml
 theme_name = "Tokyo Night Storm"
 ```
+
+The default theme is **Chadrula**.
 
 ---
 
@@ -61,18 +65,20 @@ theme_name = "Tokyo Night Storm"
 | `auto` (default) | Query the OS dark/light preference; pick a matching theme |
 | `dark` | Force a dark theme |
 | `light` | Force a light theme |
+| `manual` | Keep the current theme; OS detection stays off until you return to `auto` |
 
-In `auto` mode the daemon detects the desktop preference — via `gsettings`
-on the desktop, and via the Omarchy `colors.toml` file as a fallback. A
-`GTK_THEME` env var or `gtm` config override takes precedence.
+`Alt+T` cycles `auto → dark → light → manual → auto`.
 
-On startup the auto mode logs the detected theme
+In `auto` mode the **client** detects the desktop preference, in this order:
 
-```
-gtm[..]: Detected OS theme: dark
-```
+1. `GTM_THEME_MODE=dark|light` env var (an absolute override)
+2. GNOME `org.gnome.desktop.interface color-scheme` via `gsettings`
+3. `GTK_THEME` (a trailing `-dark` means dark)
+4. Omarchy `current/theme/colors.toml`
 
-Use `tail -f` on the log or `RUST_LOG=gtm=debug` to confirm.
+If every probe fails, the persisted `theme_name` is kept. Detection emits no log
+line — to see the effective theme, read `theme_name` in `config.toml` or open
+the theme picker (`Alt+C`), which badges light themes with ☀.
 
 ---
 
@@ -83,27 +89,48 @@ Drop a TOML file into `~/.config/gtm/themes/` (or
 
 ```toml
 # ~/.config/gtm/themes/mytheme.toml
+# The 18 colour fields below are REQUIRED. A file missing any of them fails to
+# parse and is skipped silently — the theme simply never appears in the picker.
 name = "My Theme"
-light = false
 bg = "#101014"
-pane_bg = "#16161e"
 picker_bg = "#1a1b26"
-elevated_bg = "#1f1f27"
-muted_border = "#2e2e3a"
 fg = "#d0d0d8"
 fg_dim = "#8888a0"
 fg_bright = "#f0f0f8"
 accent = "#7aa2f7"
-secondary_accent = "#bb98ff"
-tertiary_accent = "#9ece6a"
+error = "#f7768e"
+warning = "#e0af68"
+success = "#9ece6a"
+selection_fg = "#101014"
+selection_bg = "#7aa2f7"
+border = "#414868"
+border_active = "#7aa2f7"
+volume_low = "#9ece6a"
+volume_medium = "#e0af68"
+volume_high = "#f7768e"
+sidebar_active_border = "#7aa2f7"
+
+# Optional (all shown with their fallbacks)
+light = false              # auto-detected from bg luminance when omitted
+pane_bg = "#16161e"        # defaults to bg
+elevated_bg = "#1f1f27"    # defaults to picker_bg
+muted_border = "#2e2e3a"   # defaults to border
+secondary_accent = "#bb98ff"  # defaults to accent
+tertiary_accent = "#9ece6a"   # defaults to accent
+notification_border = "#7aa2f7" # defaults to accent
+monochromatic = false      # defaults to false
 ```
 
 Notes:
 
-- `pane_bg` defaults to `bg` if omitted; `elevated_bg` and `muted_border`
-  are optional back-compat keys.
-- `secondary_accent` / `tertiary_accent` fall back to `accent`.
-- Names must be unique — theme loading validates this.
+- `pane_bg` defaults to `bg`; `elevated_bg` defaults to `picker_bg`; `muted_border`
+  defaults to `border`. These three are optional for back-compat with pre-C0 theme
+  files.
+- `secondary_accent` / `tertiary_accent` / `notification_border` fall back to `accent`.
+- All colours accept `#rrggbb` hex.
+- A user theme whose `name` matches a built-in **replaces** that built-in, which
+  is the supported way to override a default. Duplicate names among your own
+  files are not detected.
 
 ---
 
@@ -111,19 +138,24 @@ Notes:
 
 ```toml
 # config.toml
-reactive_theme = true
-reactive_theme_intensity = 0.35   # 0.0–1.0 blend factor
+reactive_theme = true                # default: false
+reactive_theme_intensity = 0.34      # default 0.34; bound 0.0–1.0
 ```
 
-With reactive theming on, the accent palette is **derived live from the
-currently-played track's cover art**. The daemon extracts a dominant
-palette from the artwork and the client blends it with the base theme (the
-blend factor caps the shift). It degrades gracefully to the base theme when
-no cover is available.
+The picker steps intensity through five presets: `0.15`, `0.25`, `0.34`,
+`0.45`, `0.6`.
+
+With reactive theming on, the palette is **derived live from the
+currently-played track's cover art**. The **client** extracts a dominant
+palette (median-cut, 10 colours) on a background thread and blends it into the
+base theme. It degrades gracefully to the base theme when no cover is available.
 
 :::note
-Reactive theming applies to the *accent* tones; backgrounds stay on the
-base theme.
+Reactive theming re-tints the *accents* — and those take the artwork colours
+nearly verbatim, so `reactive_theme_intensity` does **not** damp them. The
+intensity instead controls a faint ambient wash of the dominant colour laid over
+`bg`, `pane_bg`, `elevated_bg` and `picker_bg`. Set it to `0.0` to leave
+backgrounds entirely on the base theme.
 :::
 
 ---
@@ -135,15 +167,16 @@ base theme.
 | **Seek Head** | Chasing tick at the playhead |
 | **Classic** | Plain filled/unfilled bar |
 | **Dots** | Dot matrix bar |
-| **True Gradient** (default) | Each filled cell is color-interpolated through the theme accent |
+| **True Gradient** (default) | Each filled cell is color-interpolated across `accent → secondary_accent → tertiary_accent` |
 
-Pick one the same way you pick cover source: Settings or the picker
-(`Alt+p` for the progress-style picker). It persists in `config.toml`
-(`progress_style`).
+Pick one with `Alt+p`, or set `progress_style` in `config.toml`. Unlike cover
+source, progress style has **no row in the Settings pane** — the picker and the
+config file are the only surfaces.
 
-The Knight Rider scanner eye and head re-framing are part of Seek Head /
-True Gradient (style rendering is shared by both `render_progress` and the
-now-playing pane).
+:::note
+The serialized values are case-sensitive and have no serde rename: `SeekHead`,
+`Classic`, `Dots`, `TrueGradient`.
+:::
 
 ---
 
@@ -169,10 +202,11 @@ left = ["Playback", "Title", "Volume", "Speed", "EqPreset", "Device"]
 right = ["Time", "System"]
 ```
 
-A legacy `middle` alias is accepted. Unknown module names are ignored and
-malformed files are skipped entirely.
+A legacy `middle` key still parses so older files load, but its modules are
+**discarded** — move them into `left` or `right`. Unknown module names are
+ignored and malformed files are skipped entirely.
 
-Modules available:
+Modules available (22):
 
 ```
 Playback Title Volume Speed Repeat Shuffle Progress Queue KeyAction
@@ -180,8 +214,9 @@ Backend System EqPreset SleepTimer LowPower Mono Device Notification Time
 Multiselect Download Network Source
 ```
 
-- `Alt+,` → Settings → Footer Preset opens the preset chooser, where you
-  can also toggle individual modules on and off
+- `Alt+,` → Settings → Footer Preset opens the preset chooser, which previews
+  the selected layout live. Individual modules **cannot** be toggled in the TUI —
+  edit `~/.config/gtm/footer.toml` to compose a custom preset.
 
 The chosen preset persists; modules are rendered left-to-right with each
 module's own color set built from the active theme.
@@ -195,15 +230,35 @@ The command palette supports two icon styles:
 ```toml
 # config.toml
 icon_style = "mdi"    # Material Design Icons (default)
-icon_style = "emoji"
 ```
+
+Only `mdi` is special-cased — **any** other value falls through to the
+emoji/ASCII set, so there is no separate named `"emoji"` mode. On terminals
+without a Nerd Font, set `GTM_NERD_FONTS=0` (or `false`/`no`) to force plain
+ASCII glyphs everywhere, including the sidebar and Settings icons.
+
+---
+
+## Transparent mode
+
+Two persisted booleans drop gtm's own background fills so your terminal
+wallpaper shows through. Both default to `false` and both live in
+`config.toml`:
+
+| Key | Default | Effect |
+|-----|---------|--------|
+| `transparent_bg` | `false` | Drop the TUI's own background fill |
+| `transparent_pickers` | `false` | Same for floating picker panels |
+
+Toggle either in `Alt+,` → Settings → System.
 
 ---
 
 ## Limitations
 
-- User theme files must be valid TOML and parse to the schema above;
-  unparseable files are skipped.
+- User theme files must be valid TOML **and** contain all 18 required colour
+  fields. A file missing any of them is skipped without a message — the theme
+  never appears in the picker.
 - Reactive intensity is bounded; very pale covers shift accents less.
 - Footer module names are fixed — arbitrary custom modules are not
   supported, only the listed ones.

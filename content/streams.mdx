@@ -16,13 +16,13 @@ sidebar:
 
 ## What "streams" means
 
-The daemon recognizes four synthetic remote path schemes:
+The daemon recognizes these synthetic remote path schemes:
 
 | Scheme | Provider |
 |--------|----------|
-| `subsonic://<track_id>` | Subsonic/Navidrome server |
 | `podcast://<feed_id>/<index>` | Podcast episode |
 | `radio://<station_id>/<name>` | Internet radio station |
+| `spotify:` | Spotify track (via librespot) |
 | **`http://` / `https://` ...** | **Direct stream URL** |
 
 Anything else is treated as a local file. The last case — a plain
@@ -66,7 +66,7 @@ EQ, reverb, volume, and the same mixer path as local files all apply.
 - Requires the URL to serve audio directly — no playlisting pages, DRM, or
   redirect-heavy embeds.
 - Live transport: no seeking.
-- No auth/cookie handling for streams (radio uses none by default;
-  podcasts/subsonic handle their own auth).
+- No auth/cookie handling for streams (radio uses none by default; podcasts
+  handle their own feed auth).
 - Streams are ephemeral: they are not written to `library.db`, and the
   crossfade into a stream relies on remote resolve succeeding.

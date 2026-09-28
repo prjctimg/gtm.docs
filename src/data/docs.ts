@@ -21,28 +21,29 @@ const rawDocs = import.meta.glob<string>('../../content/*.mdx', {
 });
 
 // Map of content file names → ISO-8601 last-updated timestamp.
-// Source: `git log -1 --format='%cI' -- content/<file>.mdx` run 2026-09-21.
+// Source: GitHub API — committer date of the latest commit touching
+// each file, i.e. `GET /repos/prjctimg/gtm.docs/commits?path=content/<slug>.mdx`.
+// Regenerate with scripts/regen-updated-at.sh after editing any doc.
 const updatedAtMap: Record<string, string> = {
-  audio:              '2026-09-21T19:22:53+02:00',
-  configuration:      '2026-09-21T19:22:53+02:00',
-  'cover-art':        '2026-09-21T19:22:53+02:00',
-  crossfade:          '2026-09-21T19:22:53+02:00',
-  daemon:             '2026-09-21T19:22:53+02:00',
-  'getting-started':  '2026-09-21T20:59:08+02:00',
-  interface:          '2026-09-21T19:22:53+02:00',
-  library:            '2026-09-21T19:22:53+02:00',
-  lyrics:             '2026-09-21T19:22:53+02:00',
-  'metadata-sources': '2026-09-21T19:22:53+02:00',
-  mpris:              '2026-09-21T19:22:53+02:00',
-  overview:           '2026-09-21T19:22:53+02:00',
-  playback:           '2026-09-21T19:22:53+02:00',
-  podcasts:           '2026-09-21T19:22:53+02:00',
-  radio:              '2026-09-21T19:22:53+02:00',
-  spotify:            '2026-09-21T19:22:53+02:00',
-  streams:            '2026-09-21T19:22:53+02:00',
-  subsonic:           '2026-09-21T19:22:53+02:00',
-  theming:            '2026-09-21T19:22:53+02:00',
-  youtube:            '2026-09-21T19:22:53+02:00',
+  audio:             '2026-09-22T14:31:37Z',
+  configuration:     '2026-09-21T17:22:53Z',
+  'cover-art':       '2026-09-21T17:22:53Z',
+  crossfade:         '2026-09-22T14:31:37Z',
+  daemon:            '2026-09-21T17:22:53Z',
+  'getting-started': '2026-09-21T18:59:08Z',
+  interface:         '2026-09-21T17:22:53Z',
+  library:           '2026-09-21T17:22:53Z',
+  lyrics:            '2026-09-21T17:22:53Z',
+  'metadata-sources': '2026-09-21T17:22:53Z',
+  mpris:             '2026-09-21T17:22:53Z',
+  overview:          '2026-09-21T17:22:53Z',
+  playback:          '2026-09-21T17:22:53Z',
+  podcasts:          '2026-09-21T17:22:53Z',
+  radio:             '2026-09-21T17:22:53Z',
+  spotify:           '2026-09-21T17:22:53Z',
+  streams:           '2026-09-21T17:22:53Z',
+  theming:           '2026-09-21T17:22:53Z',
+  youtube:           '2026-09-21T17:22:53Z',
 };
 
 // Helper to assign categories based on order or slug

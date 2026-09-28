@@ -20,19 +20,44 @@ sidebar:
 
 ## Scanning
 
-The daemon scans several locations on startup and on `gtm --cli scan`:
+The daemon scans its configured library paths once at startup, and on demand
+with `gtm --cli scan <dir>` (the directory argument is **required**). Default
+locations:
 
 - `$XDG_DATA_HOME/gtm/audio` (default data dir)
 - `~/Music`
 - Termux shared storage (`/sdcard/Music`, etc.)
 
-Extracted metadata is stored in an SQLite database
-(`$XDG_DATA_HOME/gtm/library.db`). Each track is keyed by a SHA-256 hash of
-its contents.
+:::note
+There is **no file watcher**. Nothing new is picked up automatically — after
+the startup scan you must run `gtm --cli scan <dir>` or restart the daemon.
+
+The startup scan also appends every newly found track to the playback queue,
+so restarting with a large unsynced folder returns you a pre-filled queue.
+:::
+
+Scans pick up `mp3, flac, ogg, wav, m4a, aac, opus`.
+
+### Database schema
+
+Metadata lives in SQLite at `$XDG_DATA_HOME/gtm/library.db`, with three tables:
+
+- **`tracks`** — `id, path, title, artist, album, duration, track_number,
+  genre, year, bitrate, samplerate, hash, cover_path, favourite, album_id,
+  play_count, last_played`
+- **`playlists`** — `id, name, created_at`
+- **`playlist_tracks`** — `playlist_id, track_id, position`, with a primary key
+  on `(playlist_id, track_id)`
+
+Each track is keyed by its **filesystem path** (`path` is `UNIQUE`); a SHA-256
+of the file contents is stored alongside it and is used to name the cached
+cover file, not to deduplicate. The same bytes at two paths create two rows.
+`play_count` and `last_played` are written on every play and are what
+**Most Played** and **Recently Played** read.
 
 ### Browsing
 
-The Library tab lists categories in the sidebar:
+The library lists 13 categories in the sidebar:
 
 | Category | Contents |
 |----------|----------|
@@ -50,8 +75,21 @@ The Library tab lists categories in the sidebar:
 | **Folders** | Grouped by source folder |
 | **Top Charts** | Provider charts and editorial playlists (Spotify, when linked) |
 
-`Alt+S` cycles the sort order of the track list. `/` opens the library
-search picker.
+`Alt+S` cycles five sort orders in the **List** context only, and applies to
+the flat view of All Tracks / Liked (Playlists, Spotify and Radio sort
+upstream). The default is `Recents`:
+
+| Order | Sorts by |
+|-------|----------|
+| `Recents` (default) | Release year, newest first |
+| `RecentlyAdded` | Newest library entry first |
+| `Alphabetical` | Title |
+| `Artist` | Artist, then title |
+| `Album` | Album, track number, title |
+
+`/` opens a context-sensitive search picker: Spotify search in the Spotify
+category, the Radio browser in Radio, and library search (capped at 10
+results) everywhere else.
 
 ---
 
@@ -72,8 +110,11 @@ gtm --cli favourite-remove <track_id>
 
 ## Playlists
 
-Playlists live in the database and are **mirrored as `.m3u8` files**
-alongside them, so they remain editable/portable even without the daemon.
+Playlists live in the database as rows in `playlists` and `playlist_tracks`.
+A two-line `#EXTM3U` **stub** `.m3u8` is written into the data directory when a
+playlist is created (and removed when it is deleted), but it is **not kept in
+sync** — `add-to-playlist` never updates it, so a mirror never contains a track
+and is not a usable export. Use `export-playlist` for a real file.
 
 ```bash
 gtm --cli playlists                 # list playlists
@@ -90,7 +131,11 @@ gtm --cli import-playlist ./mix.pls  --format pls
 gtm --cli export-playlist <id> ./out.m3u8 --format m3u8
 ```
 
-Both M3U8 and PLS formats are supported; M3U8 is the default.
+Both M3U8 and PLS formats are supported; M3U8 is the default. Import creates a
+playlist named after the file stem and resolves relative paths inside the file
+against the playlist file's own directory. Entries whose path is **already in
+the library** are skipped with a warning, so importing a playlist that overlaps
+your scanned folders yields a silently shorter playlist.
 
 ---
 
@@ -98,11 +143,18 @@ Both M3U8 and PLS formats are supported; M3U8 is the default.
 
 | Command | Purpose |
 |---------|---------|
-| `gtm --cli playlist-dedup <id>` | Remove duplicate track entries |
+| `gtm --cli playlist-dedup <id>` | Repack positions (see below) |
 | `gtm --cli playlist-doctor <id>` | Drop entries whose audio file is missing on disk |
 | `gtm --cli playlist-sort <id> [--field title\|artist\|album\|date]` | Reorder in place (default: `title`) |
 
-Position gaps in a playlist are renumbered automatically after removals.
+:::note
+Position gaps are repacked **only** by `playlist-dedup` and `playlist-doctor`.
+Removing a track from a playlist leaves a gap in the stored positions.
+
+`playlist-dedup` in practice can never remove anything — the
+`(playlist_id, track_id)` primary key already prevents duplicates, so it is
+effectively a position repack.
+:::
 
 ---
 
@@ -112,27 +164,35 @@ Position gaps in a playlist are renumbered automatically after removals.
 - CLI: `gtm --cli update-metadata <track_id> <field> <value>`
 
 Editable fields: `title`, `artist`, `album`, `genre`, `year`, `track-number`.
-An empty value clears the field.
+An empty value clears `title`, `artist`, `album` and `genre`; `year` and
+`track-number` must parse as an integer and **cannot** be cleared.
+`update-metadata` performs no range validation — the 1000–9999 / >0 rules
+apply only when tags are written back to the file.
 
 :::note
 `update-metadata` updates the **library database** — it does not rewrite the
-audio file. File tag write-back happens automatically during metadata
-backfill (see [Metadata sources](/metadata-sources/)), which uses
+audio file. File tag write-back happens only during a metadata backfill
+(`gtm --cli metadata-sync`, or Settings → System → Sync Metadata), which uses
 `lofty` and supports title, artist, album, genre, year (1000–9999), track
-number (>0), and cover art replacement (PNG/GIF/JPEG).
+number (>0), and cover art replacement. PNG and GIF artwork is tagged as such;
+any other source format is stored as JPEG.
 :::
 
 ---
 
 ## Deleting tracks
 
-Removing a track (`d`/`Del`, then confirm) touches the library database. By
-default the daemon is also permitted to **physically delete the audio file**
-and its `.lrc` sidecar (`allow_delete_files`, default `true`).
+Removing a track (`d`/`Del`, then confirm) always deletes its database row. The
+audio file and its `.lrc` sidecar are **also** deleted, but **only when the
+file lives under a configured library path** — a track added from an arbitrary
+path loses its row and keeps its file. The cached cover is deleted alongside.
+This behaviour is compiled in and is **not** user-configurable
+(`allow_delete_files` is hard-coded to `true`).
 
 :::caution
-With the default config, removing a track deletes it from disk — there is no
-trash. `playlist-doctor` only removes *playlist* entries, never files.
+For anything inside your library paths, removing a track deletes it from disk —
+there is no trash. `playlist-doctor` only removes *playlist* entries, never
+files.
 :::
 
 ---
