@@ -39,7 +39,7 @@ export interface WorkflowRunItem {
   actorAvatarUrl?: string;
 }
 
-const REPO_NAME = 'prjctimg/gtm.rs';
+const REPO_NAME = 'prjctimg/gtm';
 
 export const WORKFLOW_DEFS = [
   { id: 310822854, name: 'Release', file: 'release.yml' },
@@ -49,7 +49,7 @@ export const WORKFLOW_DEFS = [
   { id: 358066982, name: 'Auto-approve workflow runs', file: 'auto-approve.yml' }
 ];
 
-// 100% Real data from prjctimg/gtm.rs as current baseline
+// 100% Real data from prjctimg/gtm as current baseline
 const INITIAL_WORKFLOWS: WorkflowRunItem[] = [
   {
     id: 34956321984,
@@ -68,7 +68,7 @@ const INITIAL_WORKFLOWS: WorkflowRunItem[] = [
     completedAt: '2026-09-15T10:17:34Z',
     durationText: '9m 20s',
     updatedAt: '2026-09-15T10:17:34Z',
-    htmlUrl: 'https://github.com/prjctimg/gtm.rs/actions/runs/34956321984',
+    htmlUrl: 'https://github.com/prjctimg/gtm/actions/runs/34956321984',
     actor: 'prjctimg',
     actorAvatarUrl: 'https://avatars.githubusercontent.com/u/104896135?v=4'
   },
@@ -89,7 +89,7 @@ const INITIAL_WORKFLOWS: WorkflowRunItem[] = [
     completedAt: '2026-09-15T10:09:00Z',
     durationText: '45s',
     updatedAt: '2026-09-15T10:09:00Z',
-    htmlUrl: 'https://github.com/prjctimg/gtm.rs/actions/runs/34956324079',
+    htmlUrl: 'https://github.com/prjctimg/gtm/actions/runs/34956324079',
     actor: 'prjctimg',
     actorAvatarUrl: 'https://avatars.githubusercontent.com/u/104896135?v=4'
   },
@@ -110,7 +110,7 @@ const INITIAL_WORKFLOWS: WorkflowRunItem[] = [
     completedAt: '2026-09-15T10:09:12Z',
     durationText: '58s',
     updatedAt: '2026-09-15T10:09:12Z',
-    htmlUrl: 'https://github.com/prjctimg/gtm.rs/actions/runs/34956321922',
+    htmlUrl: 'https://github.com/prjctimg/gtm/actions/runs/34956321922',
     actor: 'prjctimg',
     actorAvatarUrl: 'https://avatars.githubusercontent.com/u/104896135?v=4'
   },
@@ -131,7 +131,7 @@ const INITIAL_WORKFLOWS: WorkflowRunItem[] = [
     completedAt: '2026-09-07T08:58:25Z',
     durationText: '10s',
     updatedAt: '2026-09-07T08:58:25Z',
-    htmlUrl: 'https://github.com/prjctimg/gtm.rs/actions/runs/34103420792',
+    htmlUrl: 'https://github.com/prjctimg/gtm/actions/runs/34103420792',
     actor: 'iseeheaven',
     actorAvatarUrl: 'https://github.com/iseeheaven.png'
   },
@@ -152,7 +152,7 @@ const INITIAL_WORKFLOWS: WorkflowRunItem[] = [
     completedAt: '2026-09-15T10:17:38Z',
     durationText: '2s',
     updatedAt: '2026-09-15T10:17:38Z',
-    htmlUrl: 'https://github.com/prjctimg/gtm.rs/actions/runs/34957168031',
+    htmlUrl: 'https://github.com/prjctimg/gtm/actions/runs/34957168031',
     actor: 'prjctimg',
     actorAvatarUrl: 'https://avatars.githubusercontent.com/u/104896135?v=4'
   }

@@ -111,7 +111,7 @@ brew install gtm
 :::note
 The tap's formula is version-pinned to a git tag and can trail the workspace
 version. Check \`brew info gtm\` against the current release at
-[gtm.rs/releases](https://github.com/prjctimg/gtm.rs/releases) if you need the
+[gtm/releases](https://github.com/prjctimg/gtm/releases) if you need the
 newest build — the curl installer is always current.
 :::
 
@@ -131,8 +131,8 @@ To compile the latest release or bleeding-edge development version locally:
 
 \`\`\`bash
 # 1. Clone the repository
-git clone https://github.com/prjctimg/gtm.rs.git
-cd gtm.rs
+git clone https://github.com/prjctimg/gtm.git
+cd gtm
 
 # 2. Build the optimized release binaries
 cargo build --release

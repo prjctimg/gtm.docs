@@ -44,7 +44,7 @@ export const KEYBINDINGS: KeybindingItem[] = [
   { key: 'q', action: 'Quit client', scope: 'Global' },
 ];
 
-/** Install methods documented by gtm.rs (README + crates.io). */
+/** Install methods documented by gtm (README + crates.io). */
 export const PACKAGE_COMMANDS = {
   curl: 'curl -fsSL https://gtmd.dev/install.sh | bash',
   cargo: 'cargo install gtm --locked',

@@ -241,7 +241,7 @@ export const Markdown = React.memo<MarkdownProps>(
                   <AudioPlayer
                     src={cleanSrc}
                     title={titleText}
-                    artist="gtm.rs Audio Engine"
+                    artist="gtm Audio Engine"
                   />
                 </div>
               );
@@ -402,7 +402,7 @@ export const Markdown = React.memo<MarkdownProps>(
 
     const audioSrc = attrs['src'] || (firstLine.includes('/') || firstLine.startsWith('http') || firstLine.startsWith('demo:') || firstLine.startsWith('synth:') ? firstLine.trim() : '/samples/audio-equalizer-sample.wav');
     const audioTitle = attrs['title'] || 'Audio Preview';
-    const audioArtist = attrs['artist'] || 'gtm.rs Daemon';
+    const audioArtist = attrs['artist'] || 'gtm Daemon';
 
     return (
       <AudioPlayer

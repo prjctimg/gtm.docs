@@ -1,6 +1,6 @@
 # RULES
 
-Project rules for `gtm.docs` — the docs/devlog site for [gtm.rs](https://github.com/prjctimg/gtm.rs).
+Project rules for `gtm.docs` — the docs/devlog site for [gtm](https://github.com/prjctimg/gtm).
 
 ## Dependencies
 

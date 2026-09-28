@@ -5,10 +5,10 @@ import { useEffect, useState } from 'react';
  * API. Displayed next to the brand in the navbar.
  */
 export const RELEASES_API =
-  'https://api.github.com/repos/prjctimg/gtm.rs/releases/latest';
+  'https://api.github.com/repos/prjctimg/gtm/releases/latest';
 
 /** Human-facing page for the latest release (current + historical). */
-export const RELEASES_URL = 'https://github.com/prjctimg/gtm.rs/releases/latest';
+export const RELEASES_URL = 'https://github.com/prjctimg/gtm/releases/latest';
 
 const CACHE_KEY = 'gtm:latest-release';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
@@ -75,7 +75,7 @@ export function useLatestReleaseTag(): string | null {
 }
 
 export const RELEASES_ALL_API =
-  'https://api.github.com/repos/prjctimg/gtm.rs/releases?per_page=30';
+  'https://api.github.com/repos/prjctimg/gtm/releases?per_page=30';
 
 const ALL_TAGS_CACHE_KEY = 'gtm:all-release-tags';
 

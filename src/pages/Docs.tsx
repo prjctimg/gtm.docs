@@ -57,18 +57,24 @@ export const Docs: React.FC<DocsProps> = ({
   // instead of silently redirecting to the overview doc.
   const missingDoc = Boolean(docId && !DOCS_BY_ID[docId]);
 
-  // Current active doc
-  const [currentDocId, setCurrentDocId] = useState<string>(() => {
-    return DOCS_BY_ID[activeDocId] ? activeDocId : (ALL_DOCS[0]?.id || 'overview');
-  });
+  // Current active doc derived directly from route param
+  const activeDoc: DocItem = useMemo(() => {
+    const id = activeDocId && DOCS_BY_ID[activeDocId] ? activeDocId : (ALL_DOCS[0]?.id || 'overview');
+    return DOCS_BY_ID[id] || ALL_DOCS[0] || DEFAULT_FALLBACK_DOC;
+  }, [activeDocId]);
 
   // Start with the first heading active: the scroll-spy sets the same value
   // right after the first paint (the page loads at the top), so the active
   // class is present from the start instead of flashing after the spy runs.
   const [activeHeadingId, setActiveHeadingId] = useState<string>(() => {
-    const doc = DOCS_BY_ID[activeDocId] || ALL_DOCS[0];
-    return doc?.headings?.[0]?.id ?? '';
+    return activeDoc?.headings?.[0]?.id ?? '';
   });
+
+  // Reset active heading when activeDoc changes
+  useEffect(() => {
+    setActiveHeadingId(activeDoc?.headings?.[0]?.id ?? '');
+  }, [activeDoc.id]);
+
   const [copiedLink, setCopiedLink] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
@@ -92,17 +98,6 @@ export const Docs: React.FC<DocsProps> = ({
       };
     }
   }, [isMobileDrawerOpen]);
-
-  // Sync state if route param changes
-  useEffect(() => {
-    if (activeDocId && DOCS_BY_ID[activeDocId] && activeDocId !== currentDocId) {
-      setCurrentDocId(activeDocId);
-    }
-  }, [activeDocId]);
-
-  const activeDoc: DocItem = useMemo(() => {
-    return DOCS_BY_ID[currentDocId] || ALL_DOCS[0] || DEFAULT_FALLBACK_DOC;
-  }, [currentDocId]);
 
   // Current doc index for Prev/Next
   const currentIndex = useMemo(() => {

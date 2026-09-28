@@ -382,7 +382,7 @@ export const Benchmark: React.FC<BenchmarkProps> = () => {
               Metrics (per /proc/&lt;pid&gt;): peak / mean / at-5s RSS (VmRSS), CPU (utime+stime), and t_ready (IPC round
               trip to first playing state). Fixture hashes are sealed so a corrupted fixture fails the run loudly — see the{' '}
               <a
-                href="https://github.com/prjctimg/gtm.rs/blob/dev/BENCHMARK.md"
+                href="https://github.com/prjctimg/gtm/blob/dev/BENCHMARK.md"
                 target="_blank"
                 rel="noreferrer"
                 className="text-secondary hover:text-primary underline decoration-secondary/40 underline-offset-2"
@@ -398,7 +398,7 @@ export const Benchmark: React.FC<BenchmarkProps> = () => {
         <div className="flex flex-wrap items-center justify-between gap-3 pb-6 font-mono text-xs text-text-muted">
           <span className="flex items-center gap-1.5">
             <ExternalLink className="w-3 h-3" />
-            Data: <span className="text-text-muted">src/data/benchmark-stats.json</span> (from gtm.rs{' '}
+            Data: <span className="text-text-muted">src/data/benchmark-stats.json</span> (from gtm{' '}
             <code className="px-1 rounded bg-surface-elevated border border-hairline-outline">stats.json</code>)
           </span>
           <Link to="/docs/overview" className="text-text-muted hover:text-text-primary transition-colors cursor-pointer">
