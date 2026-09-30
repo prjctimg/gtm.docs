@@ -10,7 +10,8 @@ interface PaletteProps {
 
 interface SearchItem {
   title: string;
-  category: string;
+  /** Right-hand label: which part of the site the row belongs to. */
+  context: string;
   /** Where selecting the entry navigates, anchor included. */
   path: string;
 }
@@ -36,12 +37,12 @@ export const Palette: React.FC<PaletteProps> = ({
   const itemsFor = (page: PageItem): SearchItem[] => [
     {
       title: `${page.title} — ${page.description || 'Guide'}`,
-      category: page.isDoc ? `Docs // ${page.category}` : page.title,
+      context: page.isDoc ? 'Docs' : page.title,
       path: page.path
     },
     ...page.headings.map(heading => ({
       title: `${page.title} > ${heading.text}`,
-      category: page.title,
+      context: page.title,
       path: `${page.path}#${heading.id}`
     }))
   ];
@@ -57,7 +58,7 @@ export const Palette: React.FC<PaletteProps> = ({
   const filteredItems = query.trim()
     ? allItems.filter(item =>
         item.title.toLowerCase().includes(query.toLowerCase()) ||
-        item.category.toLowerCase().includes(query.toLowerCase())
+        item.context.toLowerCase().includes(query.toLowerCase())
       )
     : allItems.slice(0, 10);
 
@@ -152,7 +153,7 @@ export const Palette: React.FC<PaletteProps> = ({
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-3">
                     <span className="text-xs text-text-muted uppercase">
-                      {item.category}
+                      {item.context}
                     </span>
                     {isSelected && <ArrowRight className="w-3 h-3 text-secondary" />}
                   </div>

@@ -1,0 +1,265 @@
+---
+title: CLI Reference
+description: "Every gtm and gtmd command and flag — playback, queue, library, playlists, search, integrations, and daemon options."
+order: 5
+---
+
+gtm ships two binaries: **`gtm`**, the client (TUI plus a non-interactive CLI),
+and **`gtmd`**, the background daemon that owns playback, the library and the
+providers. The client never touches audio itself — every command below is an IPC
+request to `gtmd`.
+
+:::note
+You rarely need to launch `gtmd` by hand. Any `gtm` command except `ping` and
+`quit` spawns the daemon on demand if it is not already running, restarting it if
+it is hung. See [The gtm Daemon](/daemon/).
+:::
+
+## gtm
+
+```
+gtm [OPTIONS] [COMMAND]
+```
+
+| Flag | Description |
+|------|-------------|
+| `-c`, `--cli` | CLI mode. With no subcommand, prints the command list instead of launching the TUI |
+| `-s`, `--socket <PATH>` | Daemon socket path. Global — accepted before or after the subcommand |
+| `-j`, `--json` | Emit JSON instead of human-readable output, for the commands that return data. Global |
+| `-v`, `--verbose` | Verbose output. Global. Enriches `next`, `prev` and `volume` |
+| `-V`, `--version` | Print version, copyright and license, then exit |
+| `-h`, `--help` | Print help for `gtm` or the given subcommand |
+
+:::caution
+`--version` / `-V` is intercepted before argument parsing and matched anywhere in
+the command line, so it never shows up in `--help` output. Anything after it is
+ignored.
+:::
+
+With no subcommand and no `--cli`, `gtm` launches the TUI. With a subcommand it
+runs that one command and exits, printing `ok` on success or `error: <reason>` on
+stderr with exit code 1.
+
+### Playback
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `play` | `<PATH> [SECONDS]` | Play a file, or resume with no argument. The optional position is in seconds |
+| `stream` | `<URL>` | Play an HTTP(S) stream URL; M3U/PLS playlist URLs are resolved first |
+| `play-pause` | | Toggle play/pause |
+| `pause` | | Pause |
+| `stop` | | Stop playback |
+| `next` | | Skip to the next track |
+| `prev` | | Skip to the previous track |
+| `seek` | `<POSITION_SECS>` | Seek to an absolute position in seconds |
+| `volume` | `<VOLUME>` | Set volume, 0–100 |
+| `shuffle` | | Toggle shuffle |
+| `repeat` | `<MODE>` | Set repeat mode: `off`, `one` or `all` |
+| `mute` | | Toggle mute |
+| `mono` | | Toggle mono downmix |
+| `crossfade` | `<ENABLED> [DURATION_SECS]` | Turn crossfade on/off, optionally with a duration. `ENABLED` takes `true`/`false`/`yes`/`no`/`1`/`0`; the duration defaults to 7 s |
+| `low-power` | `[--set <on\|off>]` | Low-power mode pauses playback and eases off background work. Without `--set`, reports the current state |
+
+### Last.fm
+
+These act on the track that is playing right now.
+
+| Command | Description |
+|---------|-------------|
+| `love` | Love the current track (immediate scrobble of the play session) |
+| `unlove` | Remove the love |
+| `scrobble` | Toggle scrobbling for this session |
+
+Credentials come from `gtm setup lastfm` — see
+[Metadata Sources](/metadata-sources/).
+
+### Queue
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `queue` | | Show the current queue |
+| `queue-add` | `<PATH>... [--position <INDEX>]` | Append files or directories, or insert at `INDEX` |
+| `queue-remove` | `<INDEX>` | Remove the track at `INDEX` |
+| `queue-move` | `<FROM> <TO>` | Move a track within the queue |
+| `queue-clear` | | Empty the queue |
+| `queue-set` | `<PATH>... --start-idx <INDEX>` | Replace the queue with these tracks. `--start-idx` is required |
+
+### Library
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `scan` | `<DIR>` | Scan a directory and add what it finds to the library |
+| `tracks` | `[FILTER] [SORT]` | List library tracks, optionally filtered and sorted |
+| `search` | `<QUERY>` | Search the library |
+| `recent` | `<COUNT>` | Show the `COUNT` most recently played tracks |
+| `metadata-sync` | `[PATH]` | Re-read tags for one file, or the whole library |
+| `favourites` | | List favourited tracks |
+| `favourite-add` | `<TRACK_ID>` | Favourite a track by id |
+| `favourite-remove` | `<TRACK_ID>` | Un-favourite a track by id |
+| `update-metadata` | `<TRACK_ID> <FIELD> <VALUE>` | Edit tags: `FIELD` is `title`, `artist`, `album`, `genre`, `year` or `track-number` |
+
+`metadata-sync` blocks until the daemon reports the sync finished, then prints
+`Metadata synced: <synced>/<total> tracks`. It gives up after 30 minutes.
+
+### Playlists
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `playlists` | | List playlists |
+| `create-playlist` | `<NAME>` | Create a playlist |
+| `delete-playlist` | `<ID>` | Delete a playlist and its mirrored file |
+| `add-to-playlist` | `<PLAYLIST_ID> <TRACK_IDS>...` | Append one or more tracks |
+| `playlist-sort` | `<PLAYLIST_ID> [--field <FIELD>]` | Sort in place by `title` (default), `artist`, `album` or `date` |
+| `playlist-dedup` | `<PLAYLIST_ID>` | Drop duplicate entries |
+| `playlist-doctor` | `<PLAYLIST_ID>` | Drop entries whose audio file is missing |
+| `import-playlist` | `<FILE> [--format <FORMAT>]` | Import a playlist file. `FORMAT` is `m3u8` (default) or `pls` |
+| `export-playlist` | `<PLAYLIST_ID> <FILE> [--format <FORMAT>]` | Export to a playlist file, same formats |
+
+### Search and lyrics
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `lyrics` | `<QUERY>` | Look up lyrics for `"artist - title"`. Prints timed lines as `[mm:ss.xx]`, or plain lines when the source is unsynced |
+| `yt-search` | `<QUERY>` | Search the video providers and print matches. Playlists are marked `[playlist]` |
+
+`yt-search` covers YouTube plus the `scsearch:`, `bilisearch:` and `mcsearch:`
+prefixes for SoundCloud, Bilibili and Mixcloud. Extra providers can be
+registered with `GTM_YT_HOSTS` — see [YouTube](/youtube/).
+
+### Audio output
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `audio-devices` | | List output devices the active backend reports |
+| `set-audio-device` | `<NAME>` | Switch output device. `default` restores the system default |
+
+Switching device stops playback, so the queue picks up from the start.
+
+### Status and diagnostics
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `status` | `[--stream] [--lyrics]` | Print the daemon state, or redraw it twice a second with `--stream`. `--lyrics` appends the current lyric line |
+| `check-health` | | Health report: version, uptime and a per-component status |
+| `ping` | | Print `pong` if the daemon answers |
+| `quit` | | Stop the daemon |
+
+`ping` and `quit` are the two commands that never auto-start a daemon: one checks
+whether it is alive, the other stops it.
+
+### Config and setup
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `config` | `[--reset] [--validate]` | Manage `config.toml` — see below |
+| `sleep-timer` | `<MINUTES>` | Stop playback after `MINUTES` |
+| `cancel-sleep-timer` | | Cancel the sleep timer |
+| `setup` | `[SERVICE] [--api <SERVICE>] [--cli]` | Guided setup for the services that need credentials |
+
+`gtm config` with no flag opens the file in `$VISUAL`, then `$EDITOR`, then the
+first of `vim`, `nvim`, `vi`, `nano`, `micro`, `emacs`, `ed` on `$PATH`.
+`--reset` deletes the file and rewrites it from defaults; `--validate` parses it
+and reports the first error, or exits 1.
+
+`gtm setup` walks through Spotify and Last.fm, skipping either one that is
+already linked. `SERVICE` (or its long form `--api`) takes `spotify` or `lastfm`
+to do just one. By default it opens the TUI service chooser; `--cli` keeps the
+prompt-driven wizard, which is what you want in a script or over SSH.
+
+### Spotify
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `spotify login` | `[CLIENT_ID] [--port <PORT>]` | Run the OAuth PKCE flow and wait for the browser to finish |
+| `spotify connect` | `<TOKEN>` | Link an account with an access token you already have |
+| `spotify disconnect` | | Unlink the account |
+| `spotify status` | | Show the link, active device, and playlist/track counts |
+| `spotify sync` | | Sync playlists into the library |
+
+`spotify login` resolves the client id from the argument, then the keychain, then
+a masked terminal prompt, and stores it for later. The callback port is 8990
+unless `--port` or `GTM_SPOTIFY_PORT` says otherwise.
+
+### Podcasts
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `podcast add` | `<URL>` | Subscribe to an RSS/Atom feed |
+| `podcast remove` | `<FEED_ID>` | Unsubscribe |
+| `podcast list` | | List subscriptions with episode counts |
+| `podcast episodes` | `<FEED_ID>` | List a feed's episodes by index, with durations |
+| `podcast refresh` | `[FEED_ID]` | Refresh every feed, or just one |
+| `podcast play` | `<FEED_ID> <EPISODE_INDEX>` | Play an episode by index |
+| `podcast status` | | Feed and episode counts, plus the last error |
+
+### Radio
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `radio search` | `<QUERY> [--limit <N>]` | Search the Radio Browser directory |
+| `radio top` | `[--limit <N>]` | Most-voted stations |
+| `radio play` | `<STATION_ID> [NAME]` | Play a station by directory id |
+| `radio tags` | `[--limit <N>]` | Most-used directory tags |
+| `radio countries` | `[--limit <N>]` | Most-used directory countries |
+| `radio tag` | `<TAG> [--limit <N>]` | Stations carrying a tag |
+| `radio country` | `<COUNTRY> [--limit <N>]` | Stations from a country |
+| `radio list` | | List custom stations from `radios.toml` as `custom:<N>` |
+| `radio add` | `<NAME> <URL>` | Add a custom station |
+| `radio rm` | `<INDEX_OR_NAME>` | Remove a custom station by `custom:<N>` or by name |
+
+`--limit` defaults to 25 everywhere it appears.
+
+## gtmd
+
+```
+gtmd [OPTIONS]
+```
+
+gtm starts this for you. Run it yourself only to point the daemon somewhere
+unusual — a different socket, an isolated config root, a specific backend.
+
+| Flag | Description |
+|------|-------------|
+| `--socket <PATH>` | Unix socket path. The pulse socket becomes the same path with a `pulse` extension |
+| `--config <DIR>` | Use `DIR` as the config **and** data root, with the cache at `DIR/cache`. Overrides every XDG variable |
+| `--library <PATH>` | Accepted but ignored — the database is always `<data dir>/library.db` |
+| `--backend <BACKEND>` | `rodio` (default) or `pulseaudio` |
+| `-v`, `--verbose` | Debug-level logging |
+| `--test-mode` | Ephemeral socket, no log file, no persisted state, a null mixer, and no network fetches. Skips the single-instance guard |
+| `-h`, `--help` | Print help |
+
+:::note
+`pulseaudio` only takes effect if the binary was built with the feature. Without
+it, `--backend pulseaudio` prints nothing and falls back to `rodio`; a Termux
+build without the feature says so explicitly at startup. See
+[Audio](/audio/).
+:::
+
+gtmd also accepts `--version` / `-V`, handled before argument parsing, so it does
+not appear in `--help`.
+
+If a daemon is already running, a second `gtmd` refuses to start
+(`gtmd already running (pid N); connect to the existing daemon`). The client
+resolves that by killing the stale PID and respawning, so you should not need to
+manage either case by hand.
+
+## Exit codes and output
+
+Both binaries exit `0` on success and `1` on failure, with `error: <reason>` on
+stderr. Commands that return data — `status`, `queue`, `tracks`, `playlists`,
+`recent`, `favourites`, `search`, `yt-search`, `lyrics`, `check-health`,
+`metadata-sync` — honor `--json`. The rest print a short fixed confirmation such
+as `ok`, so they are meant to be chained, not parsed.
+
+```bash
+# What is playing, as JSON, for a script or a widget
+gtm status --json
+
+# Wait for the library to finish re-tagging, then show the count
+gtm metadata-sync && gtm tracks --json
+```
+
+:::note
+The daemon also serves a read-only JSON status endpoint for anything that
+cannot run `gtm` at all — see `web_addr` in [Configuration](/configuration/).
+:::

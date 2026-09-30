@@ -1,9 +1,7 @@
 ---
 title: Lyrics
 description: "Lyrics resolution order, sidecar files, offline cache, and timing."
-category: "Library & Media"
-sidebar:
-  order: 9
+order: 10
 ---
 
 
@@ -95,15 +93,18 @@ or late. The first nudge re-engages auto-follow and raises an offset toast.
 ## CLI
 
 ```bash
-gtm --cli status --stream   # shows the current track's active lyric line
-gtm --cli lyrics "artist - title"   # look up lyrics for any track
-gtm lyrics "artist - title"  # search LRCLIB and print
+gtm status --stream --lyrics   # follow along, showing the active lyric line
+gtm lyrics "artist - title"     # search LRCLIB and print the result
 ```
 
+`--lyrics` is what asks for the lyric line: without it `status --stream` prints
+only the track, position and volume. It costs one extra lookup per track change,
+not one per tick, so a long-running stream is not paying for it repeatedly.
+
 The standalone `lyrics` command takes a **required** `artist - title` query
-string — there is no no-argument form, so `gtm --cli lyrics` on its own is a
-usage error. Any subcommand implies CLI mode, so the `--cli` flag is optional
-there.
+string — there is no no-argument form, so `gtm lyrics` on its own is a usage
+error. Any subcommand implies CLI mode, so a `--cli` flag before the subcommand
+is optional. See [CLI Reference](/cli/).
 
 ---
 

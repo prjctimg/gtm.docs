@@ -1,9 +1,7 @@
 ---
 title: Configuration
-description: "On-disk files, config.toml and field reference, themes, footer presets, environment variables, and daemon CLI args."
-category: "Interface & Configuration"
-sidebar:
-  order: 4
+description: "On-disk files, config.toml and field reference, themes, footer presets, custom radio stations, environment variables, and the daemon status endpoint."
+order: 4
 ---
 
 
@@ -126,6 +124,10 @@ notifications_overlay = true
 "Space"  = "play_pause"
 "Alt+q"  = "open_queue"
 "Ctrl+q" = "quit"
+
+# ─── Daemon ─────────────────────────────────────────────────────────
+# Read by gtmd, not by the TUI. See "Daemon-read keys" below.
+web_addr = "127.0.0.1:8991"      # Read-only JSON status endpoint; "" = off
 ```
 
 ### Field reference
@@ -154,6 +156,58 @@ notifications_overlay = true
 | `notification_modes` | table | (all `"footer"`) | Per-category notification mode |
 | `extensions` | table | (all `true`) | Optional TUI surfaces |
 | `keybindings` | table | (empty) | Key → action remappings |
+| `web_addr` | string | `"127.0.0.1:8991"` | Daemon status endpoint; read by `gtmd` only |
+
+`left_pane_lists` accepts exactly these 14 names, and only in this spelling:
+`All Tracks`, `Liked`, `Albums`, `Artists`, `Playlists`, `Spotify`, `Radio`,
+`Most Played`, `Recently Played`, `Recently Added`, `Genres`, `Folders`,
+`Top Charts`, `Podcasts`.
+
+### Daemon-read keys
+
+Everything above is the TUI's own configuration. `gtmd` reads the same file for
+just three keys, and reads them at startup — changing any of them needs a daemon
+restart, unlike the hot-reloaded settings above.
+
+| Key | Default | Effect on the daemon |
+|-----|---------|----------------------|
+| `cover_provider` | `"auto"` | Which artwork source to query first. Anything unrecognized falls back to `auto` rather than failing |
+| `cover_cache_mb` | `512` | On-disk budget for `covers/` + `artist_covers/`. Ignored when not a positive integer |
+| `web_addr` | `"127.0.0.1:8991"` | Read-only JSON status endpoint, below |
+
+### Status endpoint
+
+`gtmd` serves a single `GET /status.json` (or `GET /`) — `HEAD` returns the
+headers alone, any other verb gets a 405, and any other path a 404. It exists so
+a script or widget can read what is playing without attaching to the IPC socket:
+
+```json
+{
+  "playing": true,
+  "track": {
+    "title": "Teardrop",
+    "artist": "Massive Attack",
+    "album": "Mezzanine",
+    "duration": 330.0,
+    "position": 42.5,
+    "remaining": 287.5,
+    "cover_url": "/tmp/gtm-cover-abc.jpg"
+  }
+}
+```
+
+`track` is `null` when nothing is loaded, `remaining` is `null` for a live stream
+with no end, and `cover_url` falls back to the cached cover's local path when the
+provider gave no URL. There is no queue, history or file path in the payload — it
+is the current track and nothing else. A bind failure is logged and playback
+carries on: the endpoint is an extra surface, never a dependency.
+
+:::caution
+The payload is the current track, which is your listening history. It defaults
+to loopback for that reason. `web_addr = "0.0.0.0:8991"` publishes it to your
+LAN, and a bare `"8992"` is shorthand for loopback on that port. Set it to `""`
+to turn the endpoint off.
+:::
 
 ---
 
@@ -222,8 +276,9 @@ Stations added with `gtm radio add` are stored in
 station = [{ name = "NTS Radio", url = "https://stream-relay-geo.ntslive.net/stream" }]
 ```
 
-Each station is referenced by `custom:N` where `N` is its 1-based index.
-Manage the file with `gtm radio add`, `gtm radio list` and `gtm radio rm`.
+Each station is referenced by `custom:N` where `N` is its 1-based index. Manage
+the file with [`gtm radio add`](/cli/#radio), `gtm radio list` and
+`gtm radio rm`.
 
 Two further keys are optional per station: `uuid` (the Radio Browser
 `stationuuid`, written automatically when a directory station is saved from
@@ -237,68 +292,40 @@ built-in source registry).
 
 | Variable | Used by | Description |
 |----------|---------|-------------|
+| `HOME` | Client, daemon | Base for the default config, data, cache and state paths |
 | `XDG_CONFIG_HOME` | Client, daemon | Config directory root (default: `~/.config`) |
 | `XDG_DATA_HOME` | Daemon | Data directory root (default: `~/.local/share`) |
 | `XDG_CACHE_HOME` | Daemon | Cache directory root (default: `~/.cache`) |
 | `XDG_STATE_HOME` | Client | Probed for the Omarchy `colors.toml` theme file |
 | `XDG_RUNTIME_DIR` | Client, daemon | Derives the default IPC socket path |
+| `TMPDIR`, `USER` | Client, daemon | Fallbacks for socket and state paths |
 | `GTM_THEME_MODE` | Client | Force OS-theme detection to `dark` / `light`; honored only when `theme_mode = "auto"` |
 | `GTM_NERD_FONTS` | Client | Set `0` / `false` / `no` to force plain-ASCII glyphs |
 | `GTM_YT_HOSTS` | Daemon | Register extra YouTube-family search providers |
-| `GTM_SPOTIFY_PORT` | OAuth flow | Override the OAuth callback port (default: 8990) |
-| `GTM_LASTFM_PORT` | OAuth flow | Override the Last.fm callback port (default: 8991) |
-| `GTK_THEME` | Client | Second-choice OS theme probe; a trailing `-dark` means dark |
+| `GTM_SPOTIFY_PORT` | OAuth flow | Override the Spotify callback port (default: 8990) |
 | `GTM_SPOTIFY_CLIENT_ID` | Daemon | Spotify Web API app id; falls back to the bundled id file, then librespot's |
-| `NVIM` | Client | Disables cover art rendering (Neovim) |
-| `ZELLIJ` | Client | Disables cover art rendering (Zellij) |
+| `GTK_THEME` | Client | Second-choice OS theme probe; a trailing `-dark` means dark |
+| `NVIM` / `ZELLIJ` | Client | Set either to disable cover art rendering — the terminal cannot show images |
+| `VISUAL` / `EDITOR` | Client | Editor used by `gtm config` when it opens the file |
 | `RUST_LOG` | Daemon | Controls log verbosity (`gtm=debug`, etc.); overrides `--verbose` |
 | `PREFIX` / `TERMUX_VERSION` | Daemon | Termux detection, affects backend selection |
-| `TMPDIR`, `USER` | Client, daemon | Fallbacks for socket and state paths |
 
 ---
 
-## Daemon CLI args
+## Command-line flags
 
-```
-gtmd [OPTIONS]
+The two binaries take flags too, and they are documented separately: see
+[CLI Reference](/cli/) for every `gtm` command and for `gtmd`'s options. The two
+that matter most when you are pointing gtm at a non-default setup:
 
-Options:
-  --socket <PATH>      Unix socket path
-  --library <PATH>     Accepted but never read — the scan list is fixed (see
-                       Files layout) and always starts at the data dir
-  --config <DIR>       Config, data AND cache directory root
-                       (cache becomes <DIR>/cache)
-  --backend <BACKEND>  Audio backend: "rodio" or "pulseaudio"
-                       (pulseaudio needs --features pulseaudio; otherwise
-                       falls back to rodio silently)
-  -v, --verbose        Enable verbose logging
-  --test-mode          No log file, no persisted state, null audio mixer,
-                       and skips the single-instance guard
-  -h, --help           Show help
-```
+| Flag | Effect |
+|------|--------|
+| `gtm config` | Opens this file in your editor; `--reset` rewrites it from defaults, `--validate` checks it |
+| `gtmd --config <DIR>` | Relocates the config, data **and** cache roots at once, overriding every XDG variable — useful for a throwaway instance |
 
-`gtmd` accepts `--version` / `-V`, but it is handled before argument parsing
-rather than by the flag parser, so it does not appear in `--help` output.
+:::note
+`gtm config --validate` is the check to reach for after hand-editing this file.
+A bad enum value does not fail just that key: the whole file is discarded and
+defaults are used, silently.
+:::
 
-The daemon auto-starts when `gtm` is launched and no daemon is running; if one
-is already alive, a second `gtmd` **refuses to start** (`gtmd already running
-(pid N); connect to the existing daemon`) and the client instead kills the
-running PID and respawns.
-
----
-
-## Client CLI flags
-
-```
-gtm [OPTIONS] [COMMAND]
-
-Options:
-  -s, --socket <PATH>  Daemon socket path
-  -c, --cli            CLI mode (no TUI)
-  -j, --json           JSON output (CLI mode only)
-  -v, --verbose        Verbose output
-  -V, --version        Show version
-  -h, --help           Show help
-```
-
-Run `gtm --cli --help` for the full list of CLI commands.

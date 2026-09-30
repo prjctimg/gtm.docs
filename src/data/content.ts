@@ -26,8 +26,7 @@ export interface PageItem {
   /** Body with the frontmatter block removed. */
   content: string;
   headings: PageHeading[];
-  category: string;
-  /** Served under `/docs/` — the pages that participate in prev/next and categories. */
+  /** Served under `/docs/` — the pages that participate in prev/next and the sidebar. */
   isDoc: boolean;
   /** Show the live latest-release version in the page footer. */
   showVersion: boolean;
@@ -41,9 +40,8 @@ const rawPages = import.meta.glob<string>('../../content/*.mdx', {
 
 /**
  * Splits a raw file into flat frontmatter keys and the body. Indentation is not
- * significant, which is deliberate: it lets `sidebar:` followed by an indented
- * `order:` collapse to a single `order` key, and the `sidebar` block is not read
- * for anything else.
+ * significant, which is deliberate: a `key:` line followed by an indented line
+ * collapses to two sibling keys, so there is no nesting to rely on.
  */
 function parseFrontmatter(raw: string): { data: Record<string, string>; body: string } {
   const block = raw.match(/^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]+/);
@@ -83,7 +81,6 @@ function parsePage(filePath: string, raw: string): PageItem {
     order: Number.isFinite(order) ? order : 999,
     content: body,
     headings: parseHeadings(body),
-    category: data.category || '',
     isDoc: path.startsWith('/docs/'),
     showVersion: data.showVersion === 'true',
   };
@@ -120,13 +117,5 @@ export const DOCS: PageItem[] = ALL_PAGES.filter((page) => page.isDoc);
 /** The docs landing page, linked from the navbar, the footer and `/docs`. */
 export const FIRST_DOC: PageItem | undefined = DOCS[0];
 
-/** Top-level pages that are not part of a category, listed after them in the nav. */
+/** Top-level pages served outside `/docs/`, listed after the docs in the nav. */
 export const EXTRA_PAGES: PageItem[] = ALL_PAGES.filter((page) => !page.isDoc);
-
-export const DOCS_BY_CATEGORY: Record<string, PageItem[]> = DOCS.reduce((acc, doc) => {
-  if (!acc[doc.category]) acc[doc.category] = [];
-  acc[doc.category].push(doc);
-  return acc;
-}, {} as Record<string, PageItem[]>);
-
-export const DOC_CATEGORIES = Array.from(new Set(DOCS.map((doc) => doc.category)));

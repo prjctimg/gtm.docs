@@ -1,9 +1,7 @@
 ---
 title: The gtm Daemon
-description: "gtmd architecture, start/stop, Unix sockets, data files, logs, and CLI reference."
-category: "System & Daemon"
-sidebar:
-  order: 20
+description: "gtmd architecture, start/stop, Unix sockets, data files, logs, and command-line options."
+order: 20
 ---
 
 
@@ -98,7 +96,7 @@ Cache dir (`~/.cache/gtm/`):
 | `covers/` | On-disk cover cache (capped at 512 MiB, evicts oldest by mtime) |
 | `artist_covers/` | Artist-tile cover cache |
 | `lyrics/` | Fetched `.lrc` cache |
-| `spotify/` | Spotify Web session/playlist cache |
+| `spotify/` | yt-dlp audio cache for the Spotify→YouTube fallback |
 
 Downloads: `dirs::audio_dir()/gtm/downloads` (usually `~/Music/gtm/downloads`).
 
@@ -111,6 +109,19 @@ Config dir (`~/.config/gtm/`):
 | `themes/*.toml` | User themes |
 | `podcast.json` | Podcast subscriptions |
 | `radios.toml` | Custom radio stations |
+| `spotify_stream.json` | Resolved stream URL for the active Spotify track |
+
+---
+
+## Status endpoint
+
+Alongside the Unix socket, `gtmd` serves a read-only JSON view of the current
+track over plain HTTP, so a script, home-screen widget or web page can read what
+is playing without attaching to the IPC socket. It is on by default on loopback
+and controlled by the `web_addr` key in `config.toml` — see
+[Daemon-read keys](/configuration/#daemon-read-keys) and
+[Status endpoint](/configuration/#status-endpoint) for the payload and the
+address forms.
 
 ---
 
@@ -135,26 +146,20 @@ Without `RUST_LOG`, `--verbose` selects `debug` and otherwise `info`, and
 
 ## CLI reference
 
-```bash
-gtmd [OPTIONS]
+`gtmd` takes six flags, all listed in [CLI Reference](/cli/#gtmd):
 
-Options:
-  --socket <PATH>     Unix socket path
-  --library <PATH>    Accepted, but never read — see below
-  --config <DIR>      Daemon config/data/cache root
-  -v, --verbose       Verbose logging
-  --test-mode         Ephemeral state: no log, no mixer, no persistence
-  --backend <BACKEND> Audio backend: rodio | pulseaudio
-  -V, --version       Show version
-  -h, --help          Show help
-```
+| Flag | Effect |
+|------|--------|
+| `--socket <PATH>` | Unix socket path; the pulse socket becomes the same path with a `pulse` extension |
+| `--config <DIR>` | Relocates **all three** roots at once — config, data, and cache (the last becoming `<DIR>/cache`) |
+| `--library <PATH>` | Parsed and then ignored — see below |
+| `--backend <BACKEND>` | `rodio` or `pulseaudio` |
+| `-v`, `--verbose` | Debug-level logging |
+| `--test-mode` | Ephemeral socket, no log file, no persisted state, a null mixer, and no network fetches |
 
-`--library` is parsed and then ignored. The scanned directories are fixed:
-`data_dir/audio`, `~/Music` if it exists, and the shared-storage music
-directories under Termux. The database is always `data_dir/library.db`.
+`--library` changes nothing. The scanned directories are fixed: `data_dir/audio`,
+`~/Music` if it exists, and the shared-storage music directories under Termux.
+The database is always `data_dir/library.db`.
 
-`--config <DIR>` relocates **all three** roots at once — config, data, and
-cache (the last becoming `<DIR>/cache`).
-
-`--backend pulseaudio` needs a build with the `pulseaudio` Cargo feature.
-Without it the flag is accepted but silently ignored and Rodio is used.
+`--backend pulseaudio` needs a build with the `pulseaudio` Cargo feature. Without
+it the flag is accepted but silently ignored and Rodio is used.

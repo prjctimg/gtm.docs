@@ -27,8 +27,8 @@ export const HOME_DESCRIPTION = '📻 gtm is a feature rich terminal audio playe
  */
 
 /**
- * Flat frontmatter keys. Indentation is not significant, so a `sidebar:` block
- * collapses to its `order` key — nothing reads the block itself.
+ * Flat frontmatter keys. Indentation is not significant, so a `key:` line
+ * followed by an indented line collapses to two sibling keys.
  * @returns {Record<string, string>}
  */
 function frontmatter(mdx) {
