@@ -89,7 +89,7 @@ export const Home: React.FC = () => {
       docId: 'theming'
     },
     {
-      title: 'A visualizer for your music',
+      title: 'Audio visualizer',
       desc: 'Twelve ways to draw the sound: bars, dots, a bouncing wave, an eighties sunset, even fire. Pick one and it fills the screen whenever you leave the player alone for a moment.',
       badge: 'Visualizer',
       hotkey: 'Alt+v',
@@ -98,7 +98,7 @@ export const Home: React.FC = () => {
       sectionId: '_visualizer'
     },
     {
-      title: 'Lyrics that keep time',
+      title: 'Synced lyrics',
       desc: 'Lyrics scroll along with the song, one line at a time, right on cue. gtm looks them up for you and remembers them for next time. Nudge them early or late with the bracket keys.',
       badge: 'Lyrics',
       hotkey: 'l',
@@ -106,7 +106,7 @@ export const Home: React.FC = () => {
       docId: 'lyrics'
     },
     {
-      title: 'Crossfades between tracks',
+      title: 'Crossfade',
       desc: 'Blend one track into the next instead of stopping dead. Choose how long the fade takes, from three seconds to half a minute, or turn it off.',
       badge: 'Crossfade',
       hotkey: 'Alt+,',
@@ -114,7 +114,7 @@ export const Home: React.FC = () => {
       docId: 'crossfade'
     },
     {
-      title: 'A fifteen-band equalizer',
+      title: 'Tune the sound',
       desc: 'Shape the sound sixteen different ways, or draw your own curve. More bass for headphones, softer highs for a podcast — it remembers what you picked.',
       badge: 'Equalizer',
       hotkey: 'Alt+e',
@@ -123,7 +123,7 @@ export const Home: React.FC = () => {
       sectionId: '_equalizer'
     },
     {
-      title: 'A sleep timer',
+      title: 'Sleep timer',
       desc: 'Set a timer and playback stops when it runs out. Handy for falling asleep to something without it playing all night.',
       badge: 'Sleep timer',
       hotkey: 'Alt+z',
@@ -140,7 +140,7 @@ export const Home: React.FC = () => {
       docId: 'library'
     },
     {
-      title: 'Album art for every track',
+      title: 'Cover image support',
       desc: 'Artwork is looked up for you — from the file when it has some, from the internet when it does not. It is cached after the first fetch, so it never looks twice.',
       badge: 'Cover art',
       hotkey: 'z',
@@ -148,7 +148,7 @@ export const Home: React.FC = () => {
       docId: 'cover-art'
     },
     {
-      title: 'Keeps playing when you leave',
+      title: 'Background playback',
       desc: 'Close the player, start something else, close the terminal — the music carries on in the background until you stop it. It picks up where you left off, same volume included.',
       badge: 'Background',
       hotkey: null,
@@ -156,7 +156,7 @@ export const Home: React.FC = () => {
       docId: 'daemon'
     },
     {
-      title: 'YouTube, Spotify, podcasts and radio',
+      title: 'Streaming',
       desc: 'Search and play from YouTube, stream from Spotify with your own account, subscribe to podcasts and tune in to thousands of radio stations — all without leaving the player.',
       badge: 'Streaming',
       hotkey: 'Alt+y',
