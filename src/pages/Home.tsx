@@ -38,6 +38,9 @@ export const Home: React.FC = () => {
   const [activeFeatureIdx, setActiveFeatureIdx] = useState(0);
   const featureItemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Cards whose screenshot has not been added to public/media/static yet.
+  const [imgBroken, setImgBroken] = useState<Record<number, boolean>>({});
+
   // Animated spectrum bars
   const [barHeights, setBarHeights] = useState<number[]>([
     45, 60, 85, 95, 78, 90, 65, 50, 70, 82, 60, 40, 30, 55, 72, 88, 64, 42, 25
@@ -73,47 +76,92 @@ export const Home: React.FC = () => {
     return () => clearInterval(interval);
   }, [isPlayingFft]);
 
+  // Feature cards. Titles say what the feature does for you; the copy avoids
+  // implementation detail, and every claim here is checkable against the docs
+  // page it links to. `hotkey` is the real binding, not a shorthand.
   const carouselItems = [
     {
-      step: '01 / Themes',
-      title: 'Reactive Album Color Schemes',
-      desc: 'Dynamic terminal 24-bit truecolor engine that extracts dominant palettes directly from album artwork in real time. Switch manually with t or enable auto-sync.',
+      title: 'Reactive theming',
+      desc: 'Turn on reactive theming and the player picks up the colours from whatever is playing — a red cover art tints the whole interface red. Sixteen built-in themes are there too, light and dark.',
       badge: 'Themes',
-      hotkey: 't',
-      img: IMAGES.themesArt,
-      specs: '24-bit TrueColor · CIELAB Extraction · ANSI Fallback',
+      hotkey: 'Alt+T',
+      img: IMAGES.cardThemes,
       docId: 'theming'
     },
     {
-      step: '02 / Visualizer',
-      title: '60 FPS Waveform & FFT Spectrum Visualizer',
-      desc: 'Achieving 120 FPS sub-pixel FFT visualizers without flicker: an analysis of buffer diffing algorithms, terminal escape code congestion, and SIMD-accelerated Braille rendering.',
-      badge: 'Audio FFT',
-      hotkey: 'v',
-      img: IMAGES.libraryView1,
-      specs: '60 FPS · 2048 Samples · Hann Windowing · Sub-pixel Braille',
+      title: 'A visualizer for your music',
+      desc: 'Twelve ways to draw the sound: bars, dots, a bouncing wave, an eighties sunset, even fire. Pick one and it fills the screen whenever you leave the player alone for a moment.',
+      badge: 'Visualizer',
+      hotkey: 'Alt+v',
+      img: IMAGES.cardVisualizer,
       docId: 'audio',
       sectionId: '_visualizer'
     },
     {
-      step: '03 / Lyrics',
-      title: 'Synchronized Karaoke Lyrics (.lrc)',
-      desc: 'Smooth terminal vertical auto-scrolling with microsecond audio clock synchronization and dual-language translation support.',
-      badge: 'LRC Engine',
-      hotkey: 'L',
-      img: IMAGES.lyricsView1,
-      specs: '±0.1ms Clock Sync · Dual-Language · Auto-Fetch LRCLIB',
+      title: 'Lyrics that keep time',
+      desc: 'Lyrics scroll along with the song, one line at a time, right on cue. gtm looks them up for you and remembers them for next time. Nudge them early or late with the bracket keys.',
+      badge: 'Lyrics',
+      hotkey: 'l',
+      img: IMAGES.cardLyrics,
       docId: 'lyrics'
     },
     {
-      step: '04 / Concurrency',
-      title: 'Lock-Free Ringbuffer Audio Engine',
-      desc: 'Dual ring-buffer allocation for seamless cross-fades. Lock-free SPSC channel swaps audio buffers in 18.2 nanoseconds without mutex locks.',
-      badge: 'Engine',
-      hotkey: 'b',
-      img: IMAGES.libraryView2,
-      specs: '18.2ns Atomic Swap · Symphonia Pipeline · PipeWire / ALSA',
+      title: 'Crossfades between tracks',
+      desc: 'Blend one track into the next instead of stopping dead. Choose how long the fade takes, from three seconds to half a minute, or turn it off.',
+      badge: 'Crossfade',
+      hotkey: 'Alt+,',
+      img: IMAGES.cardCrossfade,
       docId: 'crossfade'
+    },
+    {
+      title: 'A fifteen-band equalizer',
+      desc: 'Shape the sound sixteen different ways, or draw your own curve. More bass for headphones, softer highs for a podcast — it remembers what you picked.',
+      badge: 'Equalizer',
+      hotkey: 'Alt+e',
+      img: IMAGES.cardEqualizer,
+      docId: 'audio',
+      sectionId: '_equalizer'
+    },
+    {
+      title: 'A sleep timer',
+      desc: 'Set a timer and playback stops when it runs out. Handy for falling asleep to something without it playing all night.',
+      badge: 'Sleep timer',
+      hotkey: 'Alt+z',
+      img: IMAGES.cardSleepTimer,
+      docId: 'playback',
+      sectionId: '_sleep-timer'
+    },
+    {
+      title: 'Your music, sorted for you',
+      desc: 'Point gtm at your music folders and it reads the tags, finds the artwork and groups everything by album, artist, genre and folder. Favourites and playlists are in there too.',
+      badge: 'Library',
+      hotkey: 'Alt+.',
+      img: IMAGES.cardLibrary,
+      docId: 'library'
+    },
+    {
+      title: 'Album art for every track',
+      desc: 'Artwork is looked up for you — from the file when it has some, from the internet when it does not. It is cached after the first fetch, so it never looks twice.',
+      badge: 'Cover art',
+      hotkey: 'z',
+      img: IMAGES.cardCoverArt,
+      docId: 'cover-art'
+    },
+    {
+      title: 'Keeps playing when you leave',
+      desc: 'Close the player, start something else, close the terminal — the music carries on in the background until you stop it. It picks up where you left off, same volume included.',
+      badge: 'Background',
+      hotkey: null,
+      img: IMAGES.cardBackground,
+      docId: 'daemon'
+    },
+    {
+      title: 'YouTube, Spotify, podcasts and radio',
+      desc: 'Search and play from YouTube, stream from Spotify with your own account, subscribe to podcasts and tune in to thousands of radio stations — all without leaving the player.',
+      badge: 'Streaming',
+      hotkey: 'Alt+y',
+      img: IMAGES.cardStreaming,
+      docId: 'youtube'
     }
   ];
 
@@ -372,18 +420,19 @@ export const Home: React.FC = () => {
         {/* Sticky Navigation Bar */}
         <div className="sticky top-20 z-30 bg-surface-container/95 backdrop-blur-md border border-hairline-outline rounded-xl px-4 py-2 flex items-center justify-center gap-2 font-mono text-xs shadow-md mx-auto w-fit">
           {/* Minimal slide step indicators to jump between slides */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-center max-w-full">
             {carouselItems.map((item, idx) => {
               const isActive = activeFeatureIdx === idx;
+              const step = String(idx + 1).padStart(2, '0');
               return (
                 <button
                   key={item.badge}
                   onClick={() => scrollToFeature(idx)}
-                  aria-label={`Jump to slide 0${idx + 1} - ${item.badge}`}
-                  title={`0${idx + 1} ${item.badge}: ${item.title}`}
+                  aria-label={`Jump to slide ${step} - ${item.title}`}
+                  title={`${step} ${item.title}`}
                   className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                    isActive 
-                      ? 'w-6 bg-secondary' 
+                    isActive
+                      ? 'w-6 bg-secondary'
                       : 'w-2 bg-hairline-outline hover:bg-text-muted'
                   }`}
                 />
@@ -410,16 +459,37 @@ export const Home: React.FC = () => {
                   isPast ? 'scale-[0.98] opacity-90' : 'scale-100 opacity-100'
                 }`}
               >
-                {/* Terminal Screenshot */}
-                <img
-                  src={item.img}
-                  alt={item.title}
-                  className={`w-full lg:w-[65%] h-auto max-h-[420px] object-contain rounded-lg border border-hairline-outline bg-canvas-obsidian p-2 sm:p-4 shadow-inner block mx-auto transition-all duration-500 ease-out ${
-                    isCurrent 
-                      ? 'translate-y-0 opacity-100 scale-100' 
-                      : 'translate-y-4 opacity-75 scale-[0.99]'
-                  }`}
-                />
+                {/* Screenshot. Falls back to a placeholder rather than a broken
+                    image when the file has not been added yet. */}
+                {item.img && !imgBroken[idx] ? (
+                  <img
+                    src={item.img}
+                    alt={item.title}
+                    onError={() =>
+                        setImgBroken((prev) => ({ ...prev, [idx]: true }))
+                    }
+                    className={`w-full lg:w-[65%] h-auto max-h-[420px] object-contain rounded-lg border border-hairline-outline bg-canvas-obsidian p-2 sm:p-4 shadow-inner block mx-auto transition-all duration-500 ease-out ${
+                      isCurrent
+                        ? 'translate-y-0 opacity-100 scale-100'
+                        : 'translate-y-4 opacity-75 scale-[0.99]'
+                    }`}
+                  />
+                ) : (
+                  <div
+                    className={`w-full lg:w-[65%] max-h-[420px] rounded-lg border border-dashed border-hairline-outline bg-canvas-obsidian flex items-center justify-center transition-all duration-500 ease-out ${
+                      isCurrent
+                        ? 'translate-y-0 opacity-100 scale-100'
+                        : 'translate-y-4 opacity-75 scale-[0.99]'
+                    }`}
+                  >
+                    <span className="font-mono text-xs text-text-disabled px-6 text-center">
+                      screenshot pending —{' '}
+                      <span className="text-text-muted">
+                        {item.img?.replace('/media/static/', '')}
+                      </span>
+                    </span>
+                  </div>
+                )}
 
                 {/* Right Narrative */}
                 <div 
@@ -437,6 +507,15 @@ export const Home: React.FC = () => {
                     <p className="text-sm text-text-muted leading-relaxed font-sans">
                       {item.desc}
                     </p>
+
+                    {item.hotkey && (
+                      <p className="flex items-baseline gap-2 text-xs text-text-muted">
+                        <span className="uppercase tracking-wider text-text-disabled">Key</span>
+                        <kbd className="px-1.5 py-0.5 rounded bg-surface-elevated border border-hairline-outline text-secondary font-mono">
+                          {item.hotkey}
+                        </kbd>
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 pt-2">
