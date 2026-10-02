@@ -30,7 +30,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-canvas-obsidian text-text-primary flex flex-col font-sans selection:bg-secondary/30 selection:text-secondary transition-colors duration-200">
+    <div className="min-h-screen bg-canvas-obsidian text-text-primary flex flex-col font-mono selection:bg-secondary/30 selection:text-secondary transition-colors duration-200">
       <Nav onOpenSearch={() => setIsSearchOpen(true)} />
 
       <div className="flex-grow flex flex-col">

@@ -207,7 +207,7 @@ export const InstallTabs: React.FC<InstallTabsProps> = ({
                             latest
                           </span>
                         </div>
-                        <div className="text-[10px] text-text-muted font-sans pt-0.5">
+                        <div className="text-[10px] text-text-muted font-mono pt-0.5">
                           Bleeding-edge builds from the dev branch
                         </div>
                       </div>
@@ -243,7 +243,7 @@ export const InstallTabs: React.FC<InstallTabsProps> = ({
                             default
                           </span>
                         </div>
-                        <div className="text-[10px] text-text-muted font-sans pt-0.5">
+                        <div className="text-[10px] text-text-muted font-mono pt-0.5">
                           Recommended stable public release
                         </div>
                       </div>

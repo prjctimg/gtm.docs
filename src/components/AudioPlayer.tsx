@@ -218,7 +218,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const remainingTime = duration > 0 ? Math.max(0, duration - currentTime) : 0;
 
   return (
-    <div className={`my-4 rounded-lg border border-hairline-outline bg-surface-container overflow-hidden shadow-xs transition-colors hover:border-secondary/40 font-sans ${className}`}>
+    <div className={`my-4 rounded-lg border border-hairline-outline bg-surface-container overflow-hidden shadow-xs transition-colors hover:border-secondary/40 font-mono ${className}`}>
       {/* Underlying HTML5 Audio element */}
       {!useSynthFallback && (
         <audio

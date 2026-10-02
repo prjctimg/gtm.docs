@@ -202,7 +202,7 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="w-full flex flex-col font-sans space-y-16 sm:space-y-24">
+    <div className="w-full flex flex-col font-mono space-y-16 sm:space-y-24">
       {/* HERO SECTION */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
@@ -499,23 +499,19 @@ export const Home: React.FC = () => {
                       : 'translate-y-2 opacity-80'
                   }`}
                 >
-                  <div className="space-y-3">
-                    <h3 className="font-mono text-xl sm:text-2xl font-bold text-text-primary leading-tight">
-                      {item.title}
-                    </h3>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <span className="font-mono text-[11px] uppercase tracking-wider text-secondary font-semibold">
+                        {item.badge}
+                      </span>
+                      <h3 className="font-mono text-2xl sm:text-3xl lg:text-[1.85rem] font-bold text-text-primary tracking-tight leading-snug">
+                        {item.title}
+                      </h3>
+                    </div>
 
-                    <p className="text-sm text-text-muted leading-relaxed font-sans">
+                    <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-mono max-w-sm lg:max-w-[34ch] text-pretty">
                       {item.desc}
                     </p>
-
-                    {item.hotkey && (
-                      <p className="flex items-baseline gap-2 text-xs text-text-muted">
-                        <span className="uppercase tracking-wider text-text-disabled">Key</span>
-                        <kbd className="px-1.5 py-0.5 rounded bg-surface-elevated border border-hairline-outline text-secondary font-mono">
-                          {item.hotkey}
-                        </kbd>
-                      </p>
-                    )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 pt-2">
