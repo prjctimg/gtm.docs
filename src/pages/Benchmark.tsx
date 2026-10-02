@@ -347,7 +347,7 @@ export const Benchmark: React.FC<BenchmarkProps> = () => {
               Metrics (per /proc/&lt;pid&gt;): peak / mean / at-5s RSS (VmRSS), CPU (utime+stime), and t_ready (IPC round
               trip to first playing state). Fixture hashes are sealed so a corrupted fixture fails the run loudly — see the{' '}
               <a
-                href="https://github.com/prjctimg/gtm/blob/dev/BENCHMARK.md"
+                href="https://github.com/prjctimg/gtm/blob/dev/.bench/BENCHMARK.md"
                 target="_blank"
                 rel="noreferrer"
                 className="text-secondary hover:text-primary underline decoration-secondary/40 underline-offset-2"

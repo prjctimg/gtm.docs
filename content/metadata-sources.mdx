@@ -86,23 +86,23 @@ gtm --cli setup lastfm
 The guided flow:
 
 1. Create an API application at `https://www.last.fm/api/account/create`
-   (API key + secret + callback URL)
-2. Enter the key and secret (stored with the daemon)
-3. The browser opens `https://www.last.fm/api/auth/?api_key=<your-key>` to
-   grant access
-4. The daemon captures the callback token and swaps it for a session
+   (API key + secret)
+2. Enter the key and secret when prompted; they are stored with the daemon
+3. gtm prints an authorize URL and opens your browser on it
+4. Click **Allow** on Last.fm. The desktop flow sends nothing back to your
+   machine, so the URL already carries the request token
+5. gtm polls the daemon until the session lands, for up to three minutes
 
-The loopback callback is served on `127.0.0.1:8991` (`$GTM_LASTFM_PORT` to
-override) with a five-minute window, and the redirect is matched on a `token`
-query param. If the browser does not redirect, you can paste the token from the
-address bar instead — the CLI accepts a manual token on stdin.
+After that, re-running `gtm --cli setup lastfm` reports scrobbling state
+(`Ready (scrobbling enabled|disabled)`, `API key set, not yet authorized`, or
+`Not configured`). `gtm --cli status` shows playback state only — Playback,
+Track, Volume, Repeat, Shuffle and Queue — and no Last.fm information. Now-playing
+updates and completed-track scrobbles are pushed automatically.
 
-After that, re-running `gtm --cli setup lastfm` or `gtm --cli scrobble` reports
-scrobbling state (`Ready (scrobbling enabled|disabled)`, `API key set, not yet
-authorized`, or `Not configured`). `gtm --cli status` shows playback state only
-— Playback, Track, Volume, Repeat, Shuffle and Queue — and no Last.fm
-information. Now-playing updates and completed-track scrobbles are pushed
-automatically.
+:::tip
+Scrobbling needs an active last.fm session; the `setup` flow handles re-auth
+when one lapses.
+:::
 
 :::tip
 Scrobbling needs an active last.fm session; `lastfm.status()` shows

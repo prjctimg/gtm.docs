@@ -10,17 +10,19 @@ export interface DocTreeProps {
 }
 
 /**
- * The page index: every `/docs/` page in frontmatter `order`, then the
- * top-level pages that live outside `/docs/` under a "More" heading. Rendered
- * twice — in the desktop sidebar and in the mobile drawer — so it lives in one
- * place.
+ * The page index: every content file in frontmatter `order` — the `/docs/` pages
+ * first, then the top-level pages served outside `/docs/`, as one continuous
+ * list. Rendered twice, in the desktop sidebar and in the mobile drawer, so it
+ * lives in one place.
  */
 export const DocTree: React.FC<DocTreeProps> = ({ onNavigate, compact = false }) => {
   const rowPadding = compact ? 'py-1.5 px-2' : 'py-2 px-2.5';
 
-  const renderGroup = (pages: PageItem[]) => (
+  const pages = [...DOCS, ...EXTRA_PAGES];
+
+  return (
     <ul className="space-y-0.5 border-l border-hairline-subtle ml-2 pl-2">
-      {pages.map((page) => (
+      {pages.map((page: PageItem) => (
         <li key={page.id}>
           <NavLink
             to={page.path}
@@ -38,24 +40,5 @@ export const DocTree: React.FC<DocTreeProps> = ({ onNavigate, compact = false })
         </li>
       ))}
     </ul>
-  );
-
-  return (
-    <>
-      <div className="space-y-1.5">
-        {renderGroup(DOCS)}
-      </div>
-
-      {EXTRA_PAGES.length > 0 && (
-        <div className="space-y-1.5">
-          <div className="text-xs font-bold text-text-muted tracking-wider uppercase flex items-center gap-1.5 px-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-            <span>More</span>
-          </div>
-
-          {renderGroup(EXTRA_PAGES)}
-        </div>
-      )}
-    </>
   );
 };

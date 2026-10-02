@@ -14,7 +14,7 @@ gtm ships two audio backends behind a common `Mixer` interface:
 | **Rodio** | (default) | Cross-platform, ALSA/CoreAudio via cpal |
 | **PulseAudio** | `pulseaudio` | Native PulseAudio streams; auto-selected on Termux |
 
-The backend also owns EQ, reverb, pitch-preserving speed, device switching,
+The backend also owns EQ, reverb, loudness normalization, device switching,
 and crossfade — one code path for every source (local files, Spotify,
 remote streams).
 
@@ -79,12 +79,11 @@ Each band is a bell filter (default Q = 1.414, i.e. 1/3-octave bandwidth),
 applied per sample in the audio engine with gains re-checked every 128
 samples to avoid lock contention.
 
-Each preset's curve is capped at **±4 dB**, and gtm then applies an automatic
-headroom trim equal to −(largest boost) so EQ boosts can never clip. The
-output is hard-clamped to ±1.0 — which is why a boost-heavy preset like
-`Bass Boost` is audibly quieter by design.
+gtm then applies an automatic headroom trim equal to −(largest boost) so EQ
+boosts can never clip, and the output is hard-clamped to ±1.0 — which is why a
+boost-heavy preset like `Bass Boost` is audibly quieter by design.
 
-:::audio src="/samples/audio-equalizer-sample.wav" title="15-Band Graphic Equalizer Demo" artist="gtm Audio Engine (120 BPM Synth Riff)"
+:::audio src="/media/static/audio-equalizer-sample.wav" title="15-Band Graphic Equalizer Demo" artist="gtm Audio Engine (120 BPM Synth Riff)"
 Sample track exercising frequency bands from 25 Hz sub-bass to 16,000 Hz highs with live equalizer visualizer.
 :::
 
@@ -104,31 +103,33 @@ Sample track exercising frequency bands from 25 Hz sub-bass to 16,000 Hz highs w
 | Vocal | Speaker |
 
 `Alt+e` opens the equalizer picker with a live mini-plot of each preset's
-frequency response. `Enter` applies the selected preset. The EQ
-on/off toggle lives under `Alt+,` (Settings → Playback). The footer
-`EqPreset` module shows the active preset.
+frequency response. `Enter` applies the selected preset. The EQ on/off toggle
+lives under `Alt+,` (Settings → Playback). The footer `EqPreset` module shows
+the active preset.
 
 EQ presets are stored in `AudioSettings` (`eq_preset`, `eq_enabled`) and
 persisted with the daemon state.
-
-:::note
-The `EqPreset::Custom([f32; 15])` variant exists in the state model but is
-**not exposed in the TUI** — there is no per-band editing UI yet.
-:::
 
 ---
 
 ## Reverb
 
-A simple room model is available via `reverb_stereo(room_size, ...)`. It
-defaults to **off**. The persisted `room_size` default is 0.5 (the mixer
-bootstraps at 0.3 until the daemon applies saved settings), and the bound is
-0.0–1.0. Reverb is applied by the daemon and toggled from Settings → Playback.
+A simple stereo room model, off by default. The persisted `room_size` default is
+0.5 and the bound is 0.0–1.0. Reverb is applied by the daemon and toggled from
+Settings → Playback.
 
 :::note
 `room_size` is only read when a source is (re)started, so changing it does not
 affect an already-playing track.
 :::
+
+---
+
+## Loudness and pre-gain
+
+The daemon tracks a loudness mode (Off / Track / Album / Auto) and a pre-gain
+value in dB, both persisted with the rest of the audio settings. They are set
+over IPC and are not yet exposed in the TUI or the CLI.
 
 ---
 
@@ -141,12 +142,15 @@ every **186 ms** at 44.1 kHz, not every 16 ms. The daemon re-broadcasts the
 latest 64 bins on a much faster ~16 ms poll, and it stops analysing entirely
 while no TUI client is connected.
 
-![Spectrum Visualizer Rendering Animation](/samples/spectrum-visualizer-demo.gif)
+![Spectrum Visualizer Rendering Animation](/media/gif/spectrum-visualizer-demo.gif)
 
-- `Ctrl+V` — toggle the visualizer
 - `Alt+v` — open the preset picker (with a live preview)
+- `z` then `Tab` — full-screen visualizer in [Zen mode](/tui/#zen-mode)
 
-:::audio src="/samples/terminal-bell.wav" title="Terminal Bell & Notification Chime" artist="gtm Daemon Alert"
+The visualizer shows up in two places: as the third Zen surface, and on its own
+once the TUI has gone idle (see [Daydreaming](/tui/#daydreaming)).
+
+:::audio src="/media/static/terminal-bell.wav" title="Terminal Bell & Notification Chime" artist="gtm Daemon Alert"
 Dual-harmonic bell tone triggered on queue completion and terminal notifications.
 :::
 
@@ -171,11 +175,10 @@ Rendering is frame-rate independent: bars use attack 0.65 / decay 0.45 (0.25
 when idle), and when nothing is playing an idle sine-wave animation keeps the
 view alive.
 
-The visualizer only renders when the terminal is ≥ 80 columns wide.
-
 The client's `visualizer_preset` config key sets the default preset
 (`"braille" | "blocks" | "mirror" | "gradient" | "spectrum" | "barsdot" |
-"classicpeak" | "columns" | "wave" | "stereo" | "retro" | "flame"`).
+"classicpeak" | "columns" | "wave" | "stereo" | "retro" | "flame"`). Setting
+`visualizer = false` under `[extensions]` turns the surface off entirely.
 
 ---
 

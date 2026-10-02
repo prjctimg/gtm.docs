@@ -1,6 +1,6 @@
 ---
 title: Playback
-description: "Volume and mute, seeking, speed, queue, repeat and shuffle, sleep timer, and low-power mode."
+description: "Volume and mute, seeking, queue, repeat and shuffle, sleep timer, and low-power mode."
 order: 6
 ---
 
@@ -50,26 +50,6 @@ forward to the live edge is generally safe.
 
 ---
 
-## Playback speed
-
-- `>` / `<` — speed up / down (pitch-preserving)
-
-Speed is pitch-preserving (time-stretch, not resample) and clamped to
-**0.25×–2.0×**. Each `>`/`<` press steps by 0.25×. The `speed` CLI command
-reports or sets the rate:
-
-```bash
-gtm --cli speed          # print current rate
-gtm --cli speed 1.5      # set to 1.5x
-```
-
-Notice that `>` maps to `>`. In US layouts `>` is Shift+`.` which clashes
-with seek-forward `.`. The seek keys require no modifier, so pressing `>` is
-necessary to speed up. If your layout makes `>` awkward, bind `speed_up` /
-`speed_down` in `config.toml`.
-
----
-
 ## Queue
 
 The queue is a picker overlay opened with `Alt+q`. From the queue you can:
@@ -97,17 +77,16 @@ then the default library list — not queue-relative. With an empty user queue,
 indices are silently ignored.
 
 `queue-add` inserts *play-next* (right after the current entry) unless you pass
-`--position <INDEX>`. `queue-set`'s `--start-idx` is currently accepted and
-ignored: playback always starts at index 0.
+`--position <INDEX>`.
 :::
 
 Adding directories recursively scans for audio files. Library scans pick up
-`mp3, flac, ogg, wav, m4a, aac, opus`; `queue-add` also accepts `wma`.
+`mp3, flac, ogg, wav, m4a, aac, opus`.
 
 :::caution
-There is no WMA decoder. `queue-add` will happily take a `.wma` file into the
-queue — the extension is in the accepted list — but decoding fails later at
-playback time, with no error at the point you added it.
+`queue-add` also accepts the `wma` extension, but gtm has no WMA decoder. A
+`.wma` file enters the queue cleanly and fails at playback time instead, with no
+error at the point you added it.
 :::
 
 ---
@@ -138,8 +117,8 @@ The sleep timer counts down a set number of minutes, then **stops playback**
 (silences the mixer, cancels any Spotify Web stream, and clears crossfade
 standby).
 
-- `Alt+z` — open the Sleep Timer picker (quick options 5, 10, 15, 30, 60,
-  90, 120 min, or manual entry)
+- `Alt+z` — open the Sleep Timer picker (a slider; `←`/`→` or `h`/`l` step by 5
+  minutes, `-`/`+` by 1, and `i` switches to numeric entry)
 - CLI: `gtm --cli sleep-timer <minutes>`
 - CLI: `gtm --cli cancel-sleep-timer`
 
@@ -160,8 +139,7 @@ playback is refused.
 
 Low-power mode has **no default key binding**. Reach it with the CLI or by
 binding `toggle_low_power` in `config.toml` (see
-[Interface](/interface/#keybindings)). `z` toggles **Zen** mode, not
-low-power.
+[TUI](/tui/#keybindings)). `z` toggles **Zen** mode, not low-power.
 
 Enabling low-power pauses playback and eases up on background work (it also
 cancels any armed sleep timer). Disabling just clears the flag so you can
@@ -180,10 +158,10 @@ The daemon persists the following to `state.json` on every change:
 - Repeat mode, shuffle
 - Mono downmix flag
 - Crossfade configuration
+- Gapless flag (see [Crossfade](/crossfade/))
 - Dynamic-mode and scrobble configuration
-- Audio settings (EQ preset, speed, device, reverb, loudness, pre-gain)
-- Gapless flag (persisted, but not consulted by playback — see
-  [Crossfade](/crossfade/))
+- Audio settings: EQ preset and on/off, output device, reverb, loudness mode,
+  pre-gain
 
 The current track and position **are** persisted and resumed on restart; the
 sleep timer and low-power mode are not.
@@ -192,6 +170,6 @@ sleep timer and low-power mode are not.
 
 ## Limitations
 
-- Speed is clamped to 0.25×–2.0×.
-- Volume is an integer 0–100.
+- Volume is an integer 0–100, and each `+`/`-` press changes it by 5.
 - Shuffle cannot be reversed to a prior order.
+- Live sources do not support seeking backward.

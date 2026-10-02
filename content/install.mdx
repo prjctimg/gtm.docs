@@ -65,7 +65,8 @@ curl -fsSL https://gtmd.dev/install.sh | bash -s -- --nightly
 
 Community maintained packaging of `gtm` is welcome! 
 
-If your platform package manager is not listed and you would like to add it, see this [issue]()
+If your platform package manager is not listed and you would like to add it, open an issue on
+[GitHub](https://github.com/prjctimg/gtm/issues/new).
 
 :::
 
@@ -77,6 +78,22 @@ crates.io:
 
 ```bash
 cargo install gtm --locked
+```
+
+### Homebrew
+
+A formula is in the repository and builds from source:
+
+```bash
+brew install --build-from-source gtm
+```
+
+### Nix
+
+The repository ships a flake that builds both binaries:
+
+```bash
+nix profile install github:prjctimg/gtm
 ```
 
 ---

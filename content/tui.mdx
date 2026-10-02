@@ -1,0 +1,198 @@
+---
+title: TUI
+description: "TUI layout, panes, keybindings, command palette, overlays, zen mode, and the footer bar."
+order: 3
+---
+
+## Layout
+
+The TUI is a single workspace split into panes:
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  NOW PLAYING        │  cover · title · progress   │  lyrics          │
+│                     │                             │  (≥100 cols)     │
+│                     │                             │                  │
+├─────────────────────┴────────────────────────────────────────────────┤
+│  sidebar            │  results                    │                  │
+│  (left)             │  (centre)                   │                  │
+├─────────────────────┴────────────────────────────────────────────────┤
+│  footer bar                                                          │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+Lyrics get their own pane only on a wide terminal. Under 100 columns they render
+inside the results pane instead, and the Now Playing band spans the full width
+above both.
+
+- **Now Playing** — cover art, animated marquee title, progress bar. Height
+  adapts: 5 rows under 60 columns, 6 rows under 22 rows, otherwise
+  `clamp(area_height / 3, 8, 14)`.
+- **Sidebar** — 15 categories: All Tracks, Liked, Albums, Artists, Playlists,
+  Spotify, Radio, Most Played, Recently Played, Recently Added, Genres, Folders,
+  Top Charts, Podcasts, Browse. Shows item counts. Filter and reorder the list
+  with `left_pane_lists` in `config.toml`.
+- **Results pane** — tracks, albums, artists, playlists, genres, folders, chart
+  or browse entries depending on the selected category.
+- **Lyrics pane** — a full-height pane on the right when lyrics are loaded and
+  the terminal is ≥ 100 columns. Below that width the lyrics render inside the
+  results pane instead.
+
+![Interactive Terminal Layout & Playback Preview](/media/gif/terminal-player-demo.gif)
+
+### Narrow terminals
+
+When the terminal is narrower than 60 columns, the sidebar and results collapse
+into a single pane. Focus is switched with `[` and `]`.
+
+---
+
+## Keybindings
+
+Every default key, the `Alt` overlays, the two actions that have no default key
+at all, and how to remap them in `config.toml` are all documented on
+[Keybindings](/keybindings/).
+
+:::note
+There is **no default key for low-power mode** — reach it with
+`gtm --cli low-power` or by binding `toggle_low_power` yourself. `z` is Zen mode.
+:::
+
+---
+
+## Zen mode
+
+`z` opens a fullscreen view of one surface at a time. `Tab` and `Shift+Tab` cycle
+between three:
+
+1. **Now Playing** — enlarged cover art, title and artist on their own lines, the
+   current lyric line, and the progress bar below.
+2. **Lyrics** — the full-screen lyric pane.
+3. **Visualizer** — the [visualizer](/audio/#visualizer) stretched across the
+   screen.
+
+`Esc` or `q` leaves. Nothing is swallowed while Zen is open: every key it does not
+claim keeps its normal binding.
+
+---
+
+## Daydreaming
+
+After a period of keyboard, paste, and mouse inactivity the TUI leaves the track
+list and shows the visualizer full screen. The idle delay is
+`daydream_secs` in `config.toml` (default 60 seconds; `0` disables it) and is
+cycled from Settings → System. Any input brings the workspace straight back.
+
+---
+
+## Command palette
+
+Press `:` to open the command palette. It lists the available actions with an icon
+(Material Design Icons by default; any non-`mdi` value of `icon_style` gives the
+emoji set). Type to filter, then press `Enter` to execute.
+
+---
+
+## Help buffer
+
+Press `?` to open a full-screen help buffer: a list of the common keys grouped by
+topic (Playback, Navigation, Playlists, View, Queue, System). It contains no
+configuration details — see [Configuration](/configuration/) for that, and
+[Keybindings](/keybindings/) for the complete reference.
+
+`j`/`k`/arrows scroll, `G`/`$` jump to the end, `0`/`Ctrl+g` to the top, and
+`n`/`N` step one line. Close it with `Esc`.
+
+---
+
+## Picker overlays
+
+When a picker is open (Queue, YouTube Search, Equalizer, Theme Picker, etc.):
+
+- `j` / `k` or `↑` / `↓` — navigate
+- `Enter` — select
+- `Esc` — close
+- Type to filter (where supported)
+
+The Sleep Timer picker is a slider: `←`/`→` or `h`/`l` step by 5 minutes, `-`/`+`
+by 1, and `i` switches to numeric entry. The Crossfade picker offers 3, 5, 10, 15,
+and 30 second presets.
+
+---
+
+## Mouse
+
+Mouse support is provided by the TUI runtime:
+
+- **Single click** — select item in a list
+- **Double click** (within 400 ms) — play selected track
+- **Scroll** — navigate in list widgets
+
+Mouse capture follows the terminal's alt-screen state. When a picker overlay is
+open, clicking outside the picker closes it.
+
+---
+
+## Footer bar
+
+The footer bar sits at the bottom and shows status modules arranged in two groups
+(left and right). Modules are small colored badges with accent backgrounds.
+
+### Available modules
+
+| Module | Shows |
+|--------|-------|
+| `Playback` | Play / Pause / Stop icon |
+| `Title` | Current track title (marquee) |
+| `Volume` | Volume percentage |
+| `Repeat` | Repeat mode (Off / One / All) |
+| `Shuffle` | Shuffle on/off |
+| `Progress` | Mini progress bar |
+| `Queue` | Queue length |
+| `KeyAction` | Last action name (set `footer_key_action = "keys"` for the key) |
+| `Backend` | Audio backend (Rodio / PulseAudio) |
+| `System` | Platform icon |
+| `EqPreset` | Current EQ preset name |
+| `SleepTimer` | Remaining sleep time |
+| `LowPower` | Low-power mode indicator |
+| `Mono` | Mono downmix indicator |
+| `Device` | Active audio device |
+| `Notification` | Notification badge |
+| `Time` | Clock |
+| `Multiselect` | Selection count |
+| `Download` | Download progress |
+| `Network` | Network status |
+| `Source` | Active source provider |
+
+### Footer presets
+
+Three built-in presets are shipped: **Default**, **Minimal**, and **Full**.
+
+You can define custom presets in `~/.config/gtm/footer.toml`:
+
+```toml
+preset = [{ name = "My Preset", left = ["Playback", "Volume"], right = ["Time", "Backend"] }]
+```
+
+User presets replace built-in presets with the same name. Unknown module names
+are silently dropped so typos never break the bar.
+
+Hide the footer bar entirely with `hide_footer` in `config.toml`, or with
+`Ctrl+h` while the TUI is running.
+
+---
+
+## Settings
+
+`Alt+,` opens Settings — a floating picker with three categories on the left and
+the selected category's rows on the right:
+
+- **Playback** — repeat, shuffle, crossfade, EQ on/off, reverb, cover source.
+- **System** — theme, theme mode, audio output, both transparent toggles, hide
+  footer, reactive theme and its intensity, visualizer preset, daydream delay,
+  footer preset, the three sync actions (covers, lyrics, metadata), the two cache
+  clears, and notification settings.
+- **Spotify** — connection status, link, unlink.
+
+Preferences changed here are written to `config.toml` and hot-reloaded, so a
+`--reset` or a hand edit and a picker toggle converge on the same file.

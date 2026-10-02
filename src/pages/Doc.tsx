@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Clock, Github } from 'lucide-react';
-import { DOCS, FIRST_DOC, pageAtPath, type PageItem } from '../data/content';
+import { DOCS, pageAtPath, type PageItem } from '../data/content';
 import { Markdown } from '../components/Markdown';
-import { DocBreadcrumb, type Crumb } from '../components/DocBreadcrumb';
 import { DocDrawer } from '../components/DocDrawer';
 import { DocNav } from '../components/DocNav';
 import { DocToc } from '../components/DocToc';
@@ -66,13 +65,6 @@ const Article: React.FC<ArticleProps> = ({ page, onOpenSearch }) => {
     };
   }, [isDrawerOpen]);
 
-  const trail = useMemo<Crumb[]>(() => {
-    const crumbs: Crumb[] = [{ label: 'Docs', to: FIRST_DOC?.path }];
-    // A top-level page is not part of the docs tree, so it needs its own step.
-    if (!page.isDoc) crumbs.push({ label: page.title });
-    return crumbs;
-  }, [page.isDoc, page.title]);
-
   const { prev, next } = useMemo(() => {
     const index = DOCS.findIndex((doc) => doc.id === page.id);
     return {
@@ -94,10 +86,6 @@ const Article: React.FC<ArticleProps> = ({ page, onOpenSearch }) => {
             onSelect={(id) => (id ? scrollToHeading(id) : window.scrollTo({ top: 0, behavior: 'smooth' }))}
             onOpenDrawer={() => setIsDrawerOpen(true)}
           />
-
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <DocBreadcrumb trail={trail} />
-          </div>
 
           <div className="border-b border-hairline-outline pb-6 space-y-2">
             <h1 className="font-mono text-2xl sm:text-3xl font-bold text-text-primary tracking-tight">

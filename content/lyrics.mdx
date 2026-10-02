@@ -32,7 +32,7 @@ Sources 3–5 hit **LRCLIB** (`https://lrclib.net/api`).
 
 :::note
 An empty or malformed sidecar does **not** shadow the offline cache or the
-network — a broken sidecar falls through instead of blocking lyrics.
+network — it falls through instead of blocking lyrics.
 :::
 
 ---
@@ -85,8 +85,9 @@ The daemon replies to each lyrics request with a `DaemonRes::Lyrics`; there is
 no `lyrics` **event**. The TUI tags every request with a generation counter, so
 a late reply is discarded rather than flashing the wrong lyrics.
 
-Press `[` / `]` to nudge the lyric clock by up to ±120 s when lyrics are early
-or late. The first nudge re-engages auto-follow and raises an offset toast.
+With the lyrics pane focused, `[` and `]` nudge the lyric clock by 0.1 s per
+press when lyrics are early or late. The first nudge re-engages auto-follow and
+raises an offset toast.
 
 ---
 

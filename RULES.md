@@ -18,11 +18,11 @@ Project rules for `gtm.docs` — the docs/devlog site for [gtm](https://github.c
 ## Content
 
 - **`content/*.mdx` is the only source of page text** — prose, titles, descriptions, headings, the sidebar tree, prev/next, search entries and the sitemap all read from it. Do not put page copy in a component, in `src/data/site.ts`, or in a build script. UI chrome (nav labels, aria-labels, tooltips, callout badges) is the exception and stays in code.
-- Every file is a page, routed by its frontmatter. Required: `title`, `description`, `order`. Optional: `path` — the route, defaulting to `/docs/<file-name>`. `order` is the only ranking key: it sorts the sidebar and drives the prev/next sequence. Pages under `/docs/` make up that sequence; any other `path` is a top-level page, listed under a "More" heading after them.
+- Every file is a page, routed by its frontmatter. Required: `title`, `description`, `order`. Optional: `path` — the route, defaulting to `/docs/<file-name>`. `order` is the only ranking key: it sorts the sidebar and drives the prev/next sequence. Pages under `/docs/` make up that sequence; any other `path` is a top-level page, listed after them in the sidebar but outside the sequence. `DocTree` renders both sets as one continuous list, with no group heading.
 - Frontmatter keys are read flat, so there is no nesting to rely on.
 - Do **not** add an `updatedAt` field. A page's last-modified date is the commit date of its file, fetched at runtime by `useCommitDate` (`src/lib/commit-date.ts`), so there is no timestamp to forget to regenerate.
 - `src/data/content.ts` is the registry: it globs the directory, parses frontmatter, and exports the lookups (`PAGES_BY_PATH`, `DOCS_BY_ID`, `DOCS`, `EXTRA_PAGES`, `FIRST_DOC`). `scripts/routes.mjs` parses the same frontmatter independently for the sitemap — keep the two in step when the schema changes.
-- Content files link to each other by file name (`/configuration/`), by the route they are served at (`/install`), or with an anchor (`/interface/#keybindings`). `Markdown.tsx` resolves all three through the registry and leaves anything unknown as a plain link.
+- Content files link to each other by file name (`/configuration/`), by the route they are served at (`/install`), or with an anchor (`/tui/#keybindings`). `Markdown.tsx` resolves all three through the registry and leaves anything unknown as a plain link.
 
 ## Routing
 

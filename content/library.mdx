@@ -44,7 +44,7 @@ cover file, not to deduplicate. The same bytes at two paths create two rows.
 
 ### Browsing
 
-The library lists 14 categories in the sidebar:
+The library lists 15 categories in the sidebar:
 
 | Category | Contents |
 |----------|----------|
@@ -60,8 +60,9 @@ The library lists 14 categories in the sidebar:
 | **Recently Added** | Newest library entries first |
 | **Genres** | Grouped by genre |
 | **Folders** | Grouped by source folder |
-| **Top Charts** | Provider charts and editorial playlists (Spotify, when linked) |
+| **Top Charts** | Provider charts from Apple Music and Deezer, plus Spotify's editorial playlists when an account is linked |
 | **Podcasts** | Subscribed podcast feeds; drilling in lists that feed's episodes |
+| **Browse** | Free-text music search, artist pages and album tracklists, served by Deezer |
 
 `Alt+S` cycles five sort orders in the **List** context only, and applies to
 the flat view of All Tracks / Liked (Playlists, Spotify and Radio sort
@@ -76,8 +77,8 @@ upstream). The default is `Recents`:
 | `Album` | Album, track number, title |
 
 `/` opens a context-sensitive search picker: Spotify search in the Spotify
-category, the Radio browser in Radio, and library search (capped at 10
-results) everywhere else.
+category, the Radio browser in Radio, the Deezer browse search in Browse, and
+library search (capped at 10 results) everywhere else.
 
 ---
 
@@ -98,11 +99,9 @@ gtm --cli favourite-remove <track_id>
 
 ## Playlists
 
-Playlists live in the database as rows in `playlists` and `playlist_tracks`.
-A two-line `#EXTM3U` **stub** `.m3u8` is written into the data directory when a
-playlist is created (and removed when it is deleted), but it is **not kept in
-sync** — `add-to-playlist` never updates it, so a mirror never contains a track
-and is not a usable export. Use `export-playlist` for a real file.
+Playlists live in the database as rows in `playlists` and `playlist_tracks`. A
+two-line `.m3u8` stub is written into the data directory when a playlist is
+created and removed when it is deleted. Use `export-playlist` for a real file.
 
 ```bash
 gtm --cli playlists                 # list playlists
@@ -138,10 +137,6 @@ your scanned folders yields a silently shorter playlist.
 :::note
 Position gaps are repacked **only** by `playlist-dedup` and `playlist-doctor`.
 Removing a track from a playlist leaves a gap in the stored positions.
-
-`playlist-dedup` in practice can never remove anything — the
-`(playlist_id, track_id)` primary key already prevents duplicates, so it is
-effectively a position repack.
 :::
 
 ---

@@ -86,6 +86,8 @@ hide_footer = false              # Hide the footer bar entirely
 # ─── Progress & Visualizer ──────────────────────────────────────────
 progress_style = "TrueGradient"  # "SeekHead" | "Classic" | "Dots" | "TrueGradient"
 visualizer_preset = "braille"    # one of 12, see below
+daydream_secs = 60               # Seconds idle before the visualizer takes over
+                                # the workspace; 0 disables it
 
 # ─── Display ─────────────────────────────────────────────────────────
 time_format = "%H:%M"            # strftime format for the clock
@@ -100,7 +102,7 @@ auto_fetch_lyrics = true         # Auto-fetch lyrics on track change
 # ─── Library ─────────────────────────────────────────────────────────
 track_sort = "Recents"           # "Recents" | "RecentlyAdded" | "Alphabetical"
                                 # | "Artist" | "Album"
-left_pane_lists = []             # Sidebar categories to show; empty = all 14
+left_pane_lists = []             # Sidebar categories to show; empty = all 15
 show_preview = true              # Left-pane track preview card
 
 # ─── Notifications ──────────────────────────────────────────────────
@@ -120,7 +122,7 @@ notifications_overlay = true
 
 # ─── Keybindings ────────────────────────────────────────────────────
 [keybindings]
-# Key → action, not action → key. See interface.mdx.
+# Key → action, not action → key. See tui.mdx.
 "Space"  = "play_pause"
 "Alt+q"  = "open_queue"
 "Ctrl+q" = "quit"
@@ -128,6 +130,7 @@ notifications_overlay = true
 # ─── Daemon ─────────────────────────────────────────────────────────
 # Read by gtmd, not by the TUI. See "Daemon-read keys" below.
 web_addr = "127.0.0.1:8991"      # Read-only JSON status endpoint; "" = off
+discord_app_id = ""             # Discord application id for Rich Presence
 ```
 
 ### Field reference
@@ -142,31 +145,33 @@ web_addr = "127.0.0.1:8991"      # Read-only JSON status endpoint; "" = off
 | `reactive_theme_intensity` | float | `0.34` | Background wash strength; TUI cycles 0.15/0.25/0.34/0.45/0.6 |
 | `footer_preset_name` | string | `"Default"` | Active footer preset: `Default`, `Minimal`, `Full`, or a user preset |
 | `footer_key_action` | string | `"action"` | `action` renders the last action name, `keys` the key |
-| `hide_footer` | bool | `false` | Hide the footer bar |
+| `hide_footer` | bool | `false` | Hide the footer bar; `Ctrl+h` toggles it while the TUI runs |
 | `progress_style` | string | `"TrueGradient"` | `SeekHead` / `Classic` / `Dots` / `TrueGradient` |
 | `visualizer_preset` | string | `"braille"` | `braille`, `blocks`, `mirror`, `gradient`, `spectrum`, `barsdot`, `classicpeak`, `columns`, `wave`, `stereo`, `retro`, `flame` |
+| `daydream_secs` | int | `60` | Seconds of keyboard, paste or mouse inactivity before the visualizer takes over the library view. `0` disables it |
 | `time_format` | string | `"%H:%M"` | Clock format |
 | `icon_style` | string | `"mdi"` | Only `mdi` is special-cased; anything else gives the emoji set |
 | `cover_provider` | string | `"auto"` | `auto` / `deezer` / `mb` or `musicbrainz` (also `musicbrainz/cover-art-archive`) / `spotify` |
 | `cover_cache_mb` | int | `512` | Combined on-disk budget over `covers/` **and** `artist_covers/`, oldest evicted first; TUI offers 128/256/512/1024/2048 |
 | `auto_fetch_lyrics` | bool | `true` | Auto-fetch lyrics on track change |
 | `track_sort` | string | `"Recents"` | `Recents` / `RecentlyAdded` / `Alphabetical` / `Artist` / `Album` |
-| `left_pane_lists` | array | (all 14) | Sidebar categories to show, in display order; unknown names are dropped and an empty result falls back to all 14 |
+| `left_pane_lists` | array | (all 15) | Sidebar categories to show, in display order; unknown names are dropped and an empty result falls back to all 15 |
 | `show_preview` | bool | `true` | Left-pane track preview card |
 | `notification_modes` | table | (all `"footer"`) | Per-category notification mode |
 | `extensions` | table | (all `true`) | Optional TUI surfaces |
 | `keybindings` | table | (empty) | Key → action remappings |
 | `web_addr` | string | `"127.0.0.1:8991"` | Daemon status endpoint; read by `gtmd` only |
+| `discord_id` | string | (unset) | Discord application id for Rich Presence; written by the Setup form and read by `gtmd` as `discord_app_id` |
 
-`left_pane_lists` accepts exactly these 14 names, and only in this spelling:
+`left_pane_lists` accepts exactly these 15 names, and only in this spelling:
 `All Tracks`, `Liked`, `Albums`, `Artists`, `Playlists`, `Spotify`, `Radio`,
 `Most Played`, `Recently Played`, `Recently Added`, `Genres`, `Folders`,
-`Top Charts`, `Podcasts`.
+`Top Charts`, `Podcasts`, `Browse`.
 
 ### Daemon-read keys
 
 Everything above is the TUI's own configuration. `gtmd` reads the same file for
-just three keys, and reads them at startup — changing any of them needs a daemon
+just four keys, and reads them at startup — changing any of them needs a daemon
 restart, unlike the hot-reloaded settings above.
 
 | Key | Default | Effect on the daemon |
@@ -174,6 +179,15 @@ restart, unlike the hot-reloaded settings above.
 | `cover_provider` | `"auto"` | Which artwork source to query first. Anything unrecognized falls back to `auto` rather than failing |
 | `cover_cache_mb` | `512` | On-disk budget for `covers/` + `artist_covers/`. Ignored when not a positive integer |
 | `web_addr` | `"127.0.0.1:8991"` | Read-only JSON status endpoint, below |
+| `discord_app_id` | (unset) | Discord application id for Rich Presence. Must be numeric; anything else is ignored. Absent means no presence |
+
+### Discord Rich Presence
+
+Set `discord_app_id` to a Discord application id and `gtmd` publishes what is
+playing to your profile over the local IPC socket, no outbound connection
+required once the client is running. The id is written by the Setup form
+(`Alt+x` → Discord), and an id Discord does not recognise simply never
+connects. The presence is cleared when the daemon exits.
 
 ### Status endpoint
 
@@ -262,8 +276,8 @@ Custom footer presets are defined in `~/.config/gtm/footer.toml`:
 preset = [{ name = "My Preset", left = ["Playback", "Volume", "EqPreset"], right = ["Queue", "Time", "Backend"] }]
 ```
 
-Use any of the module names listed in the [Footer bar](/interface/#footer-bar)
-section. Unknown names are silently dropped.
+Use any of the module names listed in the [Footer bar](/tui/#footer-bar)
+section — 21 in total. Unknown names are silently dropped.
 
 ---
 

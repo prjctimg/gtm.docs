@@ -248,7 +248,7 @@ export const Markdown = React.memo<MarkdownProps>(
 
             // Internal links. Content files address each other by file name
             // (/configuration/), by the route they are served at (/install), or
-            // with an anchor (/interface/#custom-keybindings). Anything that
+            // with an anchor (/tui/#footer-bar). Anything that
             // resolves to no page stays a plain link.
             if (href?.startsWith('/')) {
               const [path, hash] = href.split('#');
@@ -316,7 +316,7 @@ export const Markdown = React.memo<MarkdownProps>(
               const lines = rawContent.split('\n');
               const firstLine = lines[0] || '';
               const desc = lines.slice(1).join('\n').trim();
-              const audioSrc = attrs['src'] || (firstLine.includes('/') ? firstLine.trim() : '/samples/audio-equalizer-sample.wav');
+              const audioSrc = attrs['src'] || (firstLine.includes('/') ? firstLine.trim() : '/media/static/audio-equalizer-sample.wav');
               const audioTitle = attrs['title'] || 'Audio Preview';
               const audioArtist = attrs['artist'] || 'gtm Audio Engine';
 
@@ -401,7 +401,7 @@ export const Markdown = React.memo<MarkdownProps>(
     const attrs = parseAttributes(firstLine);
     const desc = lines.slice(1).join('\n').trim();
 
-    const audioSrc = attrs['src'] || (firstLine.includes('/') || firstLine.startsWith('http') || firstLine.startsWith('demo:') || firstLine.startsWith('synth:') ? firstLine.trim() : '/samples/audio-equalizer-sample.wav');
+    const audioSrc = attrs['src'] || (firstLine.includes('/') || firstLine.startsWith('http') || firstLine.startsWith('demo:') || firstLine.startsWith('synth:') ? firstLine.trim() : '/media/static/audio-equalizer-sample.wav');
     const audioTitle = attrs['title'] || 'Audio Preview';
     const audioArtist = attrs['artist'] || 'gtm Daemon';
 

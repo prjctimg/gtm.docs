@@ -23,7 +23,7 @@ The state machine exposes a `crossfade` setting as `Option<CrossfadeConfig>`
 Crossfade is **enabled by default with a 6-second duration**. Durations are
 clamped to a maximum of 30 seconds.
 
-:::audio src="/samples/crossfade-demo.wav" title="6-Second Linear Crossfade Transition" artist="gtm Dual-Mixer Daemon"
+:::audio src="/media/static/crossfade-demo.wav" title="6-Second Linear Crossfade Transition" artist="gtm Dual-Mixer Daemon"
 Demonstration of Track A smoothly ramping down while Track B ramps up seamlessly over the 6-second window.
 :::
 
@@ -51,8 +51,9 @@ gtm --cli crossfade on 10     # enable, 10 seconds
 gtm --cli crossfade off       # disable
 ```
 
-The `crossfade` command takes `enabled` and optional `duration_secs`
-(default 7 when omitted).
+The `crossfade` command takes `enabled` and an optional `duration_secs`. Omitting
+the duration on the command line sends 7 seconds; a daemon that has never been
+told otherwise starts at 6.
 
 The current setting is shown in the `Crossfade` picker and reflected in the
 footer `Playback` module.
@@ -61,20 +62,9 @@ footer `Playback` module.
 
 ## Gapless mode
 
-Separate from crossfade, `gapless` is a persisted boolean. It defaults to
-**off** and is currently **a no-op placeholder** — the flag is stored and
-restored but no playback, mixer or decoder path consults it, so it has no
-audible effect today.
-
-:::note
-`gapless` is currently only reachable through the daemon IPC
-(`DaemonReq::SetGapless`); there is no CLI command or TUI binding for it yet.
-:::
-
-:::tip
-Use crossfade for a DJ-style blend; gapless is reserved for clean seamless
-transitions on lossless files once exposed.
-:::
+`gapless` is a separate persisted boolean, off by default, reserved for clean
+seamless transitions on lossless files. Crossfade is what you want today for a
+DJ-style blend; see [Crossfade](#configuration) above for how to tune it.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: Cover Art
-description: "Cover art resolution order, providers, caching, the album art viewer, and limitations."
+description: "Cover art resolution order, providers, caching, the album art viewer, and artist portraits."
 order: 11
 ---
 
@@ -13,8 +13,8 @@ For a local track, the daemon serves cover art in this order:
    **sidecar** next to the file (`<stem>.jpg|.jpeg|.png|.webp`), else the
    queue entry's already-known `cover_path` (Spotify playlist syncs point this
    at CDN art specifically so a playing track is never left blank)
-2. For `radio://` URIs, the station's own art — see the four-step chain under
-   [Limitations](#_limitations)
+2. For `radio://` URIs, the station's own **favicon**, fetched from the directory
+   and cached under `radio:<uuid>`
 3. If a **Spotify** account is linked and the provider is `Auto` (default)
    or `Spotify`, a Spotify search for the **largest artwork variant the API
    offers** (there is no fixed 640×640 assumption)
@@ -100,8 +100,8 @@ A track cover popup opens when the track pane gains focus, showing the same
 cover the now-playing pane uses. In a normal TUI pane the cover is
 letterboxed to the available height.
 
-For a full-screen artwork viewer press `z` for Zen mode and cycle to the cover
-surface — `z` cycles cover → visualizer → lyrics. There is no cover-only key.
+For a full-screen artwork viewer, press `z` for Zen mode — the first surface it
+opens is the enlarged cover. `Tab` cycles to the lyrics and the visualizer.
 
 ---
 
