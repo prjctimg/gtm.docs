@@ -24,6 +24,14 @@ Project rules for `gtm.docs` — the docs/devlog site for [gtm](https://github.c
 - `src/data/content.ts` is the registry: it globs the directory, parses frontmatter, and exports the lookups (`PAGES_BY_PATH`, `DOCS_BY_ID`, `DOCS`, `EXTRA_PAGES`, `FIRST_DOC`). `scripts/routes.mjs` parses the same frontmatter independently for the sitemap — keep the two in step when the schema changes.
 - Content files link to each other by file name (`/configuration/`), by the route they are served at (`/install`), or with an anchor (`/tui/#keybindings`). `Markdown.tsx` resolves all three through the registry and leaves anything unknown as a plain link.
 
+## Media
+
+- Images, audio and animations live in `public/media/static/` and `public/media/gif/`. Author them in content and in `src/data/site.ts` the way the file sits on disk: `media/static/gtm.png`, `media/gif/terminal-player-demo.gif`. The leading slash and the `public/` prefix are both optional.
+- Every media path goes through `resolveMediaPath` (`src/lib/media.ts`) before it becomes an `src` or `href`. It is applied at the boundary where content becomes an element — `Markdown.tsx` (the `img` and `a` renderers and the ` ```audio `, ` ```gif `, `:::audio`, `:::gif` blocks) and `Home.tsx` — so `Gif` and `AudioPlayer` receive an already-rooted `src` and stay presentational. A new media consumer must resolve too.
+- **Never write a route-relative media path.** `public/` is served from the origin root, so the browser resolves a bare path against the current route: on `/docs/tui`, `media/static/gtm.png` becomes `/docs/media/static/gtm.png`, which misses the file and — because the SPA rewrite answers every unknown path with `index.html` — returns a 200 of HTML that fails to decode. A media path that "does not resolve" shows a broken image rather than a 404, which is what makes this easy to miss.
+- `resolveMediaPath` rewrites only `media/` paths. Absolute URLs, `data:` URIs, the `AudioPlayer` pseudo-schemes (`synth:`, `demo:`) and paths meant to be relative to the route pass through untouched. Use `mediaName` (`src/lib/media.ts`) to label a path with its bare filename instead of string-stripping a directory prefix.
+- An empty `IMAGES` entry means no file has been added yet. Render a placeholder naming the file — never an `<img>` with an empty `src`, which paints a broken-image glyph.
+
 ## Routing
 
 - The site is a **Vite SPA** with path-based client-side routing via `react-router` (`BrowserRouter`).

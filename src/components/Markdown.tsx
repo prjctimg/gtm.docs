@@ -13,6 +13,8 @@ import { CodeBlock } from './CodeBlock';
 import { Gif } from './Gif';
 import { AudioPlayer } from './AudioPlayer';
 import { DOCS_BY_ID, pageAtPath } from '../data/content';
+import { resolveMediaPath } from '../lib/media';
+import { slugify } from '../lib/slug';
 
 interface MarkdownProps {
   content: string;
@@ -27,15 +29,6 @@ function extractText(children: React.ReactNode): string {
     return extractText((children.props as { children?: React.ReactNode }).children);
   }
   return '';
-}
-
-// Convert heading text to safe slug
-function slugify(text: string): string {
-  return String(text || '')
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-');
 }
 
 // Helper to parse key-values from directives like title="..." src="..." or key=value
@@ -205,14 +198,15 @@ export const Markdown = React.memo<MarkdownProps>(
           li: ({ children }) => <li className="pl-1">{children}</li>,
           img: ({ src, alt }) => {
             if (!src) return null;
-            const isGif = src.toLowerCase().includes('.gif') || (alt && alt.toLowerCase().includes('[gif]'));
+            const mediaSrc = resolveMediaPath(src);
+            const isGif = mediaSrc.toLowerCase().includes('.gif') || (alt && alt.toLowerCase().includes('[gif]'));
             if (isGif) {
               const cleanAlt = alt?.replace(/\[gif\]/gi, '').trim();
-              return <Gif src={src} alt={cleanAlt || 'Animated Demonstration'} />;
+              return <Gif src={mediaSrc} alt={cleanAlt || 'Animated Demonstration'} />;
             }
             return (
               <figure className="my-6 rounded-xl border border-hairline-outline bg-surface-container overflow-hidden shadow-sm">
-                <img src={src} alt={alt || 'Image'} className="w-full h-auto object-contain max-h-[500px]" />
+                <img src={mediaSrc} alt={alt || 'Image'} className="w-full h-auto object-contain max-h-[500px]" />
                 {alt && (
                   <figcaption className="px-3.5 py-2 text-center text-xs font-mono text-text-muted bg-surface-elevated/70 border-t border-hairline-subtle">
                     {alt}
@@ -231,7 +225,7 @@ export const Markdown = React.memo<MarkdownProps>(
             );
 
             if (isAudioFile && href) {
-              const cleanSrc = href.replace(/^(audio|sound):/, '');
+              const cleanSrc = resolveMediaPath(href.replace(/^(audio|sound):/, ''));
               const titleText = extractText(children) || 'Audio Sample';
               return (
                 <div className="my-3">
@@ -316,7 +310,7 @@ export const Markdown = React.memo<MarkdownProps>(
               const lines = rawContent.split('\n');
               const firstLine = lines[0] || '';
               const desc = lines.slice(1).join('\n').trim();
-              const audioSrc = attrs['src'] || (firstLine.includes('/') ? firstLine.trim() : '/media/static/audio-equalizer-sample.wav');
+              const audioSrc = resolveMediaPath(attrs['src'] || (firstLine.includes('/') ? firstLine.trim() : '/media/static/audio-equalizer-sample.wav'));
               const audioTitle = attrs['title'] || 'Audio Preview';
               const audioArtist = attrs['artist'] || 'gtm Audio Engine';
 
@@ -336,7 +330,7 @@ export const Markdown = React.memo<MarkdownProps>(
               const lines = rawContent.split('\n');
               const firstLine = lines[0] || '';
               const desc = lines.slice(1).join('\n').trim();
-              const gifSrc = attrs['src'] || firstLine.trim();
+              const gifSrc = resolveMediaPath(attrs['src'] || firstLine.trim());
               const gifCaption = attrs['caption'] || attrs['alt'] || desc || undefined;
 
               return (
@@ -401,7 +395,7 @@ export const Markdown = React.memo<MarkdownProps>(
     const attrs = parseAttributes(firstLine);
     const desc = lines.slice(1).join('\n').trim();
 
-    const audioSrc = attrs['src'] || (firstLine.includes('/') || firstLine.startsWith('http') || firstLine.startsWith('demo:') || firstLine.startsWith('synth:') ? firstLine.trim() : '/media/static/audio-equalizer-sample.wav');
+    const audioSrc = resolveMediaPath(attrs['src'] || (firstLine.includes('/') || firstLine.startsWith('http') || firstLine.startsWith('demo:') || firstLine.startsWith('synth:') ? firstLine.trim() : '/media/static/audio-equalizer-sample.wav'));
     const audioTitle = attrs['title'] || 'Audio Preview';
     const audioArtist = attrs['artist'] || 'gtm Daemon';
 
@@ -421,7 +415,7 @@ export const Markdown = React.memo<MarkdownProps>(
     const attrs = parseAttributes(firstLine);
     const desc = lines.slice(1).join('\n').trim();
 
-    const gifSrc = attrs['src'] || firstLine.trim();
+    const gifSrc = resolveMediaPath(attrs['src'] || firstLine.trim());
     const gifCaption = attrs['caption'] || attrs['alt'] || desc || undefined;
 
     return (

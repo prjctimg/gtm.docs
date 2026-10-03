@@ -6,6 +6,7 @@ import { Telemetry } from '../components/Telemetry';
 import { Doodles } from '../components/Doodles';
 import { InstallTabs } from '../components/InstallTabs';
 import { usePageMeta } from '../lib/meta';
+import { mediaName, resolveMediaPath } from '../lib/media';
 import { 
   Check, 
   Copy, 
@@ -27,6 +28,33 @@ import {
 import { SiLinux, SiAndroid, SiApple } from 'react-icons/si';
 
 type TuiTab = 'library' | 'lyrics' | 'fft' | 'search';
+
+// One screenshot in the TUI explorer. `IMAGES` entries are empty until the file
+// is added under `public/media/static/`, so an empty path — and a path whose
+// file is still missing — renders the placeholder rather than a broken image.
+function TuiShot({ src, alt }: { src: string; alt: string }) {
+  const [broken, setBroken] = useState<boolean>(false);
+  const mediaSrc = resolveMediaPath(src);
+
+  if (!mediaSrc || broken) {
+    return (
+      <div className="w-full min-h-[300px] rounded border border-dashed border-hairline-outline bg-canvas-obsidian flex items-center justify-center">
+        <span className="font-mono text-xs text-text-disabled px-6 text-center">
+          screenshot pending{src ? ` — ${mediaName(src)}` : ''}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={mediaSrc}
+      alt={alt}
+      onError={() => setBroken(true)}
+      className="w-full h-auto object-cover select-none mx-auto block rounded border border-hairline-subtle"
+    />
+  );
+}
 
 export const Home: React.FC = () => {
   usePageMeta('gtm - Docs', '📻 gtm is a feature rich terminal audio player.');
@@ -256,24 +284,22 @@ export const Home: React.FC = () => {
         <div className="border border-hairline-outline rounded-xl bg-surface-container overflow-hidden shadow-2xl">
           {/* Terminal Body Viewports */}
           <div className="w-full bg-canvas-obsidian relative flex flex-col justify-center px-2 sm:px-4 md:px-6 py-3">
-            {/* View 1: Library View (Image 14 / Hotlink) */}
+            {/* View 1: Library View */}
             {activeTuiTab === 'library' && (
               <div className="w-full animate-in fade-in duration-150">
-                <img
-                  src={IMAGES.libraryView1}
+                <TuiShot
+                  src={IMAGES.heroCover}
                   alt="gtm terminal music player library interface in dark mode"
-                  className="w-full h-auto object-cover select-none mx-auto block rounded border border-hairline-subtle"
                 />
               </div>
             )}
 
-            {/* View 2: Lyrics View (Image 15 / Hotlink) */}
+            {/* View 2: Lyrics View */}
             {activeTuiTab === 'lyrics' && (
               <div className="w-full animate-in fade-in duration-150">
-                <img
+                <TuiShot
                   src={IMAGES.lyricsView1}
                   alt="gtm terminal music player synchronized lyrics split interface"
-                  className="w-full h-auto object-cover select-none mx-auto block rounded border border-hairline-subtle"
                 />
               </div>
             )}
@@ -413,7 +439,7 @@ export const Home: React.FC = () => {
             Features
           </span>
           <h2 className="text-2xl sm:text-3xl font-bold font-mono text-text-primary mt-1">
-            Terminal-first audio architecture
+     
           </h2>
         </div>
 
@@ -463,7 +489,7 @@ export const Home: React.FC = () => {
                     image when the file has not been added yet. */}
                 {item.img && !imgBroken[idx] ? (
                   <img
-                    src={item.img}
+                    src={resolveMediaPath(item.img)}
                     alt={item.title}
                     onError={() =>
                         setImgBroken((prev) => ({ ...prev, [idx]: true }))
@@ -485,7 +511,7 @@ export const Home: React.FC = () => {
                     <span className="font-mono text-xs text-text-disabled px-6 text-center">
                       screenshot pending —{' '}
                       <span className="text-text-muted">
-                        {item.img?.replace('/media/static/', '')}
+                        {mediaName(item.img)}
                       </span>
                     </span>
                   </div>
