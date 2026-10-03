@@ -78,7 +78,7 @@ export const Benchmark: React.FC<BenchmarkProps> = () => {
   ];
 
   return (
-    <div className="w-full flex justify-center px-4 sm:px-6 py-10 font-sans">
+    <div className="w-full flex justify-center px-4 sm:px-6 py-10 font-mono">
       <div className="w-full max-w-5xl space-y-8">
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="space-y-3">

@@ -28,7 +28,7 @@ export const NotFound: React.FC<NotFoundProps> = ({ onOpenSearch }) => {
         Page not found
       </h1>
 
-      <p className="mt-3 max-w-md text-sm text-text-muted leading-relaxed font-sans">
+      <p className="mt-3 max-w-md text-sm text-text-muted leading-relaxed font-mono">
         The page you are looking for doesn&apos;t exist, was moved, or never
         lived here. Double-check the URL, or head back to something that does.
       </p>

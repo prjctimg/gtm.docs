@@ -105,7 +105,7 @@
 }
 
 @theme {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'JetBrains Mono', monospace;
   --font-mono: 'JetBrains Mono', monospace;
 
   --color-canvas-obsidian: var(--canvas-obsidian);
@@ -152,6 +152,15 @@
   --color-text-body: var(--text-body);
   --color-text-muted: var(--text-muted);
   --color-text-disabled: var(--text-disabled);
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .material-symbols-outlined {

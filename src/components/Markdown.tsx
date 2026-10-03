@@ -180,7 +180,7 @@ export const Markdown = React.memo<MarkdownProps>(
               return <div className="my-3">{children}</div>;
             }
             return (
-              <p className="my-3 text-sm text-text-body leading-relaxed font-sans">
+              <p className="my-3 text-sm text-text-body leading-relaxed font-mono">
                 {children}
               </p>
             );
@@ -468,7 +468,7 @@ export const Markdown = React.memo<MarkdownProps>(
             {badgeText}
           </span>
         </div>
-        <div className="px-4 py-3.5 text-text-body text-xs sm:text-sm leading-relaxed [&>p:first-child]:mt-0 [&>p:last-child]:mb-0 [&>p]:leading-relaxed font-sans">
+        <div className="px-4 py-3.5 text-text-body text-xs sm:text-sm leading-relaxed [&>p:first-child]:mt-0 [&>p:last-child]:mb-0 [&>p]:leading-relaxed font-mono">
           {renderMarkdownComponent(body)}
         </div>
       </aside>

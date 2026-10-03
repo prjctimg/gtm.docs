@@ -74,7 +74,7 @@ const Article: React.FC<ArticleProps> = ({ page, onOpenSearch }) => {
   }, [page.id]);
 
   return (
-    <div className="w-full flex flex-col font-sans">
+    <div className="w-full flex flex-col font-mono">
       <div className="max-w-7xl mx-auto flex w-full">
         <DocNav onOpenSearch={onOpenSearch} />
 
@@ -92,7 +92,7 @@ const Article: React.FC<ArticleProps> = ({ page, onOpenSearch }) => {
               {page.title}
             </h1>
             {page.description && (
-              <p className="text-sm sm:text-base text-text-muted leading-relaxed font-sans pt-1">
+              <p className="text-sm sm:text-base text-text-muted leading-relaxed font-mono pt-1">
                 {page.description}
               </p>
             )}
@@ -142,7 +142,7 @@ const Footer: React.FC<FooterProps> = ({ page, prev, next }) => {
       </div>
 
       <div className="pt-6 border-t border-hairline-outline flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-mono text-xs">
-        <p className="text-text-muted text-xs font-sans">
+        <p className="text-text-muted text-xs font-mono">
           See an error or typo? Make this page better by editing it on GitHub.
         </p>
         <a
