@@ -583,7 +583,7 @@ export const Home: React.FC = () => {
               Install gtm in seconds
             </h2>
             <p className="text-sm text-text-muted max-w-lg mx-auto leading-relaxed">
-              Available on all major platforms. Requires no external C runtime dependencies.
+              Available on major platforms. Windows support coming soon 
             </p>
           </div>
 
