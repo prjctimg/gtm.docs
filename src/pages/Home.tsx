@@ -258,7 +258,8 @@ export const Home: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-sm sm:text-base text-text-muted max-w-2xl mx-auto leading-relaxed"
           >
-            Switching to your audio player should be a keybinding away at most, and more importantly it has to look stunning.
+          gtm (goto music) is a reimagined audio player built for terminal enthusiasts.
+
           </motion.p>
 
           {/* Multi-package manager install widget */}
