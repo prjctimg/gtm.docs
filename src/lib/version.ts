@@ -117,7 +117,7 @@ export function useAllReleaseTags(): AllReleaseTagsData {
     } catch {
       /* ignore */
     }
-    return ['nightly', ...FALLBACK_RELEASE_TAGS];
+    return [...FALLBACK_RELEASE_TAGS];
   });
   const [loading, setLoading] = useState(false);
 

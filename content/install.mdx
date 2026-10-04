@@ -38,7 +38,6 @@ Below are the flags for adjusting installation behaviour:
 
 | Flag | Effect |
 |------|--------|
-| `--nightly` | Install the latest nightly prerelease instead of a tagged release |
 | `--version <ver>` | Pin a specific release, e.g. `install.sh --version 0.2.83` |
 | `--prefix <dir>` | Install somewhere other than `$HOME/.local` |
 | `--yes` | Never prompt, e.g. to enable `gtmd` unattended |
@@ -47,14 +46,6 @@ Below are the flags for adjusting installation behaviour:
 On macOS the installer always fetches the `aarch64-darwin` artifact, so it
 works on Apple Silicon only.
 :::
-
-Nightly builds are published on every push to the `dev` branch. The `main`
-branch only ever receives tagged releases, so the default install above always
-gives you the newest stable build, while `--nightly` tracks `dev`:
-
-```bash
-curl -fsSL https://gtmd.dev/install.sh | bash -s -- --nightly
-```
 
 ---
 

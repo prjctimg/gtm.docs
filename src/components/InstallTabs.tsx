@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Copy, ChevronDown, FlaskConical, Tag } from 'lucide-react';
+import { Check, Copy, ChevronDown, Tag } from 'lucide-react';
 import { useAllReleaseTags } from '../lib/version';
 
 export type InstallPkgTab = 'curl' | 'cargo';
@@ -17,7 +17,7 @@ export const InstallTabs: React.FC<InstallTabsProps> = ({
   const { latestStable, pastVersions } = useAllReleaseTags();
 
   const [activeTab, setActiveTab] = useState<InstallPkgTab>('curl');
-  // 'stable' (default), 'nightly', or a specific tag string like 'v0.2.82'
+  // 'stable' (default), or a specific tag string like 'v0.2.82'
   const [curlVariant, setCurlVariant] = useState<string>('stable');
   const [isCurlDropdownOpen, setIsCurlDropdownOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -103,9 +103,6 @@ export const InstallTabs: React.FC<InstallTabsProps> = ({
       return 'cargo install gtm --locked';
     }
     // curl tab
-    if (curlVariant === 'nightly') {
-      return 'curl -fsSL https://gtmd.dev/install.sh | bash -s -- --nightly';
-    }
     if (curlVariant === 'stable') {
       return 'curl -fsSL https://gtmd.dev/install.sh | bash';
     }
@@ -136,7 +133,6 @@ export const InstallTabs: React.FC<InstallTabsProps> = ({
 
   // Label for the curl tab button
   const getCurlTabLabel = () => {
-    if (curlVariant === 'nightly') return 'curl: nightly';
     if (curlVariant === 'stable') return 'curl';
     return `curl: ${curlVariant}`;
   };
@@ -162,7 +158,7 @@ export const InstallTabs: React.FC<InstallTabsProps> = ({
                   ? 'bg-surface-elevated text-text-primary font-bold border border-hairline-outline text-secondary'
                   : 'text-text-muted hover:text-text-primary'
               }`}
-              title="Select curl version (nightly, stable, or past releases)"
+              title="Select curl version (stable or past releases)"
             >
               <span>{getCurlTabLabel()}</span>
               <ChevronDown
@@ -185,40 +181,7 @@ export const InstallTabs: React.FC<InstallTabsProps> = ({
                 }}
                 className="z-[9999] w-72 max-w-[90vw] bg-surface-elevated/95 backdrop-blur-xl border border-hairline-outline rounded-lg shadow-2xl py-1.5 font-mono text-xs animate-in fade-in zoom-in-95 duration-100 divide-y divide-hairline-subtle"
               >
-                {/* 1. TOP MOST OPTION: Nightly */}
-                <div className="py-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCurlVariant('nightly');
-                      setActiveTab('curl');
-                      setIsCurlDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 flex items-center justify-between gap-2 hover:bg-surface-container transition-colors cursor-pointer ${
-                      curlVariant === 'nightly' ? 'bg-secondary/10 text-secondary font-bold' : 'text-text-primary'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <FlaskConical className="w-3.5 h-3.5 text-secondary shrink-0" />
-                      <div>
-                        <div className="font-semibold flex items-center gap-1.5">
-                          <span>nightly</span>
-                          <span className="px-1.5 py-0.2 rounded text-[10px] bg-secondary/15 text-secondary border border-secondary/30">
-                            latest
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-text-muted font-mono pt-0.5">
-                          Bleeding-edge builds from the dev branch
-                        </div>
-                      </div>
-                    </div>
-                    {curlVariant === 'nightly' && (
-                      <Check className="w-3.5 h-3.5 text-secondary shrink-0" />
-                    )}
-                  </button>
-                </div>
-
-                {/* 2. DEFAULT OPTION: Stable Release */}
+                {/* 1. DEFAULT OPTION: Stable Release */}
                 <div className="py-1">
                   <button
                     type="button"
