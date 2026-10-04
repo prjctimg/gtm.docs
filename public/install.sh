@@ -75,13 +75,143 @@ stage() { printf "${BOLD}%s${NC}" "$*" >&2; }
 stage_ok() { printf " ${GREEN}✔${NC}\n" >&2; }
 stage_fail() { printf " ${RED}✘${NC}\n" >&2; }
 
-# Download a URL with a simple message. The progress indicator was removed
-# because it was showing incorrect file size and downloaded size.
+# Every network call gets these. Without them a slow DNS answer, a captive
+# portal or a half-open connection leaves curl on the socket with nothing
+# printed and nothing to interrupt it with — the script looks hung, and there
+# is no way to tell that apart from a slow download. The retries cover the two
+# cases that are transient rather than fatal: a connection refused while the
+# network comes up, and a 5xx/429 from the API while a release is mid-publish.
+#
+# `--retry-connrefused` needs curl 7.52 (2016). An older curl rejects the whole
+# command rather than ignoring the flag, so it is added only when supported.
+curl_supports() {
+  curl --help all 2>/dev/null | grep -q -- "$1"
+}
+
+CURL_WAIT=(--silent --show-error --connect-timeout 10 --max-time 60 --retry 2 --retry-delay 2)
+if curl_supports "retry-connrefused"; then
+  CURL_WAIT+=(--retry-connrefused)
+fi
+
+# Fetch a small JSON document, failing quietly. Callers decide what a failure
+# means — the stable path falls back to a conventional URL, the nightly path
+# aborts — so this only has to be bounded and loud enough to debug.
+api_get() {
+  curl "${CURL_WAIT[@]}" -fsSL "$1"
+}
+
+# The size of <url> in bytes, or 0 when the server will not say.
+#
+# One extra round trip, and only so the percentage can be honest. Without a
+# total there is nothing to divide by, and a percentage of an unknown total is
+# not a percentage. Header names are matched with explicit classes rather than
+# `IGNORECASE`, which is a GNU awk extension and this installer also runs under
+# busybox awk on Alpine and Termux.
+remote_size() {
+  curl -fsSLI --connect-timeout 10 --max-time 30 "$1" 2>/dev/null \
+    | awk '/^[Cc]ontent-[Ll]ength:/ { gsub(/\r/, "", $2); n = $2 } END { print n + 0 }'
+}
+
+# Seconds a download may receive no new bytes at all before it is called dead.
+#
+# Measured in bytes, not in average rate, and that distinction is the whole
+# point: a slow link that keeps trickling is slow, not dead. This one averages
+# 35 kB/s while pausing for tens of seconds at a stretch, and a rate floor
+# (`--speed-limit`) added for the same purpose killed that exact download four
+# times over — each curl retry restarts from zero, so it could never finish.
+# Ninety seconds with not one new byte is a connection nobody is reading.
+DOWNLOAD_STALL_SECS=90
+
+# Download a URL, reporting a percentage on a terminal.
+#
+# curl's own `--progress-bar` is gone: it draws a row of `#`, `=` and `O`
+# glyphs, which is the one thing in this output that does not read as text. The
+# percentage is computed here instead — bytes on disk against the size the
+# server reported — so it is a real number rather than curl's guess at one.
+#
+# The bytes arrive through a backgrounded curl because there is no way to ask a
+# foreground curl what it has written so far. On a non-terminal stderr (CI
+# logs, `2>log`, `| tee`) there is nothing to redraw the line into, so no
+# progress is printed — but the stall guard still runs, because a CI log that
+# stops forever is the same bug as a terminal that does. curl's errors come
+# through either way, which the old `2>/dev/null` swallowed along with them: a
+# 404 used to print "download failed" and not "404", which is the one line that
+# says why.
+#
+# No `--max-time`, because an 18 MB archive on a slow link legitimately takes
+# minutes and a total cap would fail the installs that most need patience.
 #   download_simple <url> <outfile>
 download_simple() {
   local url="$1" out="$2"
-  curl -fL "$url" -o "$out" 2>/dev/null
-  return $?
+  local curl_common=(-fL --silent --show-error --connect-timeout 15
+    --retry 3 --retry-delay 2)
+
+  local tty=0
+  if [ -t 2 ]; then tty=1; fi
+
+  local total pid have prev=-1 still=0 last=-1 code=0 killed=0
+  total="$(remote_size "$url")"
+  curl "${curl_common[@]}" "$url" -o "$out" &
+  pid=$!
+  while kill -0 "$pid" 2>/dev/null; do
+    # The file does not exist yet on the first poll — curl has not been
+    # scheduled — and `wc -c < missing` is a redirection failure the *shell*
+    # reports, which lands on this line and corrupts the percentage beside it.
+    # Ask whether it is there first.
+    if [ -f "$out" ]; then
+      have="$(wc -c < "$out" 2>/dev/null || echo 0)"
+      have="${have:-0}"
+    else
+      have=0
+    fi
+
+    if [ "${have}" -gt "${prev}" ]; then
+      still=0
+    else
+      still=$((still + 1))
+      if [ "${still}" -ge "${DOWNLOAD_STALL_SECS}" ]; then
+        kill "${pid}" 2>/dev/null || true
+        killed=1
+        break
+      fi
+    fi
+    prev="${have}"
+
+    if [ "${tty}" -eq 1 ]; then
+      if [ "${total}" -gt 0 ] 2>/dev/null; then
+        local pct=$((have * 100 / total))
+        if [ "${pct}" -gt 100 ]; then pct=100; fi
+        # A retry restarts the transfer and the file shrinks under us, so the
+        # number only ever goes up. A percentage that goes backwards
+        # mid-download reads as a fault in the installer rather than as the
+        # retry it is.
+        if [ "${pct}" -lt "${last}" ]; then pct="${last}"; fi
+        if [ "${pct}" -ne "${last}" ]; then
+          # Right-padded to a fixed width so a shorter number cannot leave the
+          # tail of the previous one on screen.
+          printf "${MUTED}📥 Downloading: %3d%%   ${NC}\r" "$pct" >&2
+          last="${pct}"
+        fi
+      elif [ "${last}" -lt 0 ]; then
+        # No total to divide by: say what is happening, invent nothing.
+        printf "${MUTED}📥 Downloading…${NC}\r" >&2
+        last=0
+      fi
+    fi
+    sleep 1
+  done
+  wait "${pid}" 2>/dev/null || code=$?
+
+  if [ "${tty}" -eq 1 ]; then
+    # Erase the progress line so the next one is not written over it.
+    printf '\r%*s\r' 24 '' >&2
+  fi
+  # 28 is curl's own "timed out", so the caller's failure message reads the same
+  # whether the stall was caught here or by curl.
+  if [ "${killed}" -eq 1 ]; then
+    return 28
+  fi
+  return "${code}"
 }
 
 VERSION=""
@@ -182,9 +312,9 @@ detect_platform() {
 
 resolve_latest_stable_tag() {
   local tag
-  tag="$(curl -sfL "https://api.github.com/repos/${REPO}/releases/latest" \
+  tag="$(api_get "https://api.github.com/repos/${REPO}/releases/latest" \
     | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' || true)"
-  [ -n "${tag}" ] || die "could not resolve the latest stable release from GitHub"
+  [ -n "${tag}" ] || die "could not reach the GitHub API for the latest release (offline, blocked, or rate limited — try: install.sh --version <ver>)"
   echo "${tag}"
 }
 
@@ -211,7 +341,7 @@ resolve_asset_url() {
   local tag="$1" archive="$2" strict="${3:-0}"
   local direct="https://github.com/${REPO}/releases/download/${tag}/${archive}"
   local body head
-  body="$(curl -sfL "https://api.github.com/repos/${REPO}/releases/tags/${tag}" 2>/dev/null)" || body=""
+  body="$(api_get "https://api.github.com/repos/${REPO}/releases/tags/${tag}" 2>/dev/null)" || body=""
   # A release shares its `"name"` key with every asset it carries, but the assets
   # all sit inside the `assets` array, so cutting the body at that key leaves the
   # release's own name as the only match.
@@ -242,21 +372,28 @@ bootstrap_install() {
   elif [ -n "${VERSION}" ]; then
     tag="v${VERSION#v}"
   else
+    # Announced, because this is the first thing the script does that can wait
+    # on a network and it used to do it in silence.
+    stage "🔎 resolving the latest stable release"
     VERSION="$(resolve_latest_stable_tag)"
     tag="v${VERSION}"
+    stage_ok
     info "latest stable: v${VERSION}"
   fi
 
   local archive_name="gtm-${PLATFORM}.tar.gz"
+  stage "🔎 resolving release assets"
   if [ "${CHANNEL}" = "nightly" ]; then
     # Resolve strictly against the published nightly so a draft (mid-build)
     # resolves to a clear "try again" instead of a dead 404 URL.
     resolve_asset_url "${tag}" "${archive_name}" 1 || {
+      stage_fail
       die "nightly archive '${archive_name}' is not published yet — the latest nightly build may still be running or failed. Retry in a few minutes, or install a stable release with: install.sh --version <ver>"
     }
   else
     resolve_asset_url "${tag}" "${archive_name}"
   fi
+  stage_ok
   local url="${ASSET_URL}"
 
   # Name the build rather than the file. The platform triple is already decided
@@ -278,9 +415,16 @@ bootstrap_install() {
   # `$tmp`, and the trap uses `:?` so an empty value fails loudly instead of
   # running `rm -rf ""`.
   BOOTSTRAP_TMPDIR="$(mktemp -d)" || die "mktemp failed"
+  # EXIT alone does not fire on a signal: bash runs it on a normal exit and on
+  # `exit`, but a Ctrl-C during the download killed the script outright and left
+  # the partial archive in /tmp. These turn the signal into an exit so the EXIT
+  # trap still runs, and so the shell reports the interruption rather than
+  # reporting it as whatever the last command happened to be.
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
   trap 'rm -rf "${BOOTSTRAP_TMPDIR:?}"' EXIT
 
-  log "📥 downloading ${label}"
+  log "⬇️  ${label}"
   if ! download_simple "${url}" "${BOOTSTRAP_TMPDIR}/${archive_name}"; then
     die "download failed: ${url}"
   fi
@@ -288,7 +432,15 @@ bootstrap_install() {
   # commit hash on success says nothing the reader does not have.
   ok "downloaded gtm"
 
-  tar -xzf "${BOOTSTRAP_TMPDIR}/${archive_name}" -C "${BOOTSTRAP_TMPDIR}"
+  # Announced because extracting a multi-megabyte archive is not instant and
+  # used to print nothing while it happened — a gap between two ✔ lines with
+  # nothing in it, which reads as a stall.
+  stage "📂 extracting"
+  tar -xzf "${BOOTSTRAP_TMPDIR}/${archive_name}" -C "${BOOTSTRAP_TMPDIR}" || {
+    stage_fail
+    die "could not extract ${archive_name} (truncated download?)"
+  }
+  stage_ok
 
   local extracted_dir="${BOOTSTRAP_TMPDIR}/${archive_name%.tar.gz}"
   [ -d "${extracted_dir}" ] || die "archive did not extract correctly"
@@ -432,10 +584,24 @@ install_from_archive() {
     case "${reply}" in
       [yY] | [yY][eE][sS])
         systemctl --user daemon-reload 2>/dev/null || true
-        if systemctl --user enable --now gtmd 2>/dev/null; then
+        # `enable --now` blocks until the unit has started or given up, and the
+        # give-up is 90 seconds of systemd's own default — spent with stderr
+        # discarded and nothing else in flight, so on a slow session bus the
+        # installer looked hung after everything was already installed. Bounded
+        # here and announced, so the worst case is a clear message rather than
+        # a silence. `timeout` is used only when present; the systemd block is
+        # Linux-only but the tool is not always installed.
+        stage "⚙️  enabling and starting gtmd (up to 30s)"
+        local systemctl_enable=(systemctl --user enable --now gtmd)
+        if command -v timeout >/dev/null 2>&1; then
+          systemctl_enable=(timeout --kill-after=5 30 systemctl --user enable --now gtmd)
+        fi
+        if "${systemctl_enable[@]}" 2>/dev/null; then
+          stage_ok
           ok "gtmd enabled and started"
         else
-          fail "could not enable gtmd"
+          stage_fail
+          fail "could not enable gtmd — start it yourself with: systemctl --user enable --now gtmd"
         fi
         ;;
       *) ;;
