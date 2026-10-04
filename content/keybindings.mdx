@@ -4,13 +4,9 @@ description: "Every default gtm keybinding, the contexts behind them, and how to
 order: 2
 ---
 
----
-
 ## How bindings are resolved
 
-gtm stores each binding as a `(key, action, contexts)` triple. A key press is
-matched against the table in order and **the first match wins**. If two
-bindings claim the same key, only the one listed first can ever fire.
+gtm stores each binding as a `(key, action, contexts)` triple. A key press is matched against the table in order and **the first match wins**. If two bindings claim the same key, only the one listed first can ever fire.
 
 Most keys carry no modifier, so a binding matches regardless of `Shift`. Chord
 bindings (`Ctrl`, `Alt`, `Cmd`) must match exactly — a binding recorded with
@@ -20,25 +16,21 @@ bindings (`Ctrl`, `Alt`, `Cmd`) must match exactly — a binding recorded with
 :::note
 Contexts document intent and make clash detection meaningful. A binding tagged
 `List` or `Global` is reachable from the whole workspace, so the `List` and
-`Global` columns below describe where a key is *meant* to apply rather than
-restricting it.
+`Global` columns below describe where a key is *meant* to apply rather than restricting it.
 :::
 
 ### Actions with no default key
 
-`check_health` and `toggle_low_power` both ship without a default binding. Reach
-them from the CLI (`gtm --cli check-health`, `gtm --cli low-power`) or bind a key
-yourself:
+None. Every action gtm exposes ships with a default binding, so there is
+nothing left to reach for the CLI or to bind yourself.
 
-```toml
-[keybindings]
-"alt+h" = "check_health"
-"f2"    = "toggle_low_power"
-```
+There is also no `toggle_low_power` action any more — low-power mode was
+removed outright. Binding it prints `gtm: unknown key "toggle_low_power" in
+config keybindings` and the entry is dropped.
 
-Two overlays have **no action name at all**, so they cannot be remapped:
-`Alt+o` (load a stream URL) and `Alt+.` (library categories). Every other
-overlay below has one.
+Three bindings have **no action name at all**, so they cannot be remapped:
+`Alt+o` (load a stream URL), `Alt+.` (library categories) and `V` (the cover
+grid). Every other overlay below has one.
 
 ## Playback
 
@@ -64,6 +56,7 @@ overlay below has one.
 | `z` | Toggle Zen mode |
 | `l` | Fetch lyrics for the track on air |
 | `i` | Track info — everything the daemon knows about the track on air |
+| `Alt+H` | Health check |
 | `Alt+T` | Cycle theme name |
 
 ## Navigation and panes
@@ -71,7 +64,7 @@ overlay below has one.
 | Key | Action |
 |-----|--------|
 | `Tab` / `Shift+Tab` | Next / previous pane |
-| `[` / `]` | Focus left / right pane |
+| `[` / `]` | Step the active view's filter back / forward — the Library grouping, or the open picker's source filter |
 | `j` / `k` or `↓` / `↑` | Move down / up |
 | `PageDown` / `PageUp` or `Ctrl+d` / `Ctrl+u` | Page down / up |
 | `Home` / `End` | Jump to top / bottom |
@@ -80,7 +73,7 @@ overlay below has one.
 | `Backspace` | Go back |
 | `/` or `Alt+/` | Search the focused list |
 | `Ctrl+f` | Enter filter mode |
-| `Alt+s` | Cycle library sort |
+| `Alt+S` | Cycle library sort *(lowercase `Alt+s` is Spotify search)* |
 
 ## Library and queue
 
@@ -124,9 +117,10 @@ Every `Alt` overlay:
 | `Alt+p` | Podcasts |
 | `Alt+e` | Equalizer |
 | `Alt+v` | Visualizer preset |
-| `Alt+b` | Progress style |
+| `Alt+P` | Progress style *(capital `P` — lowercase `Alt+p` is Podcasts)* |
 | `Alt+o` | Load a stream URL *(not remappable)* |
 | `Alt+.` | Library categories *(not remappable)* |
+| `V` | Cover grid — albums, artists and genres *(not remappable)* |
 | `Alt+c` | Theme picker |
 | `Alt+z` | Sleep timer |
 | `Alt+n` | Notifications |
@@ -166,5 +160,4 @@ that one entry, leaving the rest of your bindings in place. Two custom
 bindings that claim the same key print a clash warning.
 :::
 
-Changes are picked up by the config hot-reload, which re-checks the file's
-mtime every 120 frames — about 2 s at 60 fps.
+Changes are picked up by the config hot-reload, which re-checks the file's mtime every 120 frames — about 2 s at 60 fps.

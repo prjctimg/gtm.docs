@@ -345,7 +345,11 @@ export const Markdown = React.memo<MarkdownProps>(
             return (
               <CodeBlock
                 language={lang}
-                value={String(children).replace(/\n$/, '')}
+                // Strip whole blank lines at either end only. A padded fence
+                // would otherwise paint an empty first/last row and push the
+                // line-number gutter out of step with the code; trimming any
+                // further would eat the first line's own indentation.
+                value={String(children).replace(/^\n+/, '').replace(/\n+$/, '')}
               />
             );
           },

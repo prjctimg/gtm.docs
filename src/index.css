@@ -205,6 +205,16 @@ textarea {
 /* ==========================================================================
    Prism Syntax Highlighting - Terminal Obsidian Theme (Dark)
    ========================================================================== */
+
+/* Prism names its token types after CSS-ish words, and Tailwind scans this
+   file for class candidates — so `.token.table` also emits the `table`
+   display utility, which re-boxed every TOML table header into one line per
+   span. Declaring the tokens inline keeps any Tailwind display utility from
+   changing their box. Don't drop this as redundant: no token sets `display`. */
+.token {
+  display: inline;
+}
+
 .token.comment,
 .token.prolog,
 .token.doctype,
