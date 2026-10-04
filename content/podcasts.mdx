@@ -11,6 +11,14 @@ Add a podcast by its **RSS/Atom feed URL**:
 
 - `Alt+p` opens the Podcast Feeds picker, where you add a feed by URL and manage
   subscriptions
+- Inside the picker, press `/` to search the **public podcast directory** (the
+  iTunes Search API — no account, no API key). An empty query is legal and
+  returns what is popular; results are cached per query, so re-entering the
+  picker with the same term costs nothing. A search replaces the subscription
+  list for as long as it has results, and `Esc` goes back to your
+  subscriptions.
+- `Enter` on a search result **subscribes** to that feed. On the subscription
+  list, `Enter` opens episodes, `a` adds by URL and `r` refreshes.
 - CLI manages subscriptions:
 
 ```bash
@@ -27,6 +35,9 @@ gtm --cli podcast status
 Feeds are parsed by the daemon and their episodes listed in the podcast
 category of the library.
 
+There is **no** `gtm --cli podcast search` — discovery is a TUI picker feature
+only. Subscriptions are manageable from the CLI as below.
+
 Feed constraints:
 
 - **30-second** fetch timeout (`FETCH_TIMEOUT`)
@@ -40,9 +51,18 @@ feeds survive restarts.
 
 ## Browsing & playback
 
-Episode lists show title, date, and duration. Episodes play like any other
-remote source (`podcast://<feed_id>/<index>`); the stream is decoded
-through the same remote pipeline.
+Episode lists show title, date, and duration, plus `[no audio]` and
+`[transcript]` marks where they apply. `t` fetches an episode's transcript into
+the lyrics pane. Episodes play like any other remote source
+(`podcast://<feed_id>/<index>`); the stream is decoded through the same remote
+pipeline.
+
+### Artwork
+
+Feeds and episodes carry artwork. gtm reads channel art from
+`<itunes:image href>` or Atom `<logo>`/`<icon>`, and upsizes the directory's
+100 px thumbnails to 600 px by path. Artwork from the directory survives
+subscribing, so a show whose feed publishes no image of its own still has one.
 
 ---
 

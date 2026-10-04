@@ -115,8 +115,8 @@ Notes:
 - `secondary_accent` / `tertiary_accent` / `notification_border` fall back to `accent`.
 - All colours accept `#rrggbb` hex.
 - A user theme whose `name` matches a built-in **replaces** that built-in, which
-  is the supported way to override a default. Duplicate names among your own
-  files are not detected.
+  is the supported way to override a default. Two of your own files sharing a
+  name is not reported: the last one read wins.
 
 ---
 
@@ -155,9 +155,14 @@ backgrounds entirely on the base theme.
 | **Dots** | Dot matrix bar |
 | **True Gradient** (default) | Each filled cell is color-interpolated across `accent → secondary_accent → tertiary_accent` |
 
-Pick one with `Alt+b`, or set `progress_style` in `config.toml`. Unlike cover
+Pick one with `Alt+P`, or set `progress_style` in `config.toml`. Unlike cover
 source, progress style has **no row in the Settings pane** — the picker and the
 config file are the only surfaces.
+
+:::note
+`Alt+P` (capital P) is the progress bar; `Alt+p` (lowercase p) is Podcasts. They
+are distinct bindings.
+:::
 
 :::note
 The serialized values are case-sensitive and have no serde rename: `SeekHead`,
@@ -173,7 +178,7 @@ built-in presets are provided:
 
 | Preset | Modules |
 |--------|---------|
-| **Default** | Playback, Repeat, Shuffle, Volume, LowPower, Mono, EqPreset, KeyAction, Notification, SleepTimer, Download (right: Queue, Time, System, Multiselect, Network, Source) |
+| **Default** | Playback, Repeat, Shuffle, Volume, Mono, EqPreset, KeyAction, Notification, SleepTimer, Download (right: Queue, Time, System, Multiselect, Network, Source) |
 | **Minimal** | Playback, Volume, KeyAction, SleepTimer (right: Time, System) — for Termux/small viewports |
 | **Full** | Playback, Title, Repeat, Shuffle, Volume, EqPreset, Mono, Progress, KeyAction, SleepTimer (right: Queue, Time, System, Multiselect, Network, Source) |
 
@@ -189,11 +194,11 @@ A legacy `middle` key still parses so older files load, but its modules are
 **discarded** — move them into `left` or `right`. Unknown module names are
 ignored and malformed files are skipped entirely.
 
-Modules available (21):
+Modules available (20):
 
 ```
 Playback Title Volume Repeat Shuffle Progress Queue KeyAction
-Backend System EqPreset SleepTimer LowPower Mono Device Notification Time
+Backend System EqPreset SleepTimer Mono Device Notification Time
 Multiselect Download Network Source
 ```
 
@@ -208,7 +213,8 @@ module's own color set built from the active theme.
 
 ## Icons
 
-The command palette supports two icon styles:
+The **command palette has no icons** — each row is a name and a key. `icon_style`
+affects only the Setup service chooser (`Alt+X`):
 
 ```toml
 # config.toml

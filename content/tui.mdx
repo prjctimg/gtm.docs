@@ -28,12 +28,13 @@ above both.
 - **Now Playing** — cover art, animated marquee title, progress bar. Height
   adapts: 5 rows under 60 columns, 6 rows under 22 rows, otherwise
   `clamp(area_height / 3, 8, 14)`.
-- **Sidebar** — 15 categories: All Tracks, Liked, Albums, Artists, Playlists,
-  Spotify, Radio, Most Played, Recently Played, Recently Added, Genres, Folders,
-  Top Charts, Podcasts, Browse. Shows item counts. Filter and reorder the list
-  with `left_pane_lists` in `config.toml`.
-- **Results pane** — tracks, albums, artists, playlists, genres, folders, chart
-  or browse entries depending on the selected category.
+- **Sidebar** — 11 categories: Library, Liked, Playlists, Spotify, Radio, Most
+  Played, Recently Played, Recently Added, Folders, Top Charts, Podcasts. Shows
+  item counts, and the `Library` row counts whatever its current `[`/`]`
+  grouping shows. Filter and reorder the list with `left_pane_lists` in
+  `config.toml`; the same list is reachable with `Alt+.`.
+- **Results pane** — tracks, albums, artists, playlists, folders, chart or
+  podcast entries depending on the selected category.
 - **Lyrics pane** — a full-height pane on the right when lyrics are loaded and
   the terminal is ≥ 100 columns. Below that width the lyrics render inside the
   results pane instead.
@@ -43,20 +44,15 @@ above both.
 ### Narrow terminals
 
 When the terminal is narrower than 60 columns, the sidebar and results collapse
-into a single pane. Focus is switched with `[` and `]`.
+into a single pane. `Tab` / `Shift+Tab` swap which one is on screen.
 
 ---
 
 ## Keybindings
 
-Every default key, the `Alt` overlays, the two actions that have no default key
-at all, and how to remap them in `config.toml` are all documented on
+Every default key, the `Alt` overlays, the three bindings that have no action
+name at all, and how to remap them in `config.toml` are all documented on
 [Keybindings](/keybindings/).
-
-:::note
-There is **no default key for low-power mode** — reach it with
-`gtm --cli low-power` or by binding `toggle_low_power` yourself. `z` is Zen mode.
-:::
 
 ---
 
@@ -87,9 +83,15 @@ cycled from Settings → System. Any input brings the workspace straight back.
 
 ## Command palette
 
-Press `:` to open the command palette. It lists the available actions with an icon
-(Material Design Icons by default; any non-`mdi` value of `icon_style` gives the
-emoji set). Type to filter, then press `Enter` to execute.
+Press `:` to open the command palette. It lists the available actions grouped by
+topic (Playback, Library & Queue, View & Overlays, System), each row naming the
+command with its key in a dimmed column of its own. There are **no icons** — a
+column of glyphs in a list read by name was noise. Type to filter (it
+fuzzy-matches both the name and the key), then press `Enter` to execute.
+
+The key column is as wide as the longest command name, capped at half the pane,
+so a long name can never push its key into the text beside it. Rows with no key
+of their own — the four Spotify transport commands — leave that cell empty.
 
 ---
 
@@ -154,7 +156,6 @@ The footer bar sits at the bottom and shows status modules arranged in two group
 | `System` | Platform icon |
 | `EqPreset` | Current EQ preset name |
 | `SleepTimer` | Remaining sleep time |
-| `LowPower` | Low-power mode indicator |
 | `Mono` | Mono downmix indicator |
 | `Device` | Active audio device |
 | `Notification` | Notification badge |
@@ -187,7 +188,7 @@ Hide the footer bar entirely with `hide_footer` in `config.toml`, or with
 `Alt+,` opens Settings — a floating picker with three categories on the left and
 the selected category's rows on the right:
 
-- **Playback** — repeat, shuffle, crossfade, EQ on/off, reverb, cover source.
+- **Playback** — repeat, shuffle, crossfade, EQ on/off, reverb, pre-gain, cover source.
 - **System** — theme, theme mode, audio output, both transparent toggles, hide
   footer, reactive theme and its intensity, visualizer preset, daydream delay,
   footer preset, the three sync actions (covers, lyrics, metadata), the two cache

@@ -58,7 +58,7 @@ stderr with exit code 1.
 | `mute` | | Toggle mute |
 | `mono` | | Toggle mono downmix |
 | `crossfade` | `<ENABLED> [DURATION_SECS]` | Turn crossfade on/off, optionally with a duration. `ENABLED` takes `true`/`false`/`yes`/`no`/`1`/`0`; the duration defaults to 7 s |
-| `low-power` | `[--set <on\|off>]` | Low-power mode pauses playback and eases off background work. Without `--set`, reports the current state |
+| `pre-gain` | `<DB>` | Set the pre-gain applied to every sample, in dB (−24 … +24). Rejects an out-of-range or non-finite value rather than clamping |
 
 ### Last.fm
 
@@ -82,7 +82,7 @@ Credentials come from `gtm setup lastfm` — see
 | `queue-remove` | `<INDEX>` | Remove the track at `INDEX` |
 | `queue-move` | `<FROM> <TO>` | Move a track within the queue |
 | `queue-clear` | | Empty the queue |
-| `queue-set` | `<PATH>... --start-idx <INDEX>` | Replace the queue with these tracks. `--start-idx` is required |
+| `queue-set` | `<PATH>...` | Replace the queue with these tracks. Playback does not start; use `play` for that |
 
 ### Library
 

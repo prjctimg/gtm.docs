@@ -14,7 +14,7 @@ gtm ships two audio backends behind a common `Mixer` interface:
 | **Rodio** | (default) | Cross-platform, ALSA/CoreAudio via cpal |
 | **PulseAudio** | `pulseaudio` | Native PulseAudio streams; auto-selected on Termux |
 
-The backend also owns EQ, reverb, loudness normalization, device switching,
+The backend also owns EQ, reverb, pre-gain, device switching,
 and crossfade — one code path for every source (local files, Spotify,
 remote streams).
 
@@ -125,11 +125,19 @@ affect an already-playing track.
 
 ---
 
-## Loudness and pre-gain
+## Pre-gain
 
-The daemon tracks a loudness mode (Off / Track / Album / Auto) and a pre-gain
-value in dB, both persisted with the rest of the audio settings. They are set
-over IPC and are not yet exposed in the TUI or the CLI.
+A single gain in dB applied to every sample **before** the EQ and reverb. It is
+persisted in `state.json` as `pre_gain_db` and replayed into the mixer at
+startup. The default is `0.0` dB (unity) and the range is **−24 … +24 dB**.
+
+- `gtm --cli pre-gain <DB>` — rejects a non-finite or out-of-range value rather
+  than clamping it.
+- Settings → **Playback** → **Pre-Gain**, where `Enter` steps +1 dB and wraps at
+  the ends of the range.
+
+There is **no loudness normalization mode**. It was a tracked field with no code
+behind it and has been removed.
 
 ---
 

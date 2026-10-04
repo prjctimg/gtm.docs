@@ -1,6 +1,6 @@
 ---
 title: Playback
-description: "Volume and mute, seeking, queue, repeat and shuffle, sleep timer, and low-power mode."
+description: "Volume and mute, seeking, queue, repeat and shuffle, sleep timer, and state persistence."
 order: 6
 ---
 
@@ -67,7 +67,7 @@ gtm --cli queue-add ~/Music/song.flac        # add to queue (play-next)
 gtm --cli queue-remove 0                     # remove by index
 gtm --cli queue-move 0 2                     # move entry
 gtm --cli queue-clear                        # clear the queue
-gtm --cli queue-set ~/Music/*.flac --start-idx 0   # replace the queue
+gtm --cli queue-set ~/Music/*.flac           # replace the queue
 ```
 
 :::note
@@ -135,20 +135,6 @@ playback is refused.
 
 ---
 
-## Low-power mode
-
-Low-power mode has **no default key binding**. Reach it with the CLI or by
-binding `toggle_low_power` in `config.toml` (see
-[TUI](/tui/#keybindings)). `z` toggles **Zen** mode, not low-power.
-
-Enabling low-power pauses playback and eases up on background work (it also
-cancels any armed sleep timer). Disabling just clears the flag so you can
-play again.
-
-CLI: `gtm --cli low-power` (toggles), `gtm --cli low-power --set on|off`.
-
----
-
 ## State persistence
 
 The daemon persists the following to `state.json` on every change:
@@ -158,13 +144,13 @@ The daemon persists the following to `state.json` on every change:
 - Repeat mode, shuffle
 - Mono downmix flag
 - Crossfade configuration
-- Gapless flag (see [Crossfade](/crossfade/))
 - Dynamic-mode and scrobble configuration
-- Audio settings: EQ preset and on/off, output device, reverb, loudness mode,
-  pre-gain
+- Audio settings: `eq_preset`, `eq_enabled`, `reverb`, `pre_gain_db`,
+  `audio_device` — flattened to the top level of the file, not nested under an
+  `audio` key
 
 The current track and position **are** persisted and resumed on restart; the
-sleep timer and low-power mode are not.
+sleep timer is not.
 
 ---
 

@@ -44,28 +44,30 @@ cover file, not to deduplicate. The same bytes at two paths create two rows.
 
 ### Browsing
 
-The library lists 15 categories in the sidebar:
+The library lists 11 categories in the sidebar:
 
 | Category | Contents |
 |----------|----------|
-| **All Tracks** | Every track |
+| **Library** | Every track the daemon knows — the local library plus, when linked, every track of every synced Spotify playlist |
 | **Liked** | Tracks you favourited |
-| **Albums** | Grouped by album |
-| **Artists** | Grouped by artist |
 | **Playlists** | Your playlists |
 | **Spotify** | Synced Spotify playlists (when linked) |
 | **Radio** | Custom and discovered stations |
 | **Most Played** | Sorted by play count |
 | **Recently Played** | Sorted by last-played time |
 | **Recently Added** | Newest library entries first |
-| **Genres** | Grouped by genre |
 | **Folders** | Grouped by source folder |
 | **Top Charts** | Provider charts from Apple Music and Deezer, plus Spotify's editorial playlists when an account is linked |
 | **Podcasts** | Subscribed podcast feeds; drilling in lists that feed's episodes |
-| **Browse** | Free-text music search, artist pages and album tracklists, served by Deezer |
+
+**Library has four groupings, not four rows.** `[` and `]` walk **Tracks →
+Albums → Artists → Genres** over the same merged track list; the pane header
+names the grouping currently on screen, and switching drops any album, artist
+or genre drill-down and returns the cursor to the top. The `Library` row's
+count tracks whichever grouping is showing.
 
 `Alt+S` cycles five sort orders in the **List** context only, and applies to
-the flat view of All Tracks / Liked (Playlists, Spotify and Radio sort
+the flat view of Library / Liked (Playlists, Spotify and Radio sort
 upstream). The default is `Recents`:
 
 | Order | Sorts by |
@@ -77,8 +79,8 @@ upstream). The default is `Recents`:
 | `Album` | Album, track number, title |
 
 `/` opens a context-sensitive search picker: Spotify search in the Spotify
-category, the Radio browser in Radio, the Deezer browse search in Browse, and
-library search (capped at 10 results) everywhere else.
+category, the Radio browser in Radio, and library search everywhere else. There
+is no cap on the result list.
 
 ---
 

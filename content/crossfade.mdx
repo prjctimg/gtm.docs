@@ -1,6 +1,6 @@
 ---
 title: Crossfade
-description: "How crossfade works, its countdown, configuration, CLI control, and gapless mode."
+description: "How crossfade works, its countdown, configuration, and CLI control."
 order: 7
 ---
 
@@ -62,9 +62,8 @@ footer `Playback` module.
 
 ## Gapless mode
 
-`gapless` is a separate persisted boolean, off by default, reserved for clean
-seamless transitions on lossless files. Crossfade is what you want today for a
-DJ-style blend; see [Crossfade](#configuration) above for how to tune it.
+There isn't one. `gapless` was a persisted boolean with no code behind it and
+has been removed; crossfade (above) is the only seam handling gtm does.
 
 ---
 

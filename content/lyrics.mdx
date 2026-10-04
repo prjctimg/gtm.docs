@@ -85,9 +85,10 @@ The daemon replies to each lyrics request with a `DaemonRes::Lyrics`; there is
 no `lyrics` **event**. The TUI tags every request with a generation counter, so
 a late reply is discarded rather than flashing the wrong lyrics.
 
-With the lyrics pane focused, `[` and `]` nudge the lyric clock by 0.1 s per
-press when lyrics are early or late. The first nudge re-engages auto-follow and
-raises an offset toast.
+While the lyrics pane holds focus, the arrow keys, `PageUp`/`PageDown` and
+`Home`/`End` scroll it manually and suspend the time-sync driver; releasing focus
+(`Tab`, or `Backspace`) resumes auto-follow. There is **no manual sync offset** —
+the nudge keys were removed, and `[` / `]` now step the active view's filter.
 
 ---
 

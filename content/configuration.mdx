@@ -52,6 +52,14 @@ The client reads `$XDG_CONFIG_HOME/gtm/config.toml` (or
 `~/.config/gtm/config.toml`). It is hot-reloaded: the file's mtime is re-checked
 every 120 frames (~2 s at 60 fps) and changes take effect on that tick.
 
+Not every key is on that tick. Reloaded live: `theme_name`, `theme_mode`,
+`transparent_bg`, `transparent_pickers`, `reactive_theme`,
+`reactive_theme_intensity`, `footer_preset_name`, `progress_style`,
+`visualizer_preset`, `daydream_secs`, `time_format`, `keybindings`,
+`notification_modes`, `hide_footer`, `left_pane_lists`, `show_preview`. Read at
+startup only: `footer_key_action`, `track_sort`, `extensions`, `icon_style`,
+`auto_fetch_lyrics`, `cover_provider`, `cover_cache_mb`, `discord_id`.
+
 A `config.toml` is written the first time you run `gtm config` or change a
 setting in the TUI. Launching `gtm` on its own only ever reads it.
 
@@ -102,7 +110,7 @@ auto_fetch_lyrics = true         # Auto-fetch lyrics on track change
 # ─── Library ─────────────────────────────────────────────────────────
 track_sort = "Recents"           # "Recents" | "RecentlyAdded" | "Alphabetical"
                                 # | "Artist" | "Album"
-left_pane_lists = []             # Sidebar categories to show; empty = all 15
+left_pane_lists = []             # Sidebar categories to show; empty = all 11
 show_preview = true              # Left-pane track preview card
 
 # ─── Notifications ──────────────────────────────────────────────────
@@ -145,28 +153,32 @@ discord_app_id = ""             # Discord application id for Rich Presence
 | `reactive_theme_intensity` | float | `0.34` | Background wash strength; TUI cycles 0.15/0.25/0.34/0.45/0.6 |
 | `footer_preset_name` | string | `"Default"` | Active footer preset: `Default`, `Minimal`, `Full`, or a user preset |
 | `footer_key_action` | string | `"action"` | `action` renders the last action name, `keys` the key |
-| `hide_footer` | bool | `false` | Hide the footer bar; `Ctrl+h` toggles it while the TUI runs |
+| `hide_footer` | bool | `false` | Hide the footer bar; toggled from Settings → System while the TUI runs |
 | `progress_style` | string | `"TrueGradient"` | `SeekHead` / `Classic` / `Dots` / `TrueGradient` |
 | `visualizer_preset` | string | `"braille"` | `braille`, `blocks`, `mirror`, `gradient`, `spectrum`, `barsdot`, `classicpeak`, `columns`, `wave`, `stereo`, `retro`, `flame` |
-| `daydream_secs` | int | `60` | Seconds of keyboard, paste or mouse inactivity before the visualizer takes over the library view. `0` disables it |
+| `daydream_secs` | int | `60` | Seconds of keyboard, paste or mouse inactivity before the visualizer takes over the library view. `0` disables it. The TUI steps through `15`/`30`/`60`/`180`/`0` |
 | `time_format` | string | `"%H:%M"` | Clock format |
 | `icon_style` | string | `"mdi"` | Only `mdi` is special-cased; anything else gives the emoji set |
 | `cover_provider` | string | `"auto"` | `auto` / `deezer` / `mb` or `musicbrainz` (also `musicbrainz/cover-art-archive`) / `spotify` |
-| `cover_cache_mb` | int | `512` | Combined on-disk budget over `covers/` **and** `artist_covers/`, oldest evicted first; TUI offers 128/256/512/1024/2048 |
+| `cover_cache_mb` | int | `512` | Combined on-disk budget over `covers/` **and** `artist_covers/`, oldest evicted first. Config-file only — the TUI offers a one-shot *Clear Cover Cache* instead |
 | `auto_fetch_lyrics` | bool | `true` | Auto-fetch lyrics on track change |
 | `track_sort` | string | `"Recents"` | `Recents` / `RecentlyAdded` / `Alphabetical` / `Artist` / `Album` |
-| `left_pane_lists` | array | (all 15) | Sidebar categories to show, in display order; unknown names are dropped and an empty result falls back to all 15 |
+| `left_pane_lists` | array | (all 11) | Sidebar categories to show, in display order; unknown names are dropped, the legacy names collapse to `Library`, and an empty result falls back to all 11 |
 | `show_preview` | bool | `true` | Left-pane track preview card |
 | `notification_modes` | table | (all `"footer"`) | Per-category notification mode |
 | `extensions` | table | (all `true`) | Optional TUI surfaces |
 | `keybindings` | table | (empty) | Key → action remappings |
 | `web_addr` | string | `"127.0.0.1:8991"` | Daemon status endpoint; read by `gtmd` only |
-| `discord_id` | string | (unset) | Discord application id for Rich Presence; written by the Setup form and read by `gtmd` as `discord_app_id` |
+| `discord_id` | string | (unset) | Discord user id for Rich Presence; written by the Setup form. **Unrelated to `discord_app_id`** — see the caution below |
 
-`left_pane_lists` accepts exactly these 15 names, and only in this spelling:
-`All Tracks`, `Liked`, `Albums`, `Artists`, `Playlists`, `Spotify`, `Radio`,
-`Most Played`, `Recently Played`, `Recently Added`, `Genres`, `Folders`,
-`Top Charts`, `Podcasts`, `Browse`.
+`left_pane_lists` accepts exactly these 11 names, and only in this spelling:
+`Library`, `Liked`, `Playlists`, `Spotify`, `Radio`, `Most Played`,
+`Recently Played`, `Recently Added`, `Folders`, `Top Charts`, `Podcasts`.
+
+A config written before the Library merge is not invalidated: `All Tracks`,
+`Albums`, `Artists` and `Genres` all collapse to `Library`, so naming several of
+them keeps one row instead of losing them. `Browse` was removed outright and is
+dropped.
 
 ### Daemon-read keys
 
@@ -181,13 +193,31 @@ restart, unlike the hot-reloaded settings above.
 | `web_addr` | `"127.0.0.1:8991"` | Read-only JSON status endpoint, below |
 | `discord_app_id` | (unset) | Discord application id for Rich Presence. Must be numeric; anything else is ignored. Absent means no presence |
 
+:::caution
+`cover_provider` is the exception to the restart rule — the TUI pushes a change
+to the running daemon over IPC, so cycling the cover source in Settings takes
+effect immediately.
+
+`web_addr` and `discord_app_id` are read by `gtmd` alone and are not fields the
+TUI knows about. Any settings change made in the TUI rewrites the whole file
+from its own set of fields, which **silently drops both keys**. Keep them in a
+separate file you re-add after changing a setting in the TUI, or set them and
+leave the TUI's settings alone.
+:::
+
 ### Discord Rich Presence
 
 Set `discord_app_id` to a Discord application id and `gtmd` publishes what is
 playing to your profile over the local IPC socket, no outbound connection
-required once the client is running. The id is written by the Setup form
-(`Alt+x` → Discord), and an id Discord does not recognise simply never
-connects. The presence is cleared when the daemon exits.
+required once the client is running. An id Discord does not recognise simply
+never connects. The presence is cleared when the daemon exits.
+
+:::caution
+`discord_app_id` is **not** what the Setup form writes. `Alt+x` → Discord stores
+the Discord **user** id as `discord_id`, which is a different key that `gtmd`
+never reads. Write `discord_app_id` by hand, and re-add it after any settings
+change made in the TUI — see the caution above.
+:::
 
 ### Status endpoint
 
@@ -219,8 +249,8 @@ carries on: the endpoint is an extra surface, never a dependency.
 :::caution
 The payload is the current track, which is your listening history. It defaults
 to loopback for that reason. `web_addr = "0.0.0.0:8991"` publishes it to your
-LAN, and a bare `"8992"` is shorthand for loopback on that port. Set it to `""`
-to turn the endpoint off.
+LAN, and a bare port — `"8992"` or the unquoted integer `8992` — is shorthand
+for loopback on that port. Set it to `""` to turn the endpoint off.
 :::
 
 ---
@@ -277,7 +307,7 @@ preset = [{ name = "My Preset", left = ["Playback", "Volume", "EqPreset"], right
 ```
 
 Use any of the module names listed in the [Footer bar](/tui/#footer-bar)
-section — 21 in total. Unknown names are silently dropped.
+section — 20 in total. Unknown names are silently dropped.
 
 ---
 
