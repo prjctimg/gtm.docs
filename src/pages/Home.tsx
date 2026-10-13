@@ -7,23 +7,23 @@ import { Doodles } from '../components/Doodles';
 import { InstallTabs } from '../components/InstallTabs';
 import { usePageMeta } from '../lib/meta';
 import { mediaName, resolveMediaPath } from '../lib/media';
-import { 
-  Check, 
-  Copy, 
-  Terminal, 
-  Code, 
-  ExternalLink, 
-  Music, 
-  Sliders, 
-  Cpu, 
-  Layers, 
-  Volume2, 
-  Radio, 
-  ArrowRight, 
-  Disc, 
-  Search, 
-  CheckCircle2, 
-  FileCode 
+import {
+  Check,
+  Copy,
+  Terminal,
+  Code,
+  ExternalLink,
+  Music,
+  Sliders,
+  Cpu,
+  Layers,
+  Volume2,
+  Radio,
+  ArrowRight,
+  Disc,
+  Search,
+  CheckCircle2,
+  FileCode
 } from 'lucide-react';
 import { SiLinux, SiAndroid, SiApple } from 'react-icons/si';
 
@@ -110,20 +110,10 @@ export const Home: React.FC = () => {
   const carouselItems = [
     {
       title: 'Reactive theming',
-      desc: 'Turn on reactive theming and the player picks up the colours from whatever is playing — a red cover art tints the whole interface red. Sixteen built-in themes are there too, light and dark.',
+      desc: 'Pick up the colours from whatever is playing. Also comes with 16 built-in themes and support for transparent mode.',
       badge: 'Themes',
-      hotkey: 'Alt+T',
       img: IMAGES.cardThemes,
       docId: 'theming'
-    },
-    {
-      title: 'Audio visualizer',
-      desc: 'Twelve ways to draw the sound: bars, dots, a bouncing wave, an eighties sunset, even fire. Pick one and it fills the screen whenever you leave the player alone for a moment.',
-      badge: 'Visualizer',
-      hotkey: 'Alt+v',
-      img: IMAGES.cardVisualizer,
-      docId: 'audio',
-      sectionId: '_visualizer'
     },
     {
       title: 'Synced lyrics',
@@ -132,23 +122,6 @@ export const Home: React.FC = () => {
       hotkey: 'l',
       img: IMAGES.cardLyrics,
       docId: 'lyrics'
-    },
-    {
-      title: 'Crossfade',
-      desc: 'Blend one track into the next instead of stopping dead. Choose how long the fade takes, from three seconds to half a minute, or turn it off.',
-      badge: 'Crossfade',
-      hotkey: 'Alt+,',
-      img: IMAGES.cardCrossfade,
-      docId: 'crossfade'
-    },
-    {
-      title: 'Tune the sound',
-      desc: 'Shape the sound sixteen different ways, or draw your own curve. More bass for headphones, softer highs for a podcast — it remembers what you picked.',
-      badge: 'Equalizer',
-      hotkey: 'Alt+e',
-      img: IMAGES.cardEqualizer,
-      docId: 'audio',
-      sectionId: '_equalizer'
     },
     {
       title: 'Sleep timer',
@@ -160,34 +133,23 @@ export const Home: React.FC = () => {
       sectionId: '_sleep-timer'
     },
     {
-      title: 'Your music, sorted for you',
-      desc: 'Point gtm at your music folders and it reads the tags, finds the artwork and groups everything by album, artist, genre and folder. Favourites and playlists are in there too.',
-      badge: 'Library',
-      hotkey: 'Alt+.',
-      img: IMAGES.cardLibrary,
-      docId: 'library'
-    },
-    {
       title: 'Cover image support',
-      desc: 'Artwork is looked up for you — from the file when it has some, from the internet when it does not. It is cached after the first fetch, so it never looks twice.',
+      desc: 'Rich image preview in pickers,lists and more. Available in all modern terminals that support an image protocol.  ',
       badge: 'Cover art',
-      hotkey: 'z',
       img: IMAGES.cardCoverArt,
       docId: 'cover-art'
     },
     {
       title: 'Background playback',
-      desc: 'Close the player, start something else, close the terminal — the music carries on in the background until you stop it. It picks up where you left off, same volume included.',
+      desc: 'Close the player, and playback carries on in the background. Until you stop it, of course.',
       badge: 'Background',
-      hotkey: null,
       img: IMAGES.cardBackground,
       docId: 'daemon'
     },
     {
       title: 'Streaming',
-      desc: 'Search and play from YouTube, stream from Spotify with your own account, subscribe to podcasts and tune in to thousands of radio stations — all without leaving the player.',
+      desc: 'Stream from different sources, including internet radio.',
       badge: 'Streaming',
-      hotkey: 'Alt+y',
       img: IMAGES.cardStreaming,
       docId: 'youtube'
     }
@@ -258,7 +220,7 @@ export const Home: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-sm sm:text-base text-text-muted max-w-2xl mx-auto leading-relaxed"
           >
-          gtm (goto music) is a reimagined audio player built for terminal enthusiasts.
+            gtm (goto music) is a reimagined audio player built for terminal enthusiasts.
 
           </motion.p>
 
@@ -331,17 +293,16 @@ export const Home: React.FC = () => {
                       <div
                         key={i}
                         style={{ height: `${height}%` }}
-                        className={`w-full rounded-t transition-all duration-100 ${
-                          i < 3
-                            ? 'bg-primary-container/60 hover:bg-primary-container'
-                            : i < 8
+                        className={`w-full rounded-t transition-all duration-100 ${i < 3
+                          ? 'bg-primary-container/60 hover:bg-primary-container'
+                          : i < 8
                             ? 'bg-secondary hover:bg-secondary-fixed'
                             : i < 12
-                            ? 'bg-accent-coral hover:bg-accent-coral/90'
-                            : i < 16
-                            ? 'bg-accent-purple hover:bg-accent-purple/90'
-                            : 'bg-state-success hover:bg-state-success/90'
-                        }`}
+                              ? 'bg-accent-coral hover:bg-accent-coral/90'
+                              : i < 16
+                                ? 'bg-accent-purple hover:bg-accent-purple/90'
+                                : 'bg-state-success hover:bg-state-success/90'
+                          }`}
                       />
                     ))}
                   </div>
@@ -425,8 +386,7 @@ export const Home: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* FEATURE SHOWCASE - SCROLL TO REVIEW STACK */}
-      <motion.section 
+      <motion.section
         id="feature-tour-showcase"
         initial="hidden"
         whileInView="visible"
@@ -440,7 +400,7 @@ export const Home: React.FC = () => {
             Features
           </span>
           <h2 className="text-2xl sm:text-3xl font-bold font-mono text-text-primary mt-1">
-     
+
           </h2>
         </div>
 
@@ -457,11 +417,10 @@ export const Home: React.FC = () => {
                   onClick={() => scrollToFeature(idx)}
                   aria-label={`Jump to slide ${step} - ${item.title}`}
                   title={`${step} ${item.title}`}
-                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                    isActive
-                      ? 'w-6 bg-secondary'
-                      : 'w-2 bg-hairline-outline hover:bg-text-muted'
-                  }`}
+                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${isActive
+                    ? 'w-6 bg-secondary'
+                    : 'w-2 bg-hairline-outline hover:bg-text-muted'
+                    }`}
                 />
               );
             })}
@@ -482,9 +441,8 @@ export const Home: React.FC = () => {
                   top: '7.5rem',
                   zIndex: 10 + idx
                 }}
-                className={`sticky w-full border border-hairline-outline rounded-xl bg-surface-container shadow-2xl p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row items-center gap-6 lg:gap-8 justify-center min-h-[480px] sm:min-h-[520px] transition-all duration-300 ${
-                  isPast ? 'scale-[0.98] opacity-90' : 'scale-100 opacity-100'
-                }`}
+                className={`sticky w-full border border-hairline-outline rounded-xl bg-surface-container shadow-2xl p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row items-center gap-6 lg:gap-8 justify-center min-h-[480px] sm:min-h-[520px] transition-all duration-300 ${isPast ? 'scale-[0.98] opacity-90' : 'scale-100 opacity-100'
+                  }`}
               >
                 {/* Screenshot. Falls back to a placeholder rather than a broken
                     image when the file has not been added yet. */}
@@ -493,21 +451,19 @@ export const Home: React.FC = () => {
                     src={resolveMediaPath(item.img)}
                     alt={item.title}
                     onError={() =>
-                        setImgBroken((prev) => ({ ...prev, [idx]: true }))
+                      setImgBroken((prev) => ({ ...prev, [idx]: true }))
                     }
-                    className={`w-full lg:w-[65%] h-auto max-h-[420px] object-contain rounded-lg border border-hairline-outline bg-canvas-obsidian p-2 sm:p-4 shadow-inner block mx-auto transition-all duration-500 ease-out ${
-                      isCurrent
-                        ? 'translate-y-0 opacity-100 scale-100'
-                        : 'translate-y-4 opacity-75 scale-[0.99]'
-                    }`}
+                    className={`w-full lg:w-[65%] h-auto max-h-[420px] object-contain rounded-lg border border-hairline-outline bg-canvas-obsidian p-2 sm:p-4 shadow-inner block mx-auto transition-all duration-500 ease-out ${isCurrent
+                      ? 'translate-y-0 opacity-100 scale-100'
+                      : 'translate-y-4 opacity-75 scale-[0.99]'
+                      }`}
                   />
                 ) : (
                   <div
-                    className={`w-full lg:w-[65%] max-h-[420px] rounded-lg border border-dashed border-hairline-outline bg-canvas-obsidian flex items-center justify-center transition-all duration-500 ease-out ${
-                      isCurrent
-                        ? 'translate-y-0 opacity-100 scale-100'
-                        : 'translate-y-4 opacity-75 scale-[0.99]'
-                    }`}
+                    className={`w-full lg:w-[65%] max-h-[420px] rounded-lg border border-dashed border-hairline-outline bg-canvas-obsidian flex items-center justify-center transition-all duration-500 ease-out ${isCurrent
+                      ? 'translate-y-0 opacity-100 scale-100'
+                      : 'translate-y-4 opacity-75 scale-[0.99]'
+                      }`}
                   >
                     <span className="font-mono text-xs text-text-disabled px-6 text-center">
                       screenshot pending —{' '}
@@ -519,12 +475,11 @@ export const Home: React.FC = () => {
                 )}
 
                 {/* Right Narrative */}
-                <div 
-                  className={`w-full lg:w-[35%] flex flex-col justify-between space-y-6 text-left transition-all duration-500 delay-75 ease-out ${
-                    isCurrent 
-                      ? 'translate-y-0 opacity-100' 
-                      : 'translate-y-2 opacity-80'
-                  }`}
+                <div
+                  className={`w-full lg:w-[35%] flex flex-col justify-between space-y-6 text-left transition-all duration-500 delay-75 ease-out ${isCurrent
+                    ? 'translate-y-0 opacity-100'
+                    : 'translate-y-2 opacity-80'
+                    }`}
                 >
                   <div className="space-y-4">
                     <div className="space-y-1.5">
@@ -583,7 +538,7 @@ export const Home: React.FC = () => {
               Install gtm in seconds
             </h2>
             <p className="text-sm text-text-muted max-w-lg mx-auto leading-relaxed">
-              Available on major platforms. Windows support coming soon 
+              Available on major platforms. Windows support coming soon
             </p>
           </div>
 
