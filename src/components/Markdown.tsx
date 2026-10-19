@@ -310,7 +310,7 @@ export const Markdown = React.memo<MarkdownProps>(
               const lines = rawContent.split('\n');
               const firstLine = lines[0] || '';
               const desc = lines.slice(1).join('\n').trim();
-              const audioSrc = resolveMediaPath(attrs['src'] || (firstLine.includes('/') ? firstLine.trim() : '/media/static/audio-equalizer-sample.wav'));
+              const audioSrc = resolveMediaPath(attrs['src'] || firstLine.trim());
               const audioTitle = attrs['title'] || 'Audio Preview';
               const audioArtist = attrs['artist'] || 'gtm Audio Engine';
 
@@ -399,7 +399,7 @@ export const Markdown = React.memo<MarkdownProps>(
     const attrs = parseAttributes(firstLine);
     const desc = lines.slice(1).join('\n').trim();
 
-    const audioSrc = resolveMediaPath(attrs['src'] || (firstLine.includes('/') || firstLine.startsWith('http') || firstLine.startsWith('demo:') || firstLine.startsWith('synth:') ? firstLine.trim() : '/media/static/audio-equalizer-sample.wav'));
+    const audioSrc = resolveMediaPath(attrs['src'] || firstLine.trim());
     const audioTitle = attrs['title'] || 'Audio Preview';
     const audioArtist = attrs['artist'] || 'gtm Daemon';
 
