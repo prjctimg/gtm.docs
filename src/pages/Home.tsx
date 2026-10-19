@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
-import { motion, type Variants } from 'motion/react';
+import { motion, AnimatePresence, type Variants } from 'motion/react';
 import { IMAGES } from '../data/site';
 import { Telemetry } from '../components/Telemetry';
 import { Doodles } from '../components/Doodles';
@@ -21,9 +21,10 @@ import {
   Radio,
   ArrowRight,
   Disc,
-  Search,
   CheckCircle2,
-  FileCode
+  FileCode,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { SiLinux, SiAndroid, SiApple } from 'react-icons/si';
 
@@ -51,7 +52,7 @@ function TuiShot({ src, alt }: { src: string; alt: string }) {
       src={mediaSrc}
       alt={alt}
       onError={() => setBroken(true)}
-      className="w-full h-auto object-cover select-none mx-auto block rounded border border-hairline-subtle"
+      className="w-full h-auto max-h-[520px] object-contain select-none mx-auto block rounded border border-hairline-subtle shadow-md"
     />
   );
 }
@@ -59,8 +60,49 @@ function TuiShot({ src, alt }: { src: string; alt: string }) {
 export const Home: React.FC = () => {
   usePageMeta('gtm - Docs', '📻 gtm is a feature rich terminal audio player.');
 
-  // TUI Explorer Tab
-  const [activeTuiTab, setActiveTuiTab] = useState<TuiTab>('library');
+  // Basic image carousel state
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isCarouselHovered, setIsCarouselHovered] = useState(false);
+
+  const carouselImages = [
+    {
+      src: IMAGES.heroCover,
+      alt: 'gtm terminal music player library interface in dark mode',
+      title: 'Terminal Library & Playback',
+    },
+    {
+      src: 'media/gif/terminal-player-demo.gif',
+      alt: 'gtm interactive playback and navigation session',
+      title: 'Terminal Playback Demo',
+    },
+    {
+      src: 'media/gif/spectrum-visualizer-demo.gif',
+      alt: 'gtm real-time spectrum visualizer in terminal',
+      title: 'Real-Time Spectrum Visualizer',
+    },
+    {
+      src: IMAGES.themesArt,
+      alt: 'gtm audio player branding and reactive themes',
+      title: 'Interface & Reactive Theming',
+    },
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
+  };
+
+  // Auto scrolling & infinite carousel
+  useEffect(() => {
+    if (isCarouselHovered) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [isCarouselHovered, carouselImages.length]);
 
   // Interactive Features Showcase scroll-to-review state & refs
   const [activeFeatureIdx, setActiveFeatureIdx] = useState(0);
@@ -68,15 +110,6 @@ export const Home: React.FC = () => {
 
   // Cards whose screenshot has not been added to public/media/static yet.
   const [imgBroken, setImgBroken] = useState<Record<number, boolean>>({});
-
-  // Animated spectrum bars
-  const [barHeights, setBarHeights] = useState<number[]>([
-    45, 60, 85, 95, 78, 90, 65, 50, 70, 82, 60, 40, 30, 55, 72, 88, 64, 42, 25
-  ]);
-  const [isPlayingFft, setIsPlayingFft] = useState(true);
-
-  // Interactive fuzzy search simulation
-  const [searchQuery, setSearchQuery] = useState('kendrick to pimp a butterfly');
 
   // Scroll animation variants
   const scrollSectionVariants: Variants = {
@@ -90,19 +123,6 @@ export const Home: React.FC = () => {
       },
     },
   };
-
-  useEffect(() => {
-    if (!isPlayingFft) return;
-    const interval = setInterval(() => {
-      setBarHeights(prev =>
-        prev.map(h => {
-          const delta = (Math.random() - 0.48) * 18;
-          return Math.min(98, Math.max(15, h + delta));
-        })
-      );
-    }, 120);
-    return () => clearInterval(interval);
-  }, [isPlayingFft]);
 
   // Feature cards. Titles say what the feature does for you; the copy avoids
   // implementation detail, and every claim here is checkable against the docs
@@ -236,152 +256,79 @@ export const Home: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* INTERACTIVE TUI EXPLORER / PLAYGROUND */}
+      {/* BASIC IMAGE CAROUSEL */}
       <motion.section
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.1, margin: "0px 0px -50px 0px" }}
         variants={scrollSectionVariants}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full"
+        className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full"
       >
         <div className="border border-hairline-outline rounded-xl bg-surface-container overflow-hidden shadow-2xl">
-          {/* Terminal Body Viewports */}
-          <div className="w-full bg-canvas-obsidian relative flex flex-col justify-center px-2 sm:px-4 md:px-6 py-3">
-            {/* View 1: Library View */}
-            {activeTuiTab === 'library' && (
-              <div className="w-full animate-in fade-in duration-150">
-                <TuiShot
-                  src={IMAGES.heroCover}
-                  alt="gtm terminal music player library interface in dark mode"
-                />
-              </div>
-            )}
+          {/* Carousel Image Viewport with Previous & Next Arrows, Dots Progress, and Auto-scroll */}
+          <div
+            className="relative w-full bg-canvas-obsidian flex items-center justify-center p-3 sm:p-6 min-h-[380px] sm:min-h-[480px]"
+            onMouseEnter={() => setIsCarouselHovered(true)}
+            onMouseLeave={() => setIsCarouselHovered(false)}
+          >
+            {/* Prev Button */}
+            <button
+              type="button"
+              onClick={prevSlide}
+              aria-label="Previous image"
+              className="absolute left-3 sm:left-6 z-20 p-2 sm:p-2.5 rounded-full bg-surface-elevated/85 hover:bg-surface-elevated text-text-muted hover:text-text-primary border border-hairline-outline backdrop-blur-sm transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
 
-            {/* View 2: Lyrics View */}
-            {activeTuiTab === 'lyrics' && (
-              <div className="w-full animate-in fade-in duration-150">
-                <TuiShot
-                  src={IMAGES.lyricsView1}
-                  alt="gtm terminal music player synchronized lyrics split interface"
-                />
-              </div>
-            )}
+            {/* Next Button */}
+            <button
+              type="button"
+              onClick={nextSlide}
+              aria-label="Next image"
+              className="absolute right-3 sm:right-6 z-20 p-2 sm:p-2.5 rounded-full bg-surface-elevated/85 hover:bg-surface-elevated text-text-muted hover:text-text-primary border border-hairline-outline backdrop-blur-sm transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
 
-            {/* View 3: Animated FFT Spectrum Analyzer */}
-            {activeTuiTab === 'fft' && (
-              <div className="border border-hairline-outline bg-code-canvas rounded-lg p-6 font-mono text-xs space-y-4 min-h-[460px] flex flex-col justify-between animate-in fade-in duration-150">
-                <div className="flex items-center justify-between border-b border-hairline-outline pb-3">
-                  <div className="flex items-center gap-2 text-text-muted">
-                    <span className="text-accent-coral font-bold">FFT 60FPS</span>
-                    <span>// 64-Band Real-Time Fast Fourier Transform with sub-millisecond precision</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setIsPlayingFft(!isPlayingFft)}
-                      className="px-2 py-0.5 rounded bg-surface-elevated border border-hairline-outline text-secondary hover:text-text-primary cursor-pointer text-xs"
-                    >
-                      {isPlayingFft ? 'Pause visualizer' : 'Resume visualizer'}
-                    </button>
-                    <span className="text-text-muted text-xs">key [v]</span>
-                  </div>
-                </div>
-
-                {/* Animated Spectrum Analyzer */}
-                <div className="py-6 space-y-2 select-none">
-                  <div className="flex items-end justify-between h-52 px-4 gap-1.5 bg-surface-container/40 border border-hairline-outline rounded-lg p-3">
-                    {barHeights.map((height, i) => (
-                      <div
-                        key={i}
-                        style={{ height: `${height}%` }}
-                        className={`w-full rounded-t transition-all duration-100 ${i < 3
-                          ? 'bg-primary-container/60 hover:bg-primary-container'
-                          : i < 8
-                            ? 'bg-secondary hover:bg-secondary-fixed'
-                            : i < 12
-                              ? 'bg-accent-coral hover:bg-accent-coral/90'
-                              : i < 16
-                                ? 'bg-accent-purple hover:bg-accent-purple/90'
-                                : 'bg-state-success hover:bg-state-success/90'
-                          }`}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="flex justify-between text-xs text-text-muted px-4">
-                    <span>20 Hz (Sub-Bass)</span>
-                    <span>250 Hz (Low-Mid)</span>
-                    <span>1 kHz (Mid)</span>
-                    <span>4 kHz (High-Mid)</span>
-                    <span>12 kHz (Presence)</span>
-                    <span>20 kHz (Air)</span>
-                  </div>
-                </div>
-
-                <div className="border-t border-hairline-outline pt-3 flex items-center justify-between text-text-muted">
-                  <span className="text-secondary font-medium">Now Playing: Han Pan — Peggy Gou (FLAC 24-bit / 96kHz)</span>
-                  <span>Hann Windowing · 2048 Samples · Lock-Free Sink</span>
-                </div>
-              </div>
-            )}
-
-            {/* View 4: Fuzzy Search Interactive Palette */}
-            {activeTuiTab === 'search' && (
-              <div className="border border-hairline-outline bg-code-canvas rounded-lg p-6 font-mono text-xs space-y-4 min-h-[460px] animate-in fade-in duration-150">
-                <div className="flex items-center gap-3 bg-surface-container border border-hairline-outline rounded-lg px-4 py-2.5">
-                  <span className="text-secondary font-bold text-base">&gt;</span>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search artist, album, or track title..."
-                    className="bg-transparent border-none text-text-primary text-sm font-medium w-full focus:outline-none placeholder:text-text-disabled"
+            {/* Image display */}
+            <div className="w-full max-w-4xl mx-auto flex items-center justify-center pb-8 sm:pb-9">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={carouselImages[currentSlide].src}
+                  initial={{ opacity: 0, scale: 0.99 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.99 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="w-full flex items-center justify-center"
+                >
+                  <TuiShot
+                    src={carouselImages[currentSlide].src}
+                    alt={carouselImages[currentSlide].alt}
                   />
-                  <span className="ml-auto text-xs text-text-muted whitespace-nowrap">
-                    Filtered in 1.4ms (SQLite FTS5)
-                  </span>
-                </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
 
-                <div className="space-y-1.5 pt-2 text-xs">
-                  <div className="px-3 py-2 bg-surface-elevated border border-hairline-outline rounded-lg flex items-center justify-between text-text-primary">
-                    <div className="flex items-center gap-3">
-                      <span className="text-secondary font-bold">01</span>
-                      <span className="font-semibold">How Much A Dollar Cost</span>
-                      <span className="text-text-muted">— Kendrick Lamar</span>
-                    </div>
-                    <span className="text-text-muted text-xs">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
-                  </div>
-                  <div className="px-3 py-2 hover:bg-surface-container rounded-lg flex items-center justify-between text-text-body transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="text-text-muted">02</span>
-                      <span>Alright</span>
-                      <span className="text-text-muted">— Kendrick Lamar</span>
-                    </div>
-                    <span className="text-text-muted text-xs">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
-                  </div>
-                  <div className="px-3 py-2 hover:bg-surface-container rounded-lg flex items-center justify-between text-text-body transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="text-text-muted">03</span>
-                      <span>King Kunta</span>
-                      <span className="text-text-muted">— Kendrick Lamar</span>
-                    </div>
-                    <span className="text-text-muted text-xs">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
-                  </div>
-                  <div className="px-3 py-2 hover:bg-surface-container rounded-lg flex items-center justify-between text-text-body transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="text-text-muted">04</span>
-                      <span>The Blacker The Berry</span>
-                      <span className="text-text-muted">— Kendrick Lamar</span>
-                    </div>
-                    <span className="text-text-muted text-xs">To Pimp a Butterfly (2015) [FLAC 24/96]</span>
-                  </div>
-                </div>
-
-                <div className="border-t border-hairline-outline pt-3 flex items-center justify-between text-text-muted">
-                  <span>[Enter] Play track · [Tab] Smart Queue · [Ctrl+A] Add to Playlist</span>
-                  <span className="text-primary-container font-medium">Skim Fuzzy Filter + In-Memory Index</span>
-                </div>
-              </div>
-            )}
+            {/* Dots Progress Indicator */}
+            <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-elevated/85 border border-hairline-outline backdrop-blur-md shadow-lg">
+              {carouselImages.map((image, idx) => {
+                const isActive = currentSlide === idx;
+                return (
+                  <button
+                    key={image.src + idx}
+                    type="button"
+                    onClick={() => setCurrentSlide(idx)}
+                    aria-label={`Go to slide ${idx + 1}: ${image.title || image.alt}`}
+                    className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                      isActive
+                        ? 'w-6 bg-brand-primary shadow-[0_0_8px_rgba(var(--brand-primary-rgb,6,182,212),0.5)]'
+                        : 'w-2 bg-text-muted/40 hover:bg-text-muted/80'
+                    }`}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
       </motion.section>

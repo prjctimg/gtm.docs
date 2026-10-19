@@ -5,7 +5,6 @@
 #   curl -fsSL https://gtmd.dev/install.sh | bash
 #   install.sh                        # download and install the release for this system
 #   install.sh --version 0.2.83       # pin a specific release
-#   install.sh --nightly              # install the latest nightly prerelease
 #   install.sh --prefix ~/.local      # install under a custom prefix
 #
 # When run from inside a gtm release archive (bin/gtm + bin/gtmd sit next to
@@ -41,7 +40,6 @@ Usage: install.sh [options]
 Options:
   -h, --help            Show this help message
   -v, --version <ver>   Install a specific version (e.g. 0.2.83)
-      --nightly         Install the latest nightly prerelease
   -p, --prefix <dir>    Install prefix for the tarball (default: \$HOME/.local)
   -y, --yes             Non-interactive: never prompt (e.g. to enable gtmd)
 
