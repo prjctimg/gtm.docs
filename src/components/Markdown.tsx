@@ -31,22 +31,9 @@ function extractText(children: React.ReactNode): string {
   return '';
 }
 
-// Helper to parse key-values from directives like title="..." src="..." or key=value
-function parseAttributes(text: string): Record<string, string> {
-  const attrs: Record<string, string> = {};
-  const regex = /(\w+)=["']([^"']*)["']|(\w+)=([^\s]+)/g;
-  let m;
-  while ((m = regex.exec(text)) !== null) {
-    const key = m[1] || m[3];
-    const val = m[2] !== undefined ? m[2] : m[4];
-    if (key) attrs[key.toLowerCase()] = val;
-  }
-  return attrs;
-}
-
-// Chunks content into markdown segments and :::note/tip/caution/audio/sound/gif blocks
+// Chunks content into markdown segments and :::note/tip/caution blocks
 interface ContentSegment {
-  type: 'markdown' | 'callout' | 'audio' | 'gif';
+  type: 'markdown' | 'callout';
   calloutType?: string;
   body: string;
 }
@@ -55,7 +42,7 @@ function parseContentSegments(rawContent: string): ContentSegment[] {
   const cleanedContent = rawContent || '';
 
   const segments: ContentSegment[] = [];
-  const calloutRegex = /:::(note|tip|caution|warning|audio|sound|gif)\s*([\s\S]*?):::/g;
+  const calloutRegex = /:::(note|tip|caution|warning)\s*([\s\S]*?):::/g;
   let lastIndex = 0;
   let match;
 
@@ -71,27 +58,12 @@ function parseContentSegments(rawContent: string): ContentSegment[] {
       }
     }
 
-    // Callout segment
     const tag = match[1].toLowerCase();
-    if (tag === 'audio' || tag === 'sound') {
-      segments.push({
-        type: 'audio',
-        calloutType: tag,
-        body: match[2].trim(),
-      });
-    } else if (tag === 'gif') {
-      segments.push({
-        type: 'gif',
-        calloutType: tag,
-        body: match[2].trim(),
-      });
-    } else {
-      segments.push({
-        type: 'callout',
-        calloutType: tag,
-        body: match[2].trim(),
-      });
-    }
+    segments.push({
+      type: 'callout',
+      calloutType: tag,
+      body: match[2].trim(),
+    });
 
     lastIndex = end;
   }
@@ -226,14 +198,9 @@ export const Markdown = React.memo<MarkdownProps>(
 
             if (isAudioFile && href) {
               const cleanSrc = resolveMediaPath(href.replace(/^(audio|sound):/, ''));
-              const titleText = extractText(children) || 'Audio Sample';
               return (
                 <div className="my-3">
-                  <AudioPlayer
-                    src={cleanSrc}
-                    title={titleText}
-                    artist="gtm Audio Engine"
-                  />
+                  <AudioPlayer src={cleanSrc} />
                 </div>
               );
             }
@@ -304,44 +271,6 @@ export const Markdown = React.memo<MarkdownProps>(
 
             const rawContent = String(children).trim();
 
-            // Embedded Audio codeblock: ```audio ... ```
-            if (lang === 'audio' || lang === 'sound') {
-              const attrs = parseAttributes(rawContent);
-              const lines = rawContent.split('\n');
-              const firstLine = lines[0] || '';
-              const desc = lines.slice(1).join('\n').trim();
-              const audioSrc = resolveMediaPath(attrs['src'] || firstLine.trim());
-              const audioTitle = attrs['title'] || 'Audio Preview';
-              const audioArtist = attrs['artist'] || 'gtm Audio Engine';
-
-              return (
-                <AudioPlayer
-                  src={audioSrc}
-                  title={audioTitle}
-                  artist={audioArtist}
-                  description={desc || undefined}
-                />
-              );
-            }
-
-            // Embedded GIF codeblock: ```gif ... ```
-            if (lang === 'gif') {
-              const attrs = parseAttributes(rawContent);
-              const lines = rawContent.split('\n');
-              const firstLine = lines[0] || '';
-              const desc = lines.slice(1).join('\n').trim();
-              const gifSrc = resolveMediaPath(attrs['src'] || firstLine.trim());
-              const gifCaption = attrs['caption'] || attrs['alt'] || desc || undefined;
-
-              return (
-                <Gif
-                  src={gifSrc}
-                  alt={gifCaption || 'Animated GIF Preview'}
-                  caption={gifCaption}
-                />
-              );
-            }
-
             return (
               <CodeBlock
                 language={lang}
@@ -390,44 +319,6 @@ export const Markdown = React.memo<MarkdownProps>(
       >
         {mdText}
       </ReactMarkdown>
-    );
-  };
-
-  const renderAudio = (body: string) => {
-    const lines = body.split('\n');
-    const firstLine = lines[0] || '';
-    const attrs = parseAttributes(firstLine);
-    const desc = lines.slice(1).join('\n').trim();
-
-    const audioSrc = resolveMediaPath(attrs['src'] || firstLine.trim());
-    const audioTitle = attrs['title'] || 'Audio Preview';
-    const audioArtist = attrs['artist'] || 'gtm Daemon';
-
-    return (
-      <AudioPlayer
-        src={audioSrc}
-        title={audioTitle}
-        artist={audioArtist}
-        description={desc || undefined}
-      />
-    );
-  };
-
-  const renderGif = (body: string) => {
-    const lines = body.split('\n');
-    const firstLine = lines[0] || '';
-    const attrs = parseAttributes(firstLine);
-    const desc = lines.slice(1).join('\n').trim();
-
-    const gifSrc = resolveMediaPath(attrs['src'] || firstLine.trim());
-    const gifCaption = attrs['caption'] || attrs['alt'] || desc || undefined;
-
-    return (
-      <Gif
-        src={gifSrc}
-        alt={gifCaption || 'Animated Preview'}
-        caption={gifCaption}
-      />
     );
   };
 
@@ -485,10 +376,6 @@ export const Markdown = React.memo<MarkdownProps>(
         <React.Fragment key={idx}>
           {seg.type === 'callout'
             ? renderCallout(seg.calloutType || 'note', seg.body)
-            : seg.type === 'audio'
-            ? renderAudio(seg.body)
-            : seg.type === 'gif'
-            ? renderGif(seg.body)
             : renderMarkdownComponent(seg.body)}
         </React.Fragment>
       ))}

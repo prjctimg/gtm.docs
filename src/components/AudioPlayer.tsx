@@ -8,8 +8,6 @@ import {
 
 interface AudioPlayerProps {
   src: string;
-  title?: string;
-  artist?: string;
   description?: string;
   autoPlay?: boolean;
   className?: string;
@@ -17,8 +15,6 @@ interface AudioPlayerProps {
 
 export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   src,
-  title: _title = 'Audio Sample',
-  artist: _artist = 'gtm Daemon',
   description,
   autoPlay = false,
   className = ''

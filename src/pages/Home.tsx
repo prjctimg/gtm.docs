@@ -10,6 +10,12 @@ import { mediaName, resolveMediaPath } from '../lib/media';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SiLinux, SiAndroid, SiApple } from 'react-icons/si';
 
+const CAROUSEL_IMAGES = [
+  { src: IMAGES.hero1, title: 'Preview 1' },
+  { src: IMAGES.hero2, title: 'Preview 2' },
+  { src: IMAGES.hero3, title: 'Preview 3' },
+];
+
 function TuiShot({ src }: { src: string }) {
   const [broken, setBroken] = useState<boolean>(false);
   const mediaSrc = resolveMediaPath(src);
@@ -39,20 +45,14 @@ export const Home: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isCarouselHovered, setIsCarouselHovered] = useState(false);
 
-  const carouselImages = [
-    {
-      src: IMAGES.hero1,
-      title: 'Preview 1',
-    },
-    {
-      src: IMAGES.hero2,
-      title: 'Preview 2',
-    },
-    {
-      src: IMAGES.hero3,
-      title: 'Preview 3',
-    },
-  ];
+  const carouselImages = CAROUSEL_IMAGES;
+
+  useEffect(() => {
+    CAROUSEL_IMAGES.forEach(({ src }) => {
+      const img = new Image();
+      img.src = resolveMediaPath(src);
+    });
+  }, []);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
@@ -89,17 +89,17 @@ export const Home: React.FC = () => {
 
   const carouselItems = [
     {
-      title: 'Reactive theming',
-      desc: 'Pick up the colours from whatever is playing. Also comes with 16 built-in themes and support for transparent mode.',
-      badge: 'Themes',
+      title: 'Zen mode',
+      desc: 'Go fullscreen on one surface at a time — now playing, lyrics or the visualizer. Tab cycles between them; Esc leaves.',
+      badge: 'Zen mode',
       img: IMAGES.cardThemes,
-      docId: 'theming'
+      docId: 'tui',
+      sectionId: '_zen-mode'
     },
     {
       title: 'Synced lyrics',
       desc: 'Lyrics scroll along with the song, one line at a time, right on cue. gtm looks them up for you and remembers them for next time. Nudge them early or late with the bracket keys.',
       badge: 'Lyrics',
-      hotkey: 'l',
       img: IMAGES.cardLyrics,
       docId: 'lyrics'
     },
@@ -107,7 +107,6 @@ export const Home: React.FC = () => {
       title: 'Sleep timer',
       desc: 'Set a timer and playback stops when it runs out. Handy for falling asleep to something without it playing all night.',
       badge: 'Sleep timer',
-      hotkey: 'Alt+z',
       img: IMAGES.cardSleepTimer,
       docId: 'playback',
       sectionId: '_sleep-timer'
@@ -270,9 +269,6 @@ export const Home: React.FC = () => {
           <span className="font-mono text-xs text-secondary font-bold uppercase tracking-wider">
             Features
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold font-mono text-text-primary mt-1">
-
-          </h2>
         </div>
 
         <div className="sticky top-20 z-30 bg-surface-container/95 backdrop-blur-md border border-hairline-outline rounded-xl px-4 py-2 flex items-center justify-center gap-2 font-mono text-xs shadow-md mx-auto w-fit">
