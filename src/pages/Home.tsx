@@ -7,7 +7,7 @@ import { Doodles } from '../components/Doodles';
 import { InstallTabs } from '../components/InstallTabs';
 import { usePageMeta } from '../lib/meta';
 import { mediaName, resolveMediaPath } from '../lib/media';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
 import { SiLinux, SiAndroid, SiApple } from 'react-icons/si';
 
 const CAROUSEL_IMAGES = [
@@ -72,6 +72,23 @@ export const Home: React.FC = () => {
 
   const [activeFeatureIdx, setActiveFeatureIdx] = useState(0);
   const featureItemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [videoMuted, setVideoMuted] = useState<Record<number, boolean>>({});
+  const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
+
+  const toggleVideoSound = (idx: number) => {
+    setVideoMuted((prev) => {
+      const isCurrentlyMuted = prev[idx] ?? true;
+      const nextMuted = !isCurrentlyMuted;
+      const vid = videoRefs.current[idx];
+      if (vid) {
+        vid.muted = nextMuted;
+        if (!nextMuted) {
+          vid.play().catch(() => {});
+        }
+      }
+      return { ...prev, [idx]: nextMuted };
+    });
+  };
 
   const [imgBroken, setImgBroken] = useState<Record<number, boolean>>({});
 
@@ -266,7 +283,7 @@ export const Home: React.FC = () => {
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-6 relative"
       >
         <div className="border-b border-hairline-outline pb-3">
-          <span className="font-mono text-xs text-secondary font-bold uppercase tracking-wider">
+          <span className="font-mono text-sm sm:text-base text-secondary font-bold uppercase tracking-wider">
             Features
           </span>
         </div>
@@ -315,17 +332,49 @@ export const Home: React.FC = () => {
               >
                 {item.img && !imgBroken[idx] ? (
                   isVideo ? (
-                    <video
-                      src={resolveMediaPath(item.img)}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      onError={() =>
-                        setImgBroken((prev) => ({ ...prev, [idx]: true }))
-                      }
-                      className={mediaClassName}
-                    />
+                    <div className="relative w-full lg:w-[65%] flex items-center justify-center">
+                      <video
+                        ref={(el) => {
+                          videoRefs.current[idx] = el;
+                        }}
+                        src={resolveMediaPath(item.img)}
+                        autoPlay
+                        muted={videoMuted[idx] ?? true}
+                        loop
+                        playsInline
+                        onError={() =>
+                          setImgBroken((prev) => ({ ...prev, [idx]: true }))
+                        }
+                        className={`w-full h-auto max-h-[420px] object-contain rounded-lg border border-hairline-outline bg-canvas-obsidian p-2 sm:p-4 shadow-inner block mx-auto transition-all duration-500 ease-out ${isCurrent
+                          ? 'translate-y-0 opacity-100 scale-100'
+                          : 'translate-y-4 opacity-75 scale-[0.99]'
+                          }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleVideoSound(idx);
+                        }}
+                        aria-label={
+                          (videoMuted[idx] ?? true)
+                            ? 'Unmute video preview'
+                            : 'Mute video preview'
+                        }
+                        title={
+                          (videoMuted[idx] ?? true)
+                            ? 'Unmute audio'
+                            : 'Mute audio'
+                        }
+                        className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-20 p-2 text-text-muted hover:text-text-primary transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer focus:outline-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)] select-none group/mute"
+                      >
+                        {(videoMuted[idx] ?? true) ? (
+                          <VolumeX className="w-5 h-5 text-text-muted group-hover/mute:text-text-primary transition-colors" />
+                        ) : (
+                          <Volume2 className="w-5 h-5 text-secondary group-hover/mute:text-secondary-hover transition-colors" />
+                        )}
+                      </button>
+                    </div>
                   ) : (
                     <img
                       src={resolveMediaPath(item.img)}
@@ -359,7 +408,7 @@ export const Home: React.FC = () => {
                 >
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <span className="font-mono text-[11px] uppercase tracking-wider text-secondary font-semibold">
+                      <span className="font-mono text-xs sm:text-sm uppercase tracking-wider text-secondary font-semibold">
                         {item.badge}
                       </span>
                       <h3 className="font-mono text-2xl sm:text-3xl lg:text-[1.85rem] font-bold text-text-primary tracking-tight leading-snug">

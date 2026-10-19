@@ -58,12 +58,6 @@ export const Footer: React.FC = () => {
             >
               Install
             </Link>
-            <Link
-              to="/keybindings/"
-              className="text-text-muted hover:text-text-primary transition-colors"
-            >
-              Keymap
-            </Link>
             <a
               href="https://github.com/prjctimg/gtm"
               target="_blank"

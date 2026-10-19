@@ -48,8 +48,8 @@ export const Palette: React.FC<PaletteProps> = ({
   ];
 
   // Docs first, so the default list leads with the main documentation. Every
-  // content file contributes a top-level entry plus one per section, so the
-  // keybinding page is searchable without a hand-maintained index.
+  // content file contributes a top-level entry plus one per section, so every
+  // page is searchable without a hand-maintained index.
   const allItems: SearchItem[] = [
     ...DOCS.flatMap(itemsFor),
     ...EXTRA_PAGES.flatMap(itemsFor)
