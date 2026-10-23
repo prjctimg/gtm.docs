@@ -12,9 +12,11 @@ Crossfade gives you gapless-ish transitions between tracks. Player code uses
 
 1. When the current track is close to finishing, the daemon decodes the next
    queue entry in the background and loads it into a **standby player**.
-2. At the configured `duration_secs` mark (with 0.15 s of slack), it starts a
-   linear crossfade: the outgoing player's volume ramps down while the
-   incoming player's ramps up.
+2. At the configured `duration_secs` mark (with 0.15 s of slack), it starts an
+   **equal-power** crossfade: `cos`/`sin` curves move the outgoing player down
+   and the incoming player up so the summed power stays constant through the
+   middle. A linear ramp held the amplitude sum at 1, which put a ~3 dB dip in
+   the centre; the equal-power curve trades that for a ~1.5 dB rise.
 3. The incoming player becomes the active one.
 
 The state machine exposes a `crossfade` setting as `Option<CrossfadeConfig>`
@@ -23,12 +25,16 @@ The state machine exposes a `crossfade` setting as `Option<CrossfadeConfig>`
 Crossfade is **enabled by default with a 6-second duration**. Durations are
 clamped to a maximum of 30 seconds.
 
-### Countdown
+### Limits
 
-The daemon emits a `CrossfadeCountdown` event about 3 seconds before the
-crossfade begins (plus the configured duration). Clients use it to animate a
-"next up" indicator in the UI and to cue the lyric auto-scroll toward the
-incoming track.
+- Crossfade is skipped for `spotify:` tracks: librespot keeps one player per
+  session, so pre-decoding the next track would tear down the current one.
+  Spotify uses its own preload/gapless path instead.
+- A remote stream is resolved and decoded ahead of the transition where
+  possible; if that fails, playback falls back to the normal hard switch.
+- There is no separate countdown event. The daemon starts the standby decode
+  inside the final `duration_secs` window; clients observe the track change
+  when the incoming player is promoted.
 
 ---
 
@@ -37,7 +43,9 @@ incoming track.
 ### In the TUI
 
 - `Alt+,` → Playback → Crossfade opens a picker with preset durations:
-  **3, 5, 10, 15, 30 seconds**, plus an option to toggle enabled/disabled.
+  **3, 5, 10, 15, 30 seconds**. Selecting a duration sets the length but does
+  not change whether crossfade is enabled. The Settings row reads `Off` when it
+  is disabled; use the CLI to turn it on or off.
 
 ### CLI
 
@@ -58,8 +66,13 @@ footer `Playback` module.
 
 ## Gapless mode
 
-There isn't one. `gapless` was a persisted boolean with no code behind it and
-has been removed; crossfade (above) is the only seam handling gtm does.
+There is no user-facing `gapless` setting. The old persisted boolean had no
+code behind it and has been removed. Locally, crossfade (above) is the only
+seam handling gtm does.
 
----
+Spotify is the exception: librespot is asked to preload the next track before
+the current one ends, so a Spotify run advances without a fetch or a silent
+gap. That preload is separate from crossfade. Crossfade is skipped for
+`spotify:` tracks (librespot keeps one player per session), so enabling it does
+not overlap two Spotify tracks; the handoff is gapless, not a blend.
 

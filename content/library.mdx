@@ -44,31 +44,34 @@ cover file, not to deduplicate. The same bytes at two paths create two rows.
 
 ### Browsing
 
-The library lists 11 categories in the sidebar:
+The library lists six categories in the sidebar:
 
 | Category | Contents |
 |----------|----------|
 | **Library** | Every track the daemon knows — the local library plus, when linked, every track of every synced Spotify playlist |
-| **Liked** | Tracks you favourited |
-| **Playlists** | Your playlists |
+| **Playlists** | Your playlists, plus the Most Played, Recently Played, Recently Added and Liked groups |
 | **Spotify** | Synced Spotify playlists (when linked) |
 | **Radio** | Custom and discovered stations |
-| **Most Played** | Sorted by play count |
-| **Recently Played** | Sorted by last-played time |
-| **Recently Added** | Newest library entries first |
-| **Folders** | Grouped by source folder |
-| **Top Charts** | Provider charts from Apple Music and Deezer, plus Spotify's editorial playlists when an account is linked |
+| **Top Charts** | Free Apple and Deezer charts, resolved through Spotify for playback; see [Top Charts](/charts/) |
 | **Podcasts** | Subscribed podcast feeds; drilling in lists that feed's episodes |
 
-**Library has four groupings, not four rows.** `[` and `]` walk **Tracks →
-Albums → Artists → Genres** over the same merged track list; the pane header
-names the grouping currently on screen, and switching drops any album, artist
-or genre drill-down and returns the cursor to the top. The `Library` row's
-count tracks whichever grouping is showing.
+**Library has five groupings, not five rows.** `[` and `]` walk **Tracks →
+Albums → Artists → Genres → Folders** over the same merged track list; the pane
+header names the grouping currently on screen, and switching drops any
+album/artist/genre/folder drill-down and returns the cursor to the top. The
+`Library` row's count tracks whichever grouping is showing.
+
+**Playlists has five groups, not five sidebar rows.** Opening Playlists shows
+`Playlists`, `Most Played`, `Recently Played`, `Recently Added` and `Liked`;
+`[` / `]` move between groups and `Enter` opens the selected one. Only the
+`Playlists` group is a list of playlists — the other four list their tracks
+directly. A config written with the old top-level names keeps its content:
+`Liked` maps to Playlists and `Folders` maps to Library.
 
 `Alt+S` cycles five sort orders in the **List** context only, and applies to
-the flat view of Library / Liked (Playlists, Spotify and Radio sort
-upstream). The default is `Recents`:
+Library's flat Tracks view and its album/artist/genre/folder drill-downs. The
+Playlists groups, Spotify and Radio keep the order their source supplies. The
+default is `Recents`:
 
 | Order | Sorts by |
 |-------|----------|
@@ -87,7 +90,7 @@ is no cap on the result list.
 ## Favourites
 
 - `f` — toggle favourite for the selected/current track
-- The **Liked** category lists favourited tracks
+- The **Liked** group, inside Playlists, lists favourited tracks
 
 CLI:
 
@@ -111,6 +114,24 @@ gtm --cli create-playlist "My Mix"  # create
 gtm --cli delete-playlist <id>      # delete
 gtm --cli add-to-playlist <pid> <track id>...  # add tracks
 ```
+
+### Provider playlists
+
+Playlists owned by a provider are separate from local playlists. The TUI's
+command palette has a **playlist actions** entry that lists the verbs the
+highlighted provider supports, and the CLI uses the `playlist` namespace:
+
+```bash
+gtm --cli playlist sources
+gtm --cli playlist create --source spotify --name "Late Night"
+gtm --cli playlist add --source spotify --id <id> --track spotify:track:...
+gtm --cli playlist rename --source spotify --id <id> --name "After Hours"
+gtm --cli playlist subscribe --source spotify --id <id>
+```
+
+See the [CLI reference](/cli/#provider-playlists) for every verb and flag. A
+provider that does not support an action reports the refusal rather than
+attempting it.
 
 ### Import / Export
 

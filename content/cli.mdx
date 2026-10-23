@@ -52,7 +52,7 @@ stderr with exit code 1.
 | `next` | | Skip to the next track |
 | `prev` | | Skip to the previous track |
 | `seek` | `<POSITION_SECS>` | Seek to an absolute position in seconds |
-| `volume` | `<VOLUME>` | Set volume, 0–100 |
+| `volume` | `[VOLUME]` | Set volume, 0–100. With no argument, print the current volume |
 | `shuffle` | | Toggle shuffle |
 | `repeat` | `<MODE>` | Set repeat mode: `off`, `one` or `all` |
 | `mute` | | Toggle mute |
@@ -115,6 +115,34 @@ Credentials come from `gtm setup lastfm` — see
 | `import-playlist` | `<FILE> [--format <FORMAT>]` | Import a playlist file. `FORMAT` is `m3u8` (default) or `pls` |
 | `export-playlist` | `<PLAYLIST_ID> <FILE> [--format <FORMAT>]` | Export to a playlist file, same formats |
 
+These commands operate on **local** playlists. Playlists owned by a provider
+(Spotify and any other registered provider) use the separate `playlist`
+namespace below.
+
+### Provider playlists
+
+```bash
+gtm --cli playlist sources
+```
+
+`sources` lists the registered playlist providers and the verbs each supports.
+The remaining commands take `--source <SOURCE>` and a provider-native playlist
+`--id`:
+
+| Command | Key arguments | Description |
+|---------|---------------|-------------|
+| `playlist create` | `--source <SOURCE> --name <NAME> [--description <TEXT>] [--public]` | Create a playlist |
+| `playlist rename` | `--source <SOURCE> --id <ID> [--name <NAME>] [--description <TEXT>] [--public \| --private]` | Rename or change visibility |
+| `playlist add` | `--source <SOURCE> --id <ID> --track <TRACK>... [--at <POSITION>]` | Add one or more provider-native track references |
+| `playlist remove` | `--source <SOURCE> --id <ID> --track <TRACK>... [--position <INDEX>]...` | Remove occurrences by track and optional position |
+| `playlist delete` | `--source <SOURCE> --id <ID>` | Delete a playlist |
+| `playlist subscribe` | `--source <SOURCE> --id <ID> [--off]` | Follow a playlist, or unfollow it with `--off` |
+| `playlist copy` | `--source <SOURCE> --id <ID> [--name <NAME>]` | Copy a playlist into one the account owns |
+
+A provider that does not support a verb reports that refusal instead of
+attempting the operation. The TUI exposes the same supported subset through the
+playlist actions picker.
+
 ### Search and lyrics
 
 | Command | Arguments | Description |
@@ -132,6 +160,7 @@ registered with `GTM_YT_HOSTS` — see [YouTube](/youtube/).
 |---------|-----------|-------------|
 | `audio-devices` | | List output devices the active backend reports |
 | `set-audio-device` | `<NAME>` | Switch output device. `default` restores the system default |
+| `eq-presets` | | List the equalizer presets the daemon offers, in picker order |
 
 Switching device stops playback, so the queue picks up from the start.
 

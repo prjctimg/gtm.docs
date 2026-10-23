@@ -1,0 +1,465 @@
+---
+title: Neovim
+description: "gtm.nvim: playback control, statusline integration, native pickers, and reactive theming inside Neovim."
+path: /nvim
+order: 24
+---
+
+## Your music, inside Neovim
+
+`gtm.nvim` is a thin Neovim client for `gtmd`. It stays out of the way: no
+custom windows, no bundled picker UI, no cover-art renderer, and no default
+keymaps. What it does provide is transport control, a statusline that can show
+what is playing, native `vim.ui.select` pickers over the queue and library, and
+reactive theming that tints the editor with the colours of the current cover.
+
+That division is deliberate. Browsing uses whatever selector you already have —
+fzf-lua, Telescope, snacks, or the stock numbered list — so search and preview
+behave the way the rest of your editor does. Cover art, downloads and full
+library editing stay in `gtm`'s TUI.
+
+`gtm.nvim` talks to the daemon over the same two Unix sockets as any other
+client. It does not start `gtmd` for you.
+
+---
+
+## Requirements
+
+- **Neovim 0.11 or newer** — the plugin uses `vim.uv`, `vim.mpack` and the
+  modern `vim.api` interfaces.
+- **`gtmd` already running.** Start it separately, normally as a user service.
+  The plugin warns if the socket is missing; it never spawns a daemon.
+- **Optional:** a `vim.ui.select` provider for searchable pickers. Without one,
+  pickers fall back to the stock numbered `inputlist`, which works but cannot
+  search.
+- **Optional:** a Nerd Font for the default source icons. Plain-Unicode
+  replacements are shown below.
+
+There are no required plugin dependencies.
+
+---
+
+## Install and start
+
+With `lazy.nvim`:
+
+```lua
+{
+  "prjctimg/gtm.nvim",
+  opts = {},
+}
+```
+
+With Neovim's built-in package manager, or any setup where the plugin is loaded
+manually, call setup once:
+
+```lua
+require("gtm").setup({})
+```
+
+`plugin/gtm.lua` installs a `VeryLazy` fallback that calls `setup({})` when the
+plugin was loaded outside lazy.nvim and setup has not already been claimed. An
+explicit `require("gtm").setup(opts)` marks setup as owned, so the fallback does
+not overwrite your options. Setup is idempotent: reloading config does not
+duplicate sockets, handlers or autocommands.
+
+Once `gtmd` is running, start something playing with `gtm` or the plugin, and
+the statusline and theme begin updating. No pairing step or token is involved.
+
+:::note
+If you use a plugin manager that only lazy-loads on demand, make sure
+`gtm.nvim` is loaded before expecting the statusline component or `:Gtm`
+commands to exist. With `lazy.nvim`, `opts = {}` is enough to trigger setup.
+:::
+
+---
+
+## Configuration
+
+The complete default options:
+
+```lua
+{
+  "prjctimg/gtm.nvim",
+  opts = {
+    -- Periodic status resync. Events drive the UI; this keeps the clock honest.
+    resync_interval = 30000,
+
+    -- Override discovery for unusual runtimes. The pulse socket is this path's
+    -- sibling: gtmd.sock -> gtmd.pulse.
+    -- socket_path = "/run/user/1000/gtm/gtmd.sock",
+
+    statusline = {
+      source = true,
+      state = true,
+      artist = false,
+      title = false,
+      album = false,
+      progress = false,
+      time = false,
+      volume = false,
+      repeat = false,
+      shuffle = false,
+
+      icons = {
+        spotify = "󰓇", -- U+F04C7
+        radio = "󰐹",   -- U+F0439
+        podcast = "󰦔", -- U+F0994
+        local = "󱍙",   -- U+F1359
+        chart = "󰄪",   -- U+F012A
+      },
+    },
+
+    theme = {
+      reactive = true,
+      -- How far backgrounds move toward the album palette, clamped to 0..0.5.
+      intensity = 0.34,
+      -- Extra highlight groups to tint along with the built-in set.
+      extra_groups = {},
+    },
+
+    -- Every key is off unless you assign a key. There are no defaults.
+    keymaps = {},
+  },
+}
+```
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `resync_interval` | `30000` | Milliseconds between `get_status_lite` resyncs and theme re-assertion |
+| `socket_path` | auto | Command socket path. The plugin derives `gtmd.pulse` from it |
+| `statusline.*` | see above | Enable individual statusline items and override source icons |
+| `theme.reactive` | `true` | Tint highlights from the daemon's resolved role sets |
+| `theme.intensity` | `0.34` | Background wash strength, clamped to `0`–`0.5` |
+| `theme.extra_groups` | `{}` | Additional highlight groups to tint |
+| `keymaps` | `{}` | Opt-in normal-mode mappings by action name |
+
+### Socket discovery
+
+When `socket_path` is unset, the plugin tries these paths in order and uses the
+first one that exists:
+
+1. `$XDG_RUNTIME_DIR/gtm/gtmd.sock`
+2. `/tmp/gtm-$USER/gtmd.sock`
+3. `$TMPDIR/gtm/gtmd.sock`
+4. `$HOME/.gtm/gtm/gtmd.sock`
+
+The pulse socket sits beside the command socket (`gtmd.sock` →
+`gtmd.pulse`). Set `socket_path` explicitly when the daemon runs in a different
+runtime directory, a container, or under another user.
+
+### Opt-in keymaps
+
+There are **no default keymaps**. Map only what you want:
+
+```lua
+{
+  "prjctimg/gtm.nvim",
+  opts = {
+    keymaps = {
+      play_pause = "<leader>gp",
+      next = "<leader>gn",
+      prev = "<leader>gN",
+      volume_up = "<leader>g>",
+      volume_down = "<leader>g<",
+      stop = "<leader>gS",
+      queue = "<leader>gq",
+      spotify = "<leader>gs",
+      spotify_playlists = "<leader>gP",
+      radio = "<leader>gr",
+      search = "<leader>g/",
+      playlists = "<leader>gl",
+      favourites = "<leader>gf",
+    },
+  },
+}
+```
+
+The available mapping names are `play_pause`, `next`, `prev`, `stop`,
+`volume_up`, `volume_down`, `queue`, `spotify`, `spotify_playlists`, `radio`,
+`search`, `playlists` and `favourites`. Mappings are normal-mode only. Actions
+without a mapping name — mute, shuffle, seek, repeat, status and theme — are
+still available as commands and Lua functions.
+
+:::note
+`vim.tbl_deep_extend("force", ...)` merges nested tables. If you define
+`statusline.icons`, only the icons you name are replaced; the others keep their
+defaults.
+:::
+
+---
+
+## Statusline
+
+Only `source` and `state` are enabled by default. Everything else is opt-in, so
+nothing is squeezed into the statusline without asking.
+
+```lua
+{
+  "prjctimg/gtm.nvim",
+  opts = {
+    statusline = {
+      source = true,    -- source marker
+      state = true,     -- ▶ ⏸ ⏹
+      artist = true,
+      title = true,
+      album = false,
+      progress = true,  -- 20-column bar
+      time = false,     -- [01:23/04:56]
+      volume = false,   -- vol:80%
+      repeat = false,   -- [R] when repeat is not off
+      shuffle = false,  -- [S] when shuffle is on
+    },
+  },
+}
+```
+
+Items render in this order: source, state, artist, title, album, progress, time,
+volume, repeat, shuffle. An item with nothing to show is skipped, so the empty
+state is just `⏹` rather than a row of zeroes. The progress bar and clock advance
+locally between daemon events instead of waiting on the socket.
+
+### Source icons
+
+`statusline.source` shows where the audio came from, using Material Design
+Icons codepoints from a Nerd Font:
+
+| Source | Glyph | Codepoint |
+|--------|-------|-----------|
+| Spotify | `󰓇` | U+F04C7 |
+| Radio | `󰐹` | U+F0439 |
+| Podcast | `󰦔` | U+F0994 |
+| Local | `󱍙` | U+F1359 |
+| Chart | `󰄪` | U+F012A |
+
+A source `gtmd` has not named renders nothing rather than guessing. Without a
+Nerd Font these private-use codepoints appear as empty boxes; substitute plain
+Unicode:
+
+```lua
+icons = { spotify = "◉", radio = "☁", podcast = "❋", local = "♫", chart = "▤" },
+```
+
+### lualine
+
+```lua
+require("lualine").setup({
+  sections = { lualine_x = { require("gtm").lualine_component() } },
+})
+```
+
+The lualine component hides itself while the daemon is unreachable.
+
+### Any statusline
+
+```lua
+vim.o.statusline = "%{%v:lua.require'gtm'.statusline()%}"
+```
+
+`require("gtm").statusline()` returns the rendered string and can be called
+from another statusline plugin or a custom `statusline` expression.
+
+---
+
+## Browsing with pickers
+
+Every picker is a `vim.ui.select` menu. The plugin draws no window and keeps no
+list of its own: your selector supplies the UI and its search. Selecting a track
+plays it; there is nothing to open or close.
+
+| Command | What it browses |
+|---------|-----------------|
+| `:Gtm queue` | The current queue; selecting a row plays it |
+| `:Gtm queue remove` | The queue, removing the selected row |
+| `:Gtm queue clear` | Clears the queue after a confirmation |
+| `:Gtm spotify {query}` | Spotify web search; only real tracks are listed |
+| `:Gtm spotify` | Prompts for the query first |
+| `:Gtm spotify-playlists` | Synced Spotify playlists → tracks |
+| `:Gtm radio` | Top Radio Browser stations |
+| `:Gtm radio {query}` | Radio Browser station search |
+| `:Gtm radio tags` | Tag → stations |
+| `:Gtm radio countries` | Country → stations |
+| `:Gtm search [query]` | The local library index |
+| `:Gtm playlists` | Local playlists → tracks |
+| `:Gtm favourites` | Favourites |
+
+Queue playback handles local paths, `spotify:` URIs and `radio://` streams
+alike. Queue edits are separate subcommands, so selecting a row only plays it.
+
+The stock `vim.ui.select` fallback is a numbered `inputlist`: it works, but
+search needs a selector plugin. Cover art is not rendered in any menu. A
+Spotify result carries its image URL to the daemon, so the queued row still gets
+artwork in the TUI.
+
+---
+
+## Commands
+
+| Command | What it does |
+|---------|--------------|
+| `:Gtm play` | Play / pause |
+| `:Gtm next` / `:Gtm prev` | Skip tracks |
+| `:Gtm stop` | Stop |
+| `:Gtm volup` / `:Gtm voldown` | Volume ±5% |
+| `:Gtm mute` | Mute / unmute |
+| `:Gtm seek {secs}` | Jump to an absolute position in the track |
+| `:Gtm shuffle` | Toggle shuffle |
+| `:Gtm repeat` | Cycle repeat: off → one → all |
+| `:Gtm repeat {off\|one\|all}` | Set the repeat mode |
+| `:Gtm status` | Show what is playing now |
+| `:Gtm theme` | Show the active palette |
+| `:Gtm theme reset` | Clear the tint and forget the current role set |
+| `:Gtm queue [remove\|clear]` | Browse the queue, remove the selected row, or clear it |
+| `:Gtm spotify [query]` | Search Spotify (tracks only) |
+| `:Gtm spotify-playlists` | Browse synced Spotify playlists |
+| `:Gtm radio [query\|tags\|countries]` | Top stations, search, or drill down by tag/country |
+| `:Gtm search [query]` | Search the local library |
+| `:Gtm playlists` | Browse local playlists |
+| `:Gtm favourites` | Browse favourites |
+
+The Lua API mirrors most of this:
+
+```lua
+local gtm = require("gtm")
+
+gtm.play_pause()
+gtm.next()
+gtm.prev()
+gtm.stop()
+gtm.mute()
+gtm.shuffle()
+gtm.cycle_repeat("one")      -- "off", "one" or "all"
+gtm.seek(90)                 -- absolute seconds
+gtm.set_volume(5)            -- delta, clamped to 0..100
+gtm.statusline()
+gtm.lualine_component()
+
+gtm.queue()                  -- or "remove" / "clear"
+gtm.spotify("aphex twin")
+gtm.spotify_playlists()
+gtm.radio("tags")
+gtm.search("selected ambient works")
+gtm.playlists()
+gtm.favourites()
+```
+
+Every message the plugin shows carries the same marker — `[gtm] 📻️` — so it is
+easy to spot in a busy message list.
+
+---
+
+## Reactive theming
+
+Reactive theming is on by default. Your editor takes on the colours of the cover
+of the track that is playing: surfaces are washed with the dominant colour and
+syntax highlights shift to the palette, so moving from one track to the next
+changes the room with it.
+
+**The daemon does the colour work, not the plugin.** `gtmd` reads the cover,
+extracts a palette, and resolves it into a complete role set — surfaces,
+foregrounds, accents, selection, syntax and semantics — then pushes that set over
+the pulse socket. The plugin maps roles onto highlight groups. The only colour it
+computes itself is the background wash, because the daemon cannot know which
+colorscheme you run. That keeps `gtm.nvim`, the TUI and any future client in
+agreement: one derivation, one answer.
+
+What to expect:
+
+- **Backgrounds are your colorscheme, washed with the album.** Each background
+  keeps its own colour and is blended toward the album-derived wash. The
+  configured `theme.intensity` (default `0.34`, clamped to `0`–`0.5`) is nominal:
+  values below `0.42` receive a `+0.12` floor before blending, so even
+  `intensity = 0` leaves a faint wash. It is your theme warmed by the record,
+  not a fixed grey substituted for it.
+- **The tint stays while paused.** It is restored only when playback really
+  stops, so pausing does not flash your original theme.
+- **Error, warning, diff, spell and `Todo` colours never move.** They must stay
+  readable regardless of the artwork, so semantic groups are excluded.
+- **Changing colorscheme mid-song re-picks light or dark and re-tints** rather
+  than dropping the theme.
+- **A track with no cover art does not clear the tint.** The daemon sends an
+  empty palette and skips the role set, so the plugin keeps the last role set it
+  received. A fresh client stays untinted; a running one keeps the previous
+  track's colours until something with artwork replaces them, or playback stops.
+- **Track changes re-tint live.** If the pulse stream drops — after a `gtmd`
+  restart, for example — it reconnects on its own and re-asserts the last role
+  set it received on the periodic resync. It does not invent or clear colours
+  while the daemon is away, so the old tint can outlast the track until a new
+  role set arrives.
+- `:Gtm theme reset` restores the highlights exactly as they were and clears the
+  stored role sets, so a later colorscheme change does not resurrect the tint.
+- Use `theme = { intensity = 0 }` for the faintest wash while accents and syntax
+  still follow the album. To keep backgrounds exactly as your colorscheme made
+  them, disable reactive theming with `theme = { reactive = false }`.
+
+This needs a `gtmd` that sends role sets. Against an older daemon the editor
+stays untinted rather than guessing a second palette. `:checkhealth gtm` reports
+when theming is enabled but no role set has arrived.
+
+---
+
+## How it talks to the daemon
+
+Two Unix sockets, both handled asynchronously through `vim.uv`:
+
+- **`gtmd.sock`** — newline-delimited JSON. Each request carries a client-chosen
+  `id`, and responses are correlated by it.
+- **`gtmd.pulse`** — length-prefixed MessagePack frames pushed by the daemon.
+  The plugin subscribes at startup and decodes the events it needs: playback
+  start/pause/stop, track end, volume, shuffle, repeat and reactive-theme sets.
+
+High-frequency audio telemetry — position, spectrum and waveform events — is
+filtered out before decoding, so a busy pulse stream does not burn time in the
+read callback. A slow `get_status_lite` resync keeps the clock and theme honest.
+
+```
+Neovim ──► gtmd.sock    "what's playing?"      ──►  JSON reply
+        ◄── gtmd.pulse   "this track started"   ──  pushed, unprompted
+```
+
+The command socket retries forever with a capped exponential backoff. The pulse
+stream has its own reconnection loop and watchdog: if no heartbeat arrives for a
+minute, it treats the stream as wedged and redials even though the socket still
+looks open. Neither socket requires an event loop plugin.
+
+### What is *not* in gtm.nvim
+
+- No custom windows or floating panes.
+- No cover-art rendering in pickers.
+- No automatic daemon startup.
+- No download, import or destructive library editing.
+- No default keymaps.
+- No required dependencies.
+
+Those are intentional boundaries, not missing wiring. The full TUI remains the
+place for library surgery, downloads and artwork.
+
+---
+
+## Health
+
+```vim
+:checkhealth gtm
+```
+
+The health check reports:
+
+- whether `gtmd` is on `$PATH`,
+- whether the command and pulse sockets exist and are connected,
+- how stale the last heartbeat and status snapshot are,
+- whether reactive theming is enabled and receiving a palette.
+
+If the statusline never updates or `:Gtm` commands seem to vanish, start here.
+The most common causes are a `gtmd` that is not running, a socket in a runtime
+directory the plugin is not searching, or a plugin manager that has not loaded
+`gtm.nvim` yet.
+
+---
+
+## Specification and source
+
+- [gtm.nvim](https://github.com/prjctimg/gtm.nvim) — plugin source, README and
+  changelog.
+- [gtm.spec](https://github.com/prjctimg/gtm.spec) — the shared specification.
+- [Protocol](https://github.com/prjctimg/gtm.spec/blob/main/protocol.md) — the
+  IPC reference for client authors.

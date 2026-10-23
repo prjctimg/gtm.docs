@@ -3,7 +3,7 @@ title: Installation
 description: "Official installation methods, package managers, and build configurations for gtm."
 path: /install
 showVersion: true
-order: 21
+order: 22
 ---
 
 A complete installation provides:
@@ -38,13 +38,54 @@ Below are the flags for adjusting installation behaviour:
 
 | Flag | Effect |
 |------|--------|
-| `--version <ver>` | Pin a specific release, e.g. `install.sh --version 0.2.83` |
+| `--version <ver>` | Pin a specific release, e.g. `install.sh --version 0.2.95` |
+| `--nightly` | Install the latest nightly prerelease |
 | `--prefix <dir>` | Install somewhere other than `$HOME/.local` |
 | `--yes` | Never prompt, e.g. to enable `gtmd` unattended |
+
+When the script is run from inside a release archive it installs the bundled
+binaries, man pages, completions, systemd unit, desktop entry and icon.
+
+```bash
+# latest stable
+curl -fsSL https://gtmd.dev/install.sh | bash
+
+# latest nightly build
+curl -fsSL https://gtmd.dev/install.sh | bash -s -- --nightly
+```
 
 :::caution
 On macOS the installer always fetches the `aarch64-darwin` artifact, so it
 works on Apple Silicon only.
+:::
+
+---
+
+## Uninstall
+
+The companion script removes the installed binaries, man pages, completions and
+desktop integration:
+
+```bash
+curl -fsSL https://gtmd.dev/uninstall.sh | bash
+```
+
+| Flag | Effect |
+|------|--------|
+| `--purge` | Also remove config, library and caches after asking for confirmation |
+| `--prefix <dir>` | Prefix gtm was installed under (default: `$HOME/.local`) |
+| `--home <dir>` | Treat `<dir>` as home for every purge target, ignoring inherited `XDG_*` variables |
+| `--config-dir <dir>` | Purge `<dir>/gtm` instead of the XDG config root |
+| `--data-dir <dir>` | Purge `<dir>/gtm` instead of the XDG data root |
+| `--cache-dir <dir>` | Purge `<dir>/gtm` instead of the XDG cache root |
+| `--runtime-dir <dir>` | Purge `<dir>/gtm` instead of `XDG_RUNTIME_DIR` |
+| `--yes` | Non-interactive; never prompt |
+
+:::note
+`--purge` reads `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_CACHE_HOME` and
+`XDG_RUNTIME_DIR` from the environment. Passing `--home`, `--config-dir`,
+`--data-dir`, `--cache-dir` or `--runtime-dir` names the target explicitly and
+ignores the inherited XDG values.
 :::
 
 ---

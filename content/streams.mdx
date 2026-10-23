@@ -1,7 +1,7 @@
 ---
 title: Streams
 description: "Playing direct HTTP(S) audio URLs as live streams."
-order: 18
+order: 19
 ---
 
 
@@ -13,6 +13,7 @@ The daemon recognizes these synthetic remote path schemes:
 |--------|----------|
 | `podcast://<feed_id>/<index>` | Podcast episode |
 | `radio://<station_id>/<name>` | Internet radio station |
+| `chart://<url>` | A chart provider's preview URL, when queued directly |
 | `spotify:` | Spotify track (via librespot) |
 | **`http://` / `https://` ...** | **Direct stream URL** |
 
@@ -35,6 +36,16 @@ targets: icecast-style `/stream`, `.mp3`, `.ogg`, `.m4a`/`.aac` endpoints.
 
 From the TUI, open the stream picker (`Alt+o`) to paste a URL, or use the
 queue-add picker.
+
+### Chart previews
+
+Top Charts normally resolves a row through Spotify instead of queueing the
+provider's preview URL, so its playback reports `spotify` or `local`. The daemon
+still accepts a `chart://<url>` path for a provider preview stream: the URL is
+fetched as an on-demand remote stream and the source is reported as `chart`.
+This keeps a directly queued chart preview distinct from a plain `https://`
+stream and from `radio://`, even though all three travel through the same remote
+pipeline.
 
 ---
 

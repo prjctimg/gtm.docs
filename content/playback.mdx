@@ -27,8 +27,8 @@ explicitly play or enqueue again.
 - `m` — toggle mute
 
 Volume range is 0–100 and is persisted across restarts. Each `+`/`-` press
-changes it by 5. The CLI equivalents are `gtm --cli volume <vol>` and
-`gtm --cli mute`.
+changes it by 5. The CLI equivalents are `gtm --cli volume [vol]` and
+`gtm --cli mute`; omitting the volume prints the current value.
 
 ---
 
@@ -144,13 +144,21 @@ The daemon persists the following to `state.json` on every change:
 - Repeat mode, shuffle
 - Mono downmix flag
 - Crossfade configuration
-- Dynamic-mode and scrobble configuration
+- Scrobble configuration
+- The current track, its position, and the playback **source** (`local`,
+  `spotify`, `radio`, `podcast` or `chart`)
 - Audio settings: `eq_preset`, `eq_enabled`, `reverb`, `pre_gain_db`,
   `audio_device` — flattened to the top level of the file, not nested under an
   `audio` key
 
-The current track and position **are** persisted and resumed on restart; the
-sleep timer is not.
+The current track and position **are** persisted. Without `resume_on_start`,
+the daemon restores them **paused**: the track is loaded and the position is
+kept, but the mixer is not started and no `playback_started` event is
+broadcast. Set `resume_on_start = true` in `config.toml` to start the restored
+track when the daemon starts. The sleep timer is not persisted.
+
+Dynamic mode no longer exists as a setting, saved field or event. Queue
+behaviour is fixed.
 
 ---
 

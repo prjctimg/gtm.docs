@@ -1,7 +1,7 @@
 ---
 title: The gtm Daemon
 description: "gtmd architecture, start/stop, Unix sockets, data files, logs, and command-line options."
-order: 20
+order: 21
 ---
 
 
@@ -76,6 +76,12 @@ framing: 4-byte length prefix followed by a MessagePack-encoded
 Multiple clients (TUI + `gtm --cli` + playerctl) can attach and all share the
 one `.pulse` event socket.
 
+Playback state carries the audio **source** beside `current_track`, using one of
+`local`, `spotify`, `radio`, `podcast` or `chart`. It is present in `get_status`
+responses so a newly connected client can draw the source marker immediately,
+and in the `playback_started` event for each new track. An unknown value is not
+an error; clients render no marker rather than guessing.
+
 ---
 
 ## Data files
@@ -85,7 +91,7 @@ Under the XDG data dir (`~/.local/share/gtm/`):
 | File / dir | Purpose |
 |------------|---------|
 | `library.db` | SQLite metadata for scanned tracks |
-| `state.json` | Persisted state: queue and cursor, current track, position and resume flag, volume, mute, mono, repeat, shuffle, crossfade, `dynamic_mode`, scrobble toggle, and the **flattened** audio settings (`eq_preset`, `eq_enabled`, `reverb`, `pre_gain_db`, `audio_device`). There is no `gapless`, no `low_power` and no loudness mode |
+| `state.json` | Persisted state: queue and cursor, current track, position and playback source, volume, mute, mono, repeat, shuffle, crossfade, scrobble toggle, and the **flattened** audio settings (`eq_preset`, `eq_enabled`, `reverb`, `pre_gain_db`, `audio_device`). There is no `gapless`, no `low_power`, no loudness mode and no dynamic mode |
 | `gtmd.log` | Daemon log, **truncated on every start** (only `--test-mode` skips it) |
 | `audio/` | Default library audio dir |
 
@@ -109,6 +115,9 @@ Config dir (`~/.config/gtm/`):
 | `themes/*.toml` | User themes |
 | `podcast.json` | Podcast subscriptions |
 | `radios.toml` | Custom radio stations |
+| `spotify.json` | Spotify access/refresh token (mode 0600) |
+| `spotify_client_id` | Spotify Web API app id that minted the token |
+| `spotify_playlists.json` | Last synced Spotify playlist snapshot |
 | `spotify_stream.json` | Resolved stream URL for the active Spotify track |
 
 ---

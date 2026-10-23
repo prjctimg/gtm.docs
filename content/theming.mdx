@@ -1,7 +1,7 @@
 ---
 title: Theming
 description: "Built-in and user themes, theme-mode detection, reactive theming, progress styles, footer presets, and icons."
-order: 12
+order: 13
 ---
 
 
@@ -48,8 +48,8 @@ The default theme is **Chadrula**.
 
 | Value | Behavior |
 |-------|----------|
-| `auto` (default) | Query the OS dark/light preference; pick a matching theme |
-| `dark` | Force a dark theme |
+| `dark` (default) | Force a dark theme |
+| `auto` | Query the OS dark/light preference; pick a matching theme |
 | `light` | Force a light theme |
 | `manual` | Keep the current theme; OS detection stays off until you return to `auto` |
 
@@ -124,7 +124,7 @@ Notes:
 
 ```toml
 # config.toml
-reactive_theme = true                # default: false
+reactive_theme = true                # new configs default to true
 reactive_theme_intensity = 0.34      # default 0.34; bound 0.0–1.0
 ```
 
@@ -132,16 +132,32 @@ The picker steps intensity through five presets: `0.15`, `0.25`, `0.34`,
 `0.45`, `0.6`.
 
 With reactive theming on, the palette is **derived live from the
-currently-played track's cover art**. The **client** extracts a dominant
-palette (median-cut, 10 colours) on a background thread and blends it into the
-base theme. It degrades gracefully to the base theme when no cover is available.
+currently-played track's cover art**. The daemon extracts the dominant palette
+for the track and derives a complete set of named roles for both light and dark
+polarities. It broadcasts both the palette and the role set on the pulse socket.
+`gtm.nvim` consumes the role set directly; the TUI consumes the palette and
+runs the same shared derivation code to map it onto its own surfaces. No client
+decodes the cover itself, and there is one ramp implementation rather than two.
+
+Roles are grouped by purpose: surfaces, foregrounds, accents, lines, selections,
+search, cursor, syntax, semantic colours, diffs and misc. **Semantic roles
+(diagnostics) take no tint at all** — error, warning and success must not move
+with the album art. Accents are pulled away from luminance extremes so a
+near-white or near-black dominant colour stays legible. When the cover yields no
+palette, the base theme is kept.
 
 :::note
-Reactive theming re-tints the *accents* — and those take the artwork colours
-nearly verbatim, so `reactive_theme_intensity` does **not** damp them. The
-intensity instead controls a faint ambient wash of the dominant colour laid over
-`bg`, `pane_bg`, `elevated_bg` and `picker_bg`. Set it to `0.0` to leave
-backgrounds entirely on the base theme.
+Reactive theming re-tints the *accents* — those take the artwork colours nearly
+verbatim, so `reactive_theme_intensity` does **not** damp them. The intensity
+instead controls a faint ambient wash of the dominant colour laid over `bg`,
+`pane_bg`, `elevated_bg` and `picker_bg`. Set it to `0.0` to leave backgrounds
+entirely on the base theme.
+:::
+
+:::note
+A newly generated `config.toml` writes `reactive_theme = true`. A config written
+before the key existed omits it, and the serde default for a missing key is
+`false`, so upgrading does not silently change an older setup.
 :::
 
 ---

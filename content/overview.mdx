@@ -29,7 +29,16 @@ Using this approach of having the client separate from the daemon (which is like
 
 The client is free to attach and detach as the user pleases, allowing the flexibility to control playback without having to leave the terminal. This is a big deal if one wants to avoid too much context switching.
 
-Terminal (power) users have an obsession of integrating their essential tools into their editor (`nvim`, btw), this is made possible by `gtmd` which allows for remote control and has a 'pulse' socket for sending updates to clients using binary encoded frames (decoding handled by MessagePack in nvim). Yes, there's a gtm.nvim and it not only brings image rendering support inside of the editor, it also takes over your theme and makes it reactive too! 
+Terminal (power) users have an obsession with integrating their essential tools
+into their editor (`nvim`, btw). `gtmd` makes that possible: clients can send
+remote commands and subscribe to the **pulse** socket, which carries updates as
+MessagePack-encoded frames. `gtm.nvim` uses that connection for transport
+controls, native pickers, an optional statusline, and reactive theming that
+tints the editor from the current track's artwork.
+
+It deliberately does **not** render cover art or create custom windows. Cover
+art, downloads and full library editing stay in the TUI. See
+[Neovim](/nvim/) for setup, the statusline and the public API.
 
 
 > [!NOTE]

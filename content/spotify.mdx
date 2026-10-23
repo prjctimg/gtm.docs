@@ -1,7 +1,7 @@
 ---
 title: Spotify
 description: "Linking a Spotify account, search and streaming, playlist sync, and cover art."
-order: 14
+order: 15
 ---
 
 
@@ -75,6 +75,29 @@ Your Spotify playlists appear in the **Library → Spotify** category. Syncing
 is additive and caches the track list so the category is usable offline
 (see below). New playlist edits sync on the next `spotify sync`.
 
+### Provider playlist actions
+
+The command palette's **playlist actions** entry lists the verbs Spotify
+supports for the highlighted playlist. The same operations are available from
+the CLI under `gtm playlist`:
+
+```bash
+gtm --cli playlist sources
+gtm --cli playlist create --source spotify --name "Late Night"
+gtm --cli playlist add --source spotify --id <id> --track spotify:track:...
+gtm --cli playlist subscribe --source spotify --id <id>
+```
+
+`gtm playlist sources` is the authority on what the linked provider offers; the
+other verbs are listed in the [CLI reference](/cli/#provider-playlists).
+
+### Gapless preload
+
+Spotify tracks are preloaded shortly before the current one ends, so the next
+track is already decoded when the transition arrives. This is **preload, not
+crossfade**: crossfade is skipped for `spotify:` tracks because librespot keeps
+one player per session. The handoff is gapless, not an overlap.
+
 ---
 
 ## The Spotify Web cache
@@ -82,7 +105,10 @@ is additive and caches the track list so the category is usable offline
 `spotify.json` (mode 0600) and a sibling `spotify_client_id` in the **daemon
 config dir** hold the access/refresh token and the authorised client id, both
 mirrored into the OS keychain — so a linked account does not require
-re-authorization every launch. Playlists are cached **in memory only**.
+re-authorization every launch. The last successful playlist sync is persisted
+to `spotify_playlists.json`, so a reconnect can still show the category while a
+Web API quota window is exhausted. Playlist edits sync on the next
+`spotify sync`.
 
 `~/.cache/gtm/spotify/` is a different thing entirely: it is the yt-dlp audio
 cache used by the Spotify→YouTube fallback for tracks librespot cannot stream,

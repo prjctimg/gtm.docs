@@ -1,0 +1,142 @@
+---
+title: Top Charts
+description: "Browsing Apple and Deezer charts, how chart rows are resolved for playback, artwork, and how charts differ from radio."
+order: 10
+---
+
+## What Top Charts is
+
+**Top Charts** is a sidebar category that browses ranked music charts from free,
+unauthenticated providers. Browsing needs no account and adds nothing to your
+library. It is a catalogue with three levels, walked with `Enter` and
+`Backspace` (or `Esc`):
+
+1. **Source** — Apple or Deezer
+2. **Chart** — a country, genre, track or album chart
+3. **Tracks** — the ranked rows
+
+The selected source and chart stay open while you browse, so backing out one
+level at a time returns you to the same list rather than the top.
+
+Opening a chart row is a separate step from browsing it: the row is matched to
+**Spotify** and played from there. A Spotify account must be linked to play a
+chart row, and rows become Spotify entries in the queue rather than chart
+entries. See [Playback](#playback) below.
+
+---
+
+## Providers
+
+| Source | Charts | Size | Notes |
+|--------|--------|------|-------|
+| **Apple** (`iTunes Top Songs`) | 12 country charts + 6 US genre charts | Top 100 each | Per-country and per-genre; US store for genres |
+| **Deezer** (`Deezer Charts`) | Top Tracks and Top Albums | Top 300 tracks, Top 100 albums | Global charts; no country axis |
+
+### Apple
+
+Apple's charts come from the public iTunes RSS generator, so no Apple Music
+account, developer token or API key is needed to browse them. Each country has
+a Top Songs chart; genres are the US store's Pop, Rock, Hip-Hop/Rap,
+Electronic/Dance, R&B/Soul and Country charts.
+
+The RSS feed publishes the ranking but no artwork. gtm resolves artwork and
+duration through a batched iTunes lookup. An entry the lookup cannot match
+still appears, and can still be played by its title and artist, but its row has
+no artwork.
+
+### Deezer
+
+Deezer's public API needs no key and serves the global charts. **Top Tracks**
+is 300 tracks with per-track artwork and duration. **Top Albums** is 100 albums.
+An album entry has artwork and an album title, but no track title or preview
+of its own; it is a catalogue row rather than a reliable play target.
+
+Deezer also publishes editorial playlists, but those are lists *of* tracks
+rather than charts *of* tracks, and the chart row model does not represent
+them.
+
+---
+
+## Playback
+
+A chart row is resolved in one of two ways:
+
+- if the provider supplied a `spotify:track:` URI, that track is used directly;
+- otherwise gtm searches Spotify for `artist - title` and uses the best match.
+
+With Spotify linked, playback then follows the normal Spotify path. On Premium,
+the track streams natively through librespot. Without Premium, gtm falls back
+to a YouTube match. Without a linked Spotify account, chart playback fails even
+though the chart itself is still browsable.
+
+Because the row becomes a Spotify or fallback-local track, the playback source
+is reported as `spotify` or `local`, not `chart`. The `chart://` path described
+in [Streams](/docs/streams/) is a daemon capability for enqueuing a provider's
+preview URL directly; the TUI does not use it for chart rows.
+
+Chart rows are not library rows. They cannot be deleted, edited, downloaded or
+favourited from the chart list.
+
+### Hover previews
+
+Resting the cursor on a chart row starts the same Spotify resolution after
+`preview_delay_secs` (default 3 seconds), but **only while the transport is
+stopped**. A preview never cuts off something you chose to play, and moving the
+cursor re-arms the timer, so passing over a chart does not fire a request for
+every row. Set the delay to `0` to disable hover previews, or change it from
+Settings → Playback → Preview Delay.
+
+---
+
+## Artwork
+
+A chart is a ranking, not a release, so it has no artwork of its own. The sleeve
+is the current number-one row's artwork. When the cursor rests on a chart, the
+TUI asks the daemon for that chart's head and caches the answer by chart id for
+the session, so scrolling back over a chart costs nothing.
+
+- **Deezer** resolves a cover for each chart when the chart list is built, using
+  the first entry's artwork.
+- **Apple** publishes no artwork for the chart itself. The daemon resolves the
+  head of the chart and backfills missing track art from Deezer. A chart whose
+  head still cannot be matched stays blank rather than borrowing an unrelated
+  image.
+- A Deezer **Top Albums** row uses the album's own cover. A track row with no
+  release art falls back to the artist picture.
+
+Chart row artwork is loaded directly from the provider's CDN. It does not go
+through the local cover cache, because there is no local file to cache it
+against.
+
+---
+
+## Top Charts vs Radio
+
+| | Top Charts | Radio |
+|---|---|---|
+| Contents | Ranked, finite chart rows | Live stations |
+| Browsing account | None | None |
+| Playback | Resolved through Spotify | Direct live stream |
+| Playback source | `spotify` or `local` | `radio` |
+| Duration | Full resolved track | Continuous, non-seekable |
+
+Both categories are separate from the local library and from `spotify:`
+playlists. A station uses `radio://`; a chart row is resolved to a `spotify:`
+track (or a YouTube fallback) before it is queued.
+
+---
+
+## Limitations
+
+- **Browsing** is free; **playback** requires a linked Spotify account.
+- Matching is metadata-based. A chart row can resolve to the wrong recording,
+  and Deezer album rows are especially approximate because they carry an album
+  title rather than a track title.
+- Apple chart entries that the iTunes lookup misses still appear, without
+  artwork.
+- Chart rows are not library entries, so they do not appear in library search,
+  playlists or favourites, and cannot be edited or downloaded.
+- There are no Spotify editorial charts. The providers are Apple/iTunes and
+  Deezer only.
+- There is no personalised chart; these are the providers' public rankings.
+- Top Charts is a TUI feature. It has no `gtm --cli` namespace.

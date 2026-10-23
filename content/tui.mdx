@@ -28,11 +28,18 @@ above both.
 - **Now Playing** — cover art, animated marquee title, progress bar. Height
   adapts: 5 rows under 60 columns, 6 rows under 22 rows, otherwise
   `clamp(area_height / 3, 8, 14)`.
-- **Sidebar** — 11 categories: Library, Liked, Playlists, Spotify, Radio, Most
-  Played, Recently Played, Recently Added, Folders, Top Charts, Podcasts. Shows
-  item counts, and the `Library` row counts whatever its current `[`/`]`
-  grouping shows. Filter and reorder the list with `left_pane_lists` in
-  `config.toml`; the same list is reachable with `Alt+.`.
+- **Sidebar** — six categories: Library, Playlists, Spotify, Radio, Top Charts,
+  Podcasts. Shows item counts, and the `Library` row counts whatever its current
+  `[`/`]` grouping shows. The `Playlists` row likewise counts the group on
+  screen. Filter and reorder the list with `left_pane_lists` in `config.toml`;
+  the same list is reachable with `Alt+.`.
+- **Library groupings** — `[` / `]` walks Tracks → Albums → Artists → Genres →
+  Folders. The header names the grouping, and the Library row counts the rows
+  currently shown.
+- **Playlist groups** — opening Playlists shows Playlists, Most Played, Recently
+  Played, Recently Added and Liked. `[` / `]` move between groups; `Enter` on
+  Playlists drills into a playlist, while the other groups list their tracks
+  directly.
 - **Results pane** — tracks, albums, artists, playlists, folders, chart or
   podcast entries depending on the selected category.
 - **Lyrics pane** — a full-height pane on the right when lyrics are loaded and
@@ -45,6 +52,16 @@ above both.
 
 When the terminal is narrower than 60 columns, the sidebar and results collapse
 into a single pane. `Tab` / `Shift+Tab` swap which one is on screen.
+
+### First-run welcome
+
+A fresh install opens on a welcome pane instead of the library. It is a splash,
+not a mode: any key dismisses it and then performs its normal action. `s` opens
+the project repository, `q` or `Esc` closes the pane without quitting, and `H`
+dismisses it permanently by writing `show_welcome = false`.
+
+The pane is controlled by `show_welcome` in `config.toml` and can be brought
+back from Settings → System.
 
 ---
 
@@ -76,8 +93,9 @@ claim keeps its normal binding.
 
 After a period of keyboard, paste, and mouse inactivity the TUI leaves the track
 list and shows the visualizer full screen. The idle delay is
-`daydream_secs` in `config.toml` (default 60 seconds; `0` disables it) and is
-cycled from Settings → System. Any input brings the workspace straight back.
+`daydream_secs` in `config.toml` (default 0, so daydreaming is opt-in; `0`
+disables it) and is cycled from Settings → System. Any input brings the
+workspace straight back.
 
 ---
 
@@ -92,18 +110,6 @@ fuzzy-matches both the name and the key), then press `Enter` to execute.
 The key column is as wide as the longest command name, capped at half the pane,
 so a long name can never push its key into the text beside it. Rows with no key
 of their own — the four Spotify transport commands — leave that cell empty.
-
----
-
-## Help buffer
-
-Press `?` to open a full-screen help buffer: a list of the common keys grouped by
-topic (Playback, Navigation, Playlists, View, Queue, System). It contains no
-configuration details — see [Configuration](/configuration/) for that, and
-[Keybindings](/keybindings/) for the complete reference.
-
-`j`/`k`/arrows scroll, `G`/`$` jump to the end, `0`/`Ctrl+g` to the top, and
-`n`/`N` step one line. Close it with `Esc`.
 
 ---
 
@@ -149,7 +155,7 @@ The footer bar sits at the bottom and shows status modules arranged in two group
 | `Volume` | Volume percentage |
 | `Repeat` | Repeat mode (Off / One / All) |
 | `Shuffle` | Shuffle on/off |
-| `Progress` | Mini progress bar |
+| `Progress` | Elapsed / total time, e.g. `1:23 / 4:56` |
 | `Queue` | Queue length |
 | `KeyAction` | Last action name (set `footer_key_action = "keys"` for the key) |
 | `Backend` | Audio backend (Rodio / PulseAudio) |
@@ -178,8 +184,14 @@ preset = [{ name = "My Preset", left = ["Playback", "Volume"], right = ["Time", 
 User presets replace built-in presets with the same name. Unknown module names
 are silently dropped so typos never break the bar.
 
-Hide the footer bar entirely with `hide_footer` in `config.toml`, or with
-`Ctrl+h` while the TUI is running.
+Hide the footer bar entirely with `hide_footer` in `config.toml`, or with the
+**Hide Footer** toggle in Settings → System.
+
+:::note
+The `Progress` module shows the elapsed and total times. It does not draw a bar:
+the progress bar is rendered by the Now Playing pane and Zen view, not by the
+footer.
+:::
 
 ---
 
@@ -188,11 +200,12 @@ Hide the footer bar entirely with `hide_footer` in `config.toml`, or with
 `Alt+,` opens Settings — a floating picker with three categories on the left and
 the selected category's rows on the right:
 
-- **Playback** — repeat, shuffle, crossfade, EQ on/off, reverb, pre-gain, cover source.
+- **Playback** — repeat, shuffle, crossfade, EQ on/off, reverb, pre-gain, cover
+  source, and preview delay.
 - **System** — theme, theme mode, audio output, both transparent toggles, hide
   footer, reactive theme and its intensity, visualizer preset, daydream delay,
   footer preset, the three sync actions (covers, lyrics, metadata), the two cache
-  clears, and notification settings.
+  clears, notification settings, show welcome, and resume playback on start.
 - **Spotify** — connection status, link, unlink.
 
 Preferences changed here are written to `config.toml` and hot-reloaded, so a

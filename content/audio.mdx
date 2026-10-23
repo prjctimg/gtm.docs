@@ -101,7 +101,8 @@ boost-heavy preset like `Bass Boost` is audibly quieter by design.
 `Alt+e` opens the equalizer picker with a live mini-plot of each preset's
 frequency response. `Enter` applies the selected preset. The EQ on/off toggle
 lives under `Alt+,` (Settings → Playback). The footer `EqPreset` module shows
-the active preset.
+the active preset. From a script, `gtm --cli eq-presets` prints the preset names
+in the same order the picker steps through them.
 
 EQ presets are stored in `AudioSettings` (`eq_preset`, `eq_enabled`) and
 persisted with the daemon state.

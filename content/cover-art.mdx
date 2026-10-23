@@ -1,7 +1,7 @@
 ---
 title: Cover Art
 description: "Cover art resolution order, providers, caching, the album art viewer, and artist portraits."
-order: 11
+order: 12
 ---
 
 
@@ -23,6 +23,29 @@ For a local track, the daemon serves cover art in this order:
 
 Each metadata lookup is bounded by a 5-second timeout; the Spotify lookup
 is bounded at 8 seconds. Misses fall through instead of stalling the view.
+
+### Charts and live radio
+
+Chart rows are a separate, URL-only path. Apple and Deezer publish a CDN
+artwork URL with each chart track; the TUI loads it directly instead of asking
+the cover cache, because a chart row has no local file behind it and its
+artwork must render whether or not Spotify is linked. A Deezer album chart row
+uses the album's own cover rather than borrowing the first track's art.
+
+A chart's own list row also gets a sleeve without opening the chart: the chart
+is a ranking, not a release, so there is no artwork for the ranking itself.
+The TUI asks the daemon for the chart's head as the cursor moves and caches the
+result by chart id. Deezer publishes the cover directly; Apple's feed does not,
+so the daemon resolves the head tracks and backfills missing art from Deezer.
+A chart whose head still cannot be matched stays blank rather than borrowing an
+unrelated image.
+
+For a `radio://` station, the now-playing cover follows the current track when
+the station publishes a tracklist, then the station favicon. The queue's
+**up-next** strip does the reverse order for the next track: it searches the
+catalog by the artist/title the station printed and keeps that answer latched
+per query, so holding the tracklist open costs nothing. A station that prints
+no separate artist is searched by title alone.
 
 ---
 
