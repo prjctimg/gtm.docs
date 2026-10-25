@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, NavLink } from 'react-router';
-import { Search, Github } from 'lucide-react';
+import { Search, Github, Radio } from 'lucide-react';
 import { FIRST_DOC } from '../data/content';
 
 interface NavProps {
@@ -17,8 +17,9 @@ export const Nav: React.FC<NavProps> = ({ onOpenSearch }) => {
             <Link
               to="/"
               id="nav-brand-button"
-              className="font-mono text-base sm:text-lg text-secondary tracking-tight font-bold flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer text-left"
+              className="font-mono text-base sm:text-lg text-secondary tracking-tight font-bold flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer text-left group"
             >
+              <Radio className="w-5 h-5 text-secondary shrink-0 group-hover:scale-105 transition-transform" />
               <span>gtm</span>
             </Link>
           </div>

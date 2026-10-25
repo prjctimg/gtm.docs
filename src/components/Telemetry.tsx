@@ -308,124 +308,52 @@ export const Telemetry: React.FC<TelemetryProps> = ({ className = '' }) => {
         </p>
       </div>
 
-      {/* Main telemetry card div in JetBrains Mono */}
-      <div className="bg-surface-container border border-hairline-outline rounded-xl p-5 sm:p-6 flex flex-col justify-between space-y-4 shadow-sm hover:border-secondary/40 transition-colors font-mono">
-        {/* Real Commit Context Box: Avatar on left (slightly bigger) */}
-        <div className="bg-code-canvas border border-hairline-outline rounded-lg p-3 sm:p-3.5 flex items-start gap-3">
-          {/* The capture aborts off-origin requests, so this image fails there and
-            hides itself via display:none — but it loads fine for real visitors.
-            Exempt the style from hydration comparison. */}
-          <img
-            src={primaryRun.actorAvatarUrl || `https://github.com/${primaryRun.actor}.png`}
-            alt={primaryRun.actor}
-            title={`@${primaryRun.actor}`}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-hairline-outline bg-surface-elevated shrink-0 mt-0.5"
-            suppressHydrationWarning
-            onError={(e) => {
-              (e.currentTarget as HTMLElement).style.display = 'none';
-            }}
-          />
+      {/* Main telemetry card div matching the other cards design with no nested wrapper divs */}
+      <div className="bg-surface-container border border-hairline-outline rounded-2xl overflow-hidden shadow-2xl font-mono transition-all duration-300">
+        {/* Top Header: Commit context & live summary counts */}
+        <div className="p-4 sm:p-5 border-b border-hairline-outline bg-surface-container flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* The capture aborts off-origin requests, so this image fails there and
+              hides itself via display:none — but it loads fine for real visitors.
+              Exempt the style from hydration comparison. */}
+            <img
+              src={primaryRun.actorAvatarUrl || `https://github.com/${primaryRun.actor}.png`}
+              alt={primaryRun.actor}
+              title={`@${primaryRun.actor}`}
+              className="w-8 h-8 rounded-full border border-hairline-outline bg-surface-elevated shrink-0"
+              suppressHydrationWarning
+              onError={(e) => {
+                (e.currentTarget as HTMLElement).style.display = 'none';
+              }}
+            />
 
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1 font-mono text-xs text-text-muted bg-surface-elevated px-1.5 py-0.5 rounded border border-hairline-outline">
-                <GitBranch className="w-3 h-3 text-secondary" />
-                {primaryRun.branch}
-              </span>
-              <span className="inline-flex items-center gap-1 font-mono text-xs text-text-muted bg-surface-elevated px-1.5 py-0.5 rounded border border-hairline-outline">
-                <GitCommit className="w-3 h-3 text-secondary" />
-                {primaryRun.sha}
-              </span>
-            </div>
-
-            {/* Real Git Commit Message */}
-            <p
-              className="font-mono text-xs sm:text-sm text-text-primary font-medium leading-snug truncate"
-              title={primaryRun.commitMessage}
-            >
-              "{primaryRun.commitMessage}"
-            </p>
-
-            {/* Distinct PR Title (if triggered by PR) */}
-            {primaryRun.prTitle && (
-              <div className="flex items-center gap-1.5 pt-0.5 font-mono text-xs text-text-muted border-t border-hairline-outline/50">
-                <GitPullRequest className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                <span className="text-text-secondary truncate font-normal font-mono" title={primaryRun.prTitle}>
-                  "{primaryRun.prTitle}"
+            <div className="min-w-0 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-xs uppercase tracking-wider text-secondary font-semibold">
+                  CI / CD
+                </span>
+                <span className="text-text-disabled">•</span>
+                <span className="inline-flex items-center gap-1 font-mono text-xs text-text-muted bg-surface-elevated px-1.5 py-0.5 rounded border border-hairline-outline">
+                  <GitBranch className="w-3 h-3 text-secondary" />
+                  {primaryRun.branch}
+                </span>
+                <span className="inline-flex items-center gap-1 font-mono text-xs text-text-muted bg-surface-elevated px-1.5 py-0.5 rounded border border-hairline-outline">
+                  <GitCommit className="w-3 h-3 text-secondary" />
+                  {primaryRun.sha}
                 </span>
               </div>
-            )}
+
+              <p
+                className="font-mono text-xs sm:text-sm text-text-primary font-medium leading-snug truncate max-w-xl"
+                title={primaryRun.commitMessage}
+              >
+                "{primaryRun.commitMessage}"
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* All 5 Workflows Status List */}
-        <div className="space-y-1.5">
-          <div className="divide-y divide-hairline-outline/60 border border-hairline-outline rounded-lg bg-surface-elevated/50 overflow-hidden">
-            {workflows.map((wf) => {
-              const isSuccess = wf.conclusion === 'success';
-              const isFailure = wf.conclusion === 'failure';
-              const isSkipped = wf.conclusion === 'skipped';
-              const isRunning = wf.status === 'in_progress' || wf.status === 'queued';
-
-              return (
-                <a
-                  key={wf.workflowId}
-                  href={wf.htmlUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between p-2.5 sm:px-3.5 hover:bg-surface-elevated transition-colors group cursor-pointer"
-                >
-                  {/* Workflow Name & File */}
-                  <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                    <div className="shrink-0">
-                      {isRunning ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
-                      ) : isSuccess ? (
-                        <CheckCircle2 className="w-4 h-4 text-state-success stroke-[2.2]" />
-                      ) : isFailure ? (
-                        <XCircle className="w-4 h-4 text-accent-coral stroke-[2.2]" />
-                      ) : isSkipped ? (
-                        <MinusCircle className="w-4 h-4 text-text-muted stroke-[2]" />
-                      ) : (
-                        <Activity className="w-4 h-4 text-text-muted" />
-                      )}
-                    </div>
-
-                    <div className="min-w-0 space-y-0.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs font-bold text-text-primary group-hover:text-secondary transition-colors">
-                          {wf.workflowName}
-                        </span>
-                        <span className="font-mono text-xs text-text-muted">
-                          #{wf.runNumber}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 font-mono text-xs text-text-muted truncate">
-                        <FileCode2 className="w-2.5 h-2.5 text-secondary shrink-0" />
-                        <span className="truncate">{wf.workflowFile}</span>
-                        <span>•</span>
-                        <span className="capitalize">{wf.event.replace('_', ' ')}</span>
-                        <span>•</span>
-                        <span className={isRunning ? 'text-amber-300 font-semibold' : ''}>
-                          {getWorkflowDuration(wf)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* External Link */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    <ExternalLink className="w-3.5 h-3.5 text-text-muted group-hover:text-secondary group-hover:translate-x-0.5 transition-all" />
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Bottom Summary Bar */}
-        <div className="flex items-center justify-between pt-2 border-t border-hairline-outline/60 font-mono text-xs text-text-muted">
-          <div className="flex items-center gap-2.5 text-xs flex-wrap">
+          {/* Status Counts */}
+          <div className="flex items-center gap-3 text-xs text-text-muted shrink-0">
             {inProgressCount > 0 && (
               <span className="text-amber-400 font-bold flex items-center gap-1" title={`${inProgressCount} Running`}>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -450,8 +378,87 @@ export const Telemetry: React.FC<TelemetryProps> = ({ className = '' }) => {
                 <span>{skippedCount}</span>
               </span>
             )}
-            <span>• {formatRelativeTime(primaryRun.updatedAt)}</span>
+            <span className="text-text-disabled">•</span>
+            <span>{formatRelativeTime(primaryRun.updatedAt)}</span>
           </div>
+        </div>
+
+        {/* Workflow Runs List: Direct edge-to-edge divide list without nested containers */}
+        <div className="divide-y divide-hairline-outline/70 bg-canvas-obsidian/40">
+          {workflows.map((wf) => {
+            const isSuccess = wf.conclusion === 'success';
+            const isFailure = wf.conclusion === 'failure';
+            const isSkipped = wf.conclusion === 'skipped';
+            const isRunning = wf.status === 'in_progress' || wf.status === 'queued';
+
+            return (
+              <a
+                key={wf.workflowId}
+                href={wf.htmlUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between p-3 sm:px-5 hover:bg-surface-elevated/80 transition-colors group cursor-pointer"
+              >
+                <div className="flex items-center gap-3 min-w-0 pr-2">
+                  <div className="shrink-0">
+                    {isRunning ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                    ) : isSuccess ? (
+                      <CheckCircle2 className="w-4 h-4 text-state-success stroke-[2.2]" />
+                    ) : isFailure ? (
+                      <XCircle className="w-4 h-4 text-accent-coral stroke-[2.2]" />
+                    ) : isSkipped ? (
+                      <MinusCircle className="w-4 h-4 text-text-muted stroke-[2]" />
+                    ) : (
+                      <Activity className="w-4 h-4 text-text-muted" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-xs font-bold text-text-primary group-hover:text-secondary transition-colors">
+                        {wf.workflowName}
+                      </span>
+                      <span className="font-mono text-xs text-text-muted">
+                        #{wf.runNumber}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 font-mono text-xs text-text-muted truncate">
+                      <FileCode2 className="w-2.5 h-2.5 text-secondary shrink-0" />
+                      <span className="truncate">{wf.workflowFile}</span>
+                      <span>•</span>
+                      <span className="capitalize">{wf.event.replace('_', ' ')}</span>
+                      <span>•</span>
+                      <span className={isRunning ? 'text-amber-300 font-semibold' : ''}>
+                        {getWorkflowDuration(wf)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <ExternalLink className="w-3.5 h-3.5 text-text-muted group-hover:text-secondary group-hover:translate-x-0.5 transition-all" />
+                </div>
+              </a>
+            );
+          })}
+        </div>
+
+        {/* Bottom Card Footer */}
+        <div className="p-3.5 sm:px-5 bg-surface-container flex items-center justify-between text-xs text-text-muted border-t border-hairline-outline">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-state-success animate-pulse" />
+            <span>Continuous testing & cross-platform builds</span>
+          </div>
+          <a
+            href={`https://github.com/${REPO_NAME}/actions`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 hover:text-text-primary text-secondary transition-colors font-mono"
+          >
+            <span>View runs on GitHub</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
       </div>
     </div>

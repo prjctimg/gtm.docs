@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
-import { Github, Sun, Moon } from 'lucide-react';
+import { Github, Sun, Moon, Radio } from 'lucide-react';
 import { FIRST_DOC } from '../data/content';
 import { useTheme } from '../context/Theme';
 
@@ -32,17 +32,20 @@ export const Footer: React.FC = () => {
 
         {/* Footer Links inline with Copyright */}
         <div className="pt-4 border-t border-hairline-outline/40 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 text-text-muted text-xs">
-          <span>
-            © {currentYear},{' '}
-            <a
-              href="https://prjctimg.me"
-              target="_blank"
-              rel="noreferrer"
-              className="text-text-muted hover:text-secondary underline decoration-hairline-outline hover:decoration-secondary transition-colors"
-            >
-              prjctimg
-            </a>
-          </span>
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-secondary shrink-0" />
+            <span>
+              © {currentYear},{' '}
+              <a
+                href="https://prjctimg.me"
+                target="_blank"
+                rel="noreferrer"
+                className="text-text-muted hover:text-secondary underline decoration-hairline-outline hover:decoration-secondary transition-colors"
+              >
+                prjctimg
+              </a>
+            </span>
+          </div>
 
           {/* Navigation links matching the navbar */}
           <nav className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 text-xs text-text-muted">

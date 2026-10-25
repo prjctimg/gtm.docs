@@ -1,5 +1,6 @@
 import React from 'react';
-import { Search, X } from 'lucide-react';
+import { Link } from 'react-router';
+import { Search, X, Radio } from 'lucide-react';
 import { DocTree } from './DocTree';
 
 export interface DocDrawerProps {
@@ -17,7 +18,15 @@ export const DocDrawer: React.FC<DocDrawerProps> = ({ onClose, onOpenSearch }) =
     />
 
     <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-canvas-obsidian border-r border-hairline-outline shadow-2xl flex flex-col font-mono text-sm z-10 animate-in slide-in-from-left duration-200">
-      <div className="flex items-center justify-end p-4 border-b border-hairline-outline bg-surface-container/50">
+      <div className="flex items-center justify-between p-4 border-b border-hairline-outline bg-surface-container/50">
+        <Link
+          to="/"
+          onClick={onClose}
+          className="font-mono text-base text-secondary font-bold flex items-center gap-2 hover:opacity-90 transition-opacity"
+        >
+          <Radio className="w-4 h-4 text-secondary shrink-0" />
+          <span>gtm</span>
+        </Link>
         <button
           type="button"
           onClick={onClose}
