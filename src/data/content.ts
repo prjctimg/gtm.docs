@@ -70,6 +70,9 @@ function parsePage(filePath: string, raw: string): PageItem {
   const id = filePath.split('/').pop()?.replace(/\.mdx$/, '') || '';
   const { data, body } = parseFrontmatter(raw);
 
+  // Normalize links pointing to public/media/* to media/* to keep authoring paths short and sane
+  const normalizedBody = body.replace(/\]\(\/?public\/media\//g, '](media/');
+
   const path = data.path || `/docs/${id}`;
   const order = Number.parseInt(data.order ?? '', 10);
 
@@ -79,8 +82,8 @@ function parsePage(filePath: string, raw: string): PageItem {
     title: data.title || id,
     description: data.description || '',
     order: Number.isFinite(order) ? order : 999,
-    content: body,
-    headings: parseHeadings(body),
+    content: normalizedBody,
+    headings: parseHeadings(normalizedBody),
     isDoc: path.startsWith('/docs/'),
     showVersion: data.showVersion === 'true',
   };

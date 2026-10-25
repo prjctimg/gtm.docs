@@ -207,6 +207,22 @@ export const Markdown = React.memo<MarkdownProps>(
 
             const isExternal = href?.startsWith('http://') || href?.startsWith('https://');
 
+            // Internal media links (public/media/* or media/*)
+            if (href && /^(\.\.?\/)*\/?(public\/)?media\//i.test(href)) {
+              const mediaHref = resolveMediaPath(href);
+              return (
+                <a
+                  href={mediaHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-secondary hover:text-primary transition-colors underline decoration-secondary/40 underline-offset-2 inline-flex items-center gap-0.5"
+                >
+                  <span>{children}</span>
+                  <ExternalLink className="w-3 h-3 text-text-muted inline ml-0.5" />
+                </a>
+              );
+            }
+
             // Internal links. Content files address each other by file name
             // (/configuration/), by the route they are served at (/install), or
             // with an anchor (/tui/#footer-bar). Anything that

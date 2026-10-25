@@ -22,10 +22,29 @@ export function resolveMediaPath(path: string): string {
   // Any scheme at all — http:, https:, data:, blob:, synth:, demo:.
   if (/^[a-z][a-z0-9+.-]*:/i.test(path)) return path;
 
-  const rooted = path.trim().replace(/^\.\//, '').replace(/^public\//, '');
-  if (rooted !== 'media' && !rooted.startsWith('media/')) return path;
+  // Normalize forward slashes
+  let clean = path.trim().replace(/\\/g, '/');
 
-  return `/${rooted}`;
+  // Strip relative parent/current segments (./, ../)
+  clean = clean.replace(/^(\.\.?\/)+/, '');
+
+  // Strip leading /public/ or public/ so public/media/* resolves cleanly as media/*
+  clean = clean.replace(/^\/?public\//, '');
+
+  // Strip leading slash
+  clean = clean.replace(/^\//, '');
+
+  // If the path refers to media/ or is media, anchor it to origin root as /media/...
+  if (clean === 'media' || clean.startsWith('media/')) {
+    return `/${clean}`;
+  }
+
+  // Already an absolute /media/... path
+  if (path.trim().startsWith('/media/')) {
+    return path.trim();
+  }
+
+  return path;
 }
 
 /**

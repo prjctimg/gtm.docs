@@ -23,18 +23,18 @@
   --primary: #40a0ff;
   --primary-container: #0088ff;
   --on-primary-container: #ffffff;
-  --primary-fixed: #d6e8ff;
-  --primary-fixed-dim: #99cbff;
+  --primary-fixed: #d0e4ff;
+  --primary-fixed-dim: #9ecaff;
 
   --secondary: #0088ff;
   --secondary-container: #0070d6;
   --on-secondary-container: #ffffff;
-  --secondary-fixed: #cce5ff;
-  --secondary-fixed-dim: #339fff;
+  --secondary-fixed: #d0e4ff;
+  --secondary-fixed-dim: #40a0ff;
 
   --tertiary: #aec6ff;
-  --tertiary-container: #7aa2f7;
-  --on-tertiary-container: #00367d;
+  --tertiary-container: #004880;
+  --on-tertiary-container: #001e38;
 
   --accent-coral: #f7768e;
   --accent-purple: #bb9af7;
@@ -75,13 +75,13 @@
   --primary: #0088ff;
   --primary-container: #0088ff;
   --on-primary-container: #ffffff;
-  --primary-fixed: #e5f2ff;
-  --primary-fixed-dim: #339fff;
+  --primary-fixed: #d0e4ff;
+  --primary-fixed-dim: #0088ff;
 
   --secondary: #0088ff;
   --secondary-container: #e5f2ff;
-  --on-secondary-container: #004c99;
-  --secondary-fixed: #cce5ff;
+  --on-secondary-container: #004880;
+  --secondary-fixed: #e5f2ff;
   --secondary-fixed-dim: #0088ff;
 
   --tertiary: #0070d6;
@@ -105,8 +105,8 @@
 }
 
 @theme {
-  --font-sans: 'JetBrains Mono', monospace;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --color-canvas-obsidian: var(--canvas-obsidian);
   --color-background: var(--background);
@@ -160,7 +160,14 @@ button,
 input,
 select,
 textarea {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-mono);
 }
 
 .material-symbols-outlined {
@@ -252,7 +259,7 @@ textarea {
 .token.operator,
 .token.entity,
 .token.url {
-  color: #0088ff;
+  color: #7dcfff;
 }
 
 .token.atrule,
@@ -274,12 +281,12 @@ textarea {
 }
 
 .token.parameter {
-  color: #a2c9ff;
+  color: #f3d6ff;
 }
 
 .token.table,
 .token.key {
-  color: #0088ff;
+  color: #c84bf7;
 }
 
 .token.important,
@@ -350,7 +357,7 @@ textarea {
 [data-theme="light"] .token.operator,
 [data-theme="light"] .token.entity,
 [data-theme="light"] .token.url {
-  color: #0088ff;
+  color: #aa00d5;
 }
 
 .light .token.atrule,
@@ -359,7 +366,7 @@ textarea {
 [data-theme="light"] .token.atrule,
 [data-theme="light"] .token.attr-value,
 [data-theme="light"] .token.keyword {
-  color: #7c3aed;
+  color: #8800ab;
   font-weight: 500;
 }
 
@@ -367,7 +374,7 @@ textarea {
 .light .token.class-name,
 [data-theme="light"] .token.function,
 [data-theme="light"] .token.class-name {
-  color: #0284c7;
+  color: #aa00d5;
 }
 
 .light .token.regex,
@@ -388,7 +395,7 @@ textarea {
 .light .token.key,
 [data-theme="light"] .token.table,
 [data-theme="light"] .token.key {
-  color: #0088ff;
+  color: #aa00d5;
 }
 
 /* Feature independent scroll container scrollbar */

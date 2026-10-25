@@ -52,12 +52,6 @@ export const Nav: React.FC<NavProps> = ({ onOpenSearch }) => {
             >
               Install
             </NavLink>
-            <Link
-              to="/nvim"
-              className="py-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
-            >
-              Neovim
-            </Link>
           </nav>
         </div>
 

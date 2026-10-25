@@ -7,7 +7,7 @@ import { Doodles } from '../components/Doodles';
 import { InstallTabs } from '../components/InstallTabs';
 import { usePageMeta } from '../lib/meta';
 import { mediaName, resolveMediaPath } from '../lib/media';
-import { ArrowRight, ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import { SiLinux, SiAndroid, SiApple } from 'react-icons/si';
 
 const CAROUSEL_IMAGES = [
@@ -16,13 +16,28 @@ const CAROUSEL_IMAGES = [
   { src: IMAGES.hero3, title: 'Preview 3' },
 ];
 
-function TuiShot({ src }: { src: string }) {
+// Eagerly prefetch images as soon as module loads so carousel never renders blank
+const PRELOADED_SRCS = new Set<string>();
+function prefetchMedia(src: string) {
+  const resolved = resolveMediaPath(src);
+  if (!resolved || PRELOADED_SRCS.has(resolved)) return;
+  PRELOADED_SRCS.add(resolved);
+  const img = new Image();
+  img.src = resolved;
+}
+
+if (typeof window !== 'undefined') {
+  CAROUSEL_IMAGES.forEach((item) => prefetchMedia(item.src));
+  prefetchMedia(IMAGES.cardSleepTimer);
+}
+
+function TuiShot({ src, alt, priority }: { src: string; alt?: string; priority?: boolean }) {
   const [broken, setBroken] = useState<boolean>(false);
   const mediaSrc = resolveMediaPath(src);
 
   if (!mediaSrc || broken) {
     return (
-      <div className="w-full min-h-[300px] rounded border border-dashed border-hairline-outline bg-canvas-obsidian flex items-center justify-center">
+      <div className="w-full h-full min-h-[300px] border border-dashed border-hairline-outline bg-canvas-obsidian flex items-center justify-center">
         <span className="font-mono text-xs text-text-disabled px-6 text-center">
           screenshot pending{src ? ` — ${mediaName(src)}` : ''}
         </span>
@@ -33,8 +48,12 @@ function TuiShot({ src }: { src: string }) {
   return (
     <img
       src={mediaSrc}
+      alt={alt || 'Terminal screenshot'}
+      loading="eager"
+      decoding="sync"
+      fetchPriority={priority ? 'high' : 'auto'}
       onError={() => setBroken(true)}
-      className="w-full h-auto max-h-[520px] object-contain select-none mx-auto block rounded border border-hairline-subtle shadow-md"
+      className="w-full h-full object-cover select-none block"
     />
   );
 }
@@ -48,10 +67,8 @@ export const Home: React.FC = () => {
   const carouselImages = CAROUSEL_IMAGES;
 
   useEffect(() => {
-    CAROUSEL_IMAGES.forEach(({ src }) => {
-      const img = new Image();
-      img.src = resolveMediaPath(src);
-    });
+    CAROUSEL_IMAGES.forEach(({ src }) => prefetchMedia(src));
+    prefetchMedia(IMAGES.cardSleepTimer);
   }, []);
 
   const nextSlide = () => {
@@ -73,6 +90,8 @@ export const Home: React.FC = () => {
   const [activeFeatureIdx, setActiveFeatureIdx] = useState(0);
   const featureItemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [videoMuted, setVideoMuted] = useState<Record<number, boolean>>({});
+  const [videoProgress, setVideoProgress] = useState<Record<number, number>>({});
+  const [videoPlaying, setVideoPlaying] = useState<Record<number, boolean>>({});
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
 
   const toggleVideoSound = (idx: number) => {
@@ -88,6 +107,18 @@ export const Home: React.FC = () => {
       }
       return { ...prev, [idx]: nextMuted };
     });
+  };
+
+  const toggleVideoPlay = (idx: number) => {
+    const vid = videoRefs.current[idx];
+    if (!vid) return;
+    if (vid.paused) {
+      vid.play().catch(() => {});
+      setVideoPlaying((prev) => ({ ...prev, [idx]: true }));
+    } else {
+      vid.pause();
+      setVideoPlaying((prev) => ({ ...prev, [idx]: false }));
+    }
   };
 
   const [imgBroken, setImgBroken] = useState<Record<number, boolean>>({});
@@ -213,17 +244,33 @@ export const Home: React.FC = () => {
         variants={scrollSectionVariants}
         className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full"
       >
-        <div className="border border-hairline-outline rounded-xl bg-surface-container overflow-hidden shadow-2xl">
+        <div className="border border-hairline-outline rounded-2xl bg-surface-container overflow-hidden shadow-2xl">
           <div
-            className="relative w-full bg-canvas-obsidian flex items-center justify-center p-3 sm:p-6 min-h-[380px] sm:min-h-[480px]"
+            className="relative w-full aspect-video bg-canvas-obsidian overflow-hidden"
             onMouseEnter={() => setIsCarouselHovered(true)}
             onMouseLeave={() => setIsCarouselHovered(false)}
           >
+            {/* Carousel slides: all slides remain mounted so images are prefetched, decoded, and transition seamlessly without blank frames */}
+            {carouselImages.map((image, idx) => {
+              const isActive = currentSlide === idx;
+              return (
+                <div
+                  key={image.src}
+                  aria-hidden={!isActive}
+                  className={`absolute inset-0 w-full h-full transition-opacity duration-500 ease-in-out ${
+                    isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                  }`}
+                >
+                  <TuiShot src={image.src} alt={image.title} priority={idx === 0} />
+                </div>
+              );
+            })}
+
             <button
               type="button"
               onClick={prevSlide}
               aria-label="Previous image"
-              className="absolute left-3 sm:left-6 z-20 p-2 sm:p-2.5 rounded-full bg-surface-elevated/85 hover:bg-surface-elevated text-text-muted hover:text-text-primary border border-hairline-outline backdrop-blur-sm transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
+              className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-surface-elevated/85 hover:bg-surface-elevated text-text-muted hover:text-text-primary border border-hairline-outline backdrop-blur-sm transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -232,25 +279,10 @@ export const Home: React.FC = () => {
               type="button"
               onClick={nextSlide}
               aria-label="Next image"
-              className="absolute right-3 sm:right-6 z-20 p-2 sm:p-2.5 rounded-full bg-surface-elevated/85 hover:bg-surface-elevated text-text-muted hover:text-text-primary border border-hairline-outline backdrop-blur-sm transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
+              className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-surface-elevated/85 hover:bg-surface-elevated text-text-muted hover:text-text-primary border border-hairline-outline backdrop-blur-sm transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
-
-            <div className="w-full max-w-4xl mx-auto flex items-center justify-center pb-8 sm:pb-9">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={carouselImages[currentSlide].src}
-                  initial={{ opacity: 0, scale: 0.99 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.99 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="w-full flex items-center justify-center"
-                >
-                  <TuiShot src={carouselImages[currentSlide].src} />
-                </motion.div>
-              </AnimatePresence>
-            </div>
 
             <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-elevated/85 border border-hairline-outline backdrop-blur-md shadow-lg">
               {carouselImages.map((image, idx) => {
@@ -263,7 +295,7 @@ export const Home: React.FC = () => {
                     aria-label={`Go to slide ${idx + 1}: ${image.title}`}
                     className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
                       isActive
-                        ? 'w-6 bg-brand-primary shadow-[0_0_8px_rgba(var(--brand-primary-rgb,6,182,212),0.5)]'
+                        ? 'w-6 bg-secondary shadow-[0_0_8px_rgba(0,136,255,0.7)]'
                         : 'w-2 bg-text-muted/40 hover:bg-text-muted/80'
                     }`}
                   />
@@ -314,10 +346,6 @@ export const Home: React.FC = () => {
             const isCurrent = activeFeatureIdx === idx;
             const isPast = activeFeatureIdx > idx;
             const isVideo = /\.(webm|mp4|mov)$/i.test(item.img);
-            const mediaClassName = `w-full lg:w-[65%] h-auto max-h-[420px] object-contain rounded-lg border border-hairline-outline bg-canvas-obsidian p-2 sm:p-4 shadow-inner block mx-auto transition-all duration-500 ease-out ${isCurrent
-              ? 'translate-y-0 opacity-100 scale-100'
-              : 'translate-y-4 opacity-75 scale-[0.99]'
-              }`;
 
             return (
               <div
@@ -327,12 +355,31 @@ export const Home: React.FC = () => {
                   top: '7.5rem',
                   zIndex: 10 + idx
                 }}
-                className={`sticky w-full border border-hairline-outline rounded-xl bg-surface-container shadow-2xl p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row items-center gap-6 lg:gap-8 justify-center min-h-[480px] sm:min-h-[520px] transition-all duration-300 ${isPast ? 'scale-[0.98] opacity-90' : 'scale-100 opacity-100'
-                  }`}
+                className={`sticky w-full max-w-4xl mx-auto border border-hairline-outline rounded-2xl bg-surface-container overflow-hidden flex flex-col shadow-2xl transition-all duration-400 ease-out ${
+                  isPast
+                    ? 'opacity-0 pointer-events-none -translate-y-8 scale-[0.96]'
+                    : isCurrent
+                    ? 'opacity-100 translate-y-0 scale-100'
+                    : 'opacity-85 translate-y-4 scale-[0.99]'
+                }`}
               >
+                {/* Top half: Video or media preview */}
                 {item.img && !imgBroken[idx] ? (
                   isVideo ? (
-                    <div className="relative w-full lg:w-[65%] flex items-center justify-center">
+                    <div className="relative w-full aspect-video bg-canvas-obsidian border-b border-hairline-outline overflow-hidden">
+                      {/* Unobtrusive progress indicator: small thin line at the top that shrinks as video plays */}
+                      <div
+                        className="absolute top-0 left-0 right-0 z-20 pointer-events-none overflow-hidden"
+                        aria-label="Video playback progress"
+                      >
+                        <div className="w-full h-[2.5px] bg-white/10">
+                          <div
+                            className="h-full bg-secondary transition-[width] duration-200 ease-linear shadow-[0_0_8px_rgba(0,136,255,0.7)]"
+                            style={{ width: `${videoProgress[idx] ?? 100}%` }}
+                          />
+                        </div>
+                      </div>
+
                       <video
                         ref={(el) => {
                           videoRefs.current[idx] = el;
@@ -342,55 +389,91 @@ export const Home: React.FC = () => {
                         muted={videoMuted[idx] ?? true}
                         loop
                         playsInline
+                        preload="auto"
+                        onTimeUpdate={(e) => {
+                          const vid = e.currentTarget;
+                          if (vid.duration && !isNaN(vid.duration) && vid.duration > 0) {
+                            const remaining = Math.max(0, Math.min(100, (1 - vid.currentTime / vid.duration) * 100));
+                            setVideoProgress((prev) => ({ ...prev, [idx]: remaining }));
+                          }
+                        }}
+                        onPlay={() => setVideoPlaying((prev) => ({ ...prev, [idx]: true }))}
+                        onPause={() => setVideoPlaying((prev) => ({ ...prev, [idx]: false }))}
                         onError={() =>
                           setImgBroken((prev) => ({ ...prev, [idx]: true }))
                         }
-                        className={`w-full h-auto max-h-[420px] object-contain rounded-lg border border-hairline-outline bg-canvas-obsidian p-2 sm:p-4 shadow-inner block mx-auto transition-all duration-500 ease-out ${isCurrent
-                          ? 'translate-y-0 opacity-100 scale-100'
-                          : 'translate-y-4 opacity-75 scale-[0.99]'
-                          }`}
+                        onClick={() => toggleVideoPlay(idx)}
+                        className="w-full h-full object-cover block cursor-pointer"
                       />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleVideoSound(idx);
-                        }}
-                        aria-label={
-                          (videoMuted[idx] ?? true)
-                            ? 'Unmute video preview'
-                            : 'Mute video preview'
-                        }
-                        title={
-                          (videoMuted[idx] ?? true)
-                            ? 'Unmute audio'
-                            : 'Mute audio'
-                        }
-                        className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-20 p-2 text-text-muted hover:text-text-primary transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer focus:outline-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)] select-none group/mute"
-                      >
-                        {(videoMuted[idx] ?? true) ? (
-                          <VolumeX className="w-5 h-5 text-text-muted group-hover/mute:text-text-primary transition-colors" />
-                        ) : (
-                          <Volume2 className="w-5 h-5 text-secondary group-hover/mute:text-secondary-hover transition-colors" />
-                        )}
-                      </button>
+
+                      {/* Video playback controls: play/pause and volume toggle */}
+                      <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-20 flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleVideoPlay(idx);
+                          }}
+                          aria-label={
+                            videoPlaying[idx] !== false
+                              ? 'Pause video preview'
+                              : 'Play video preview'
+                          }
+                          title={
+                            videoPlaying[idx] !== false
+                              ? 'Pause preview'
+                              : 'Play preview'
+                          }
+                          className="p-1.5 text-text-muted hover:text-text-primary transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer focus:outline-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] select-none"
+                        >
+                          {videoPlaying[idx] !== false ? (
+                            <Pause className="w-4 h-4 text-secondary hover:text-secondary-hover transition-colors" />
+                          ) : (
+                            <Play className="w-4 h-4 text-text-muted hover:text-text-primary transition-colors" />
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleVideoSound(idx);
+                          }}
+                          aria-label={
+                            (videoMuted[idx] ?? true)
+                              ? 'Unmute video preview'
+                              : 'Mute video preview'
+                          }
+                          title={
+                            (videoMuted[idx] ?? true)
+                              ? 'Unmute audio'
+                              : 'Mute audio'
+                          }
+                          className="p-1.5 text-text-muted hover:text-text-primary transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer focus:outline-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] select-none group/mute"
+                        >
+                          {(videoMuted[idx] ?? true) ? (
+                            <VolumeX className="w-4 h-4 text-text-muted group-hover/mute:text-text-primary transition-colors" />
+                          ) : (
+                            <Volume2 className="w-4 h-4 text-secondary group-hover/mute:text-secondary-hover transition-colors" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <img
-                      src={resolveMediaPath(item.img)}
-                      onError={() =>
-                        setImgBroken((prev) => ({ ...prev, [idx]: true }))
-                      }
-                      className={mediaClassName}
-                    />
+                    <div className="relative w-full aspect-video bg-canvas-obsidian border-b border-hairline-outline overflow-hidden">
+                      <img
+                        src={resolveMediaPath(item.img)}
+                        loading="eager"
+                        decoding="sync"
+                        onError={() =>
+                          setImgBroken((prev) => ({ ...prev, [idx]: true }))
+                        }
+                        className="w-full h-full object-cover block"
+                      />
+                    </div>
                   )
                 ) : (
-                  <div
-                    className={`w-full lg:w-[65%] max-h-[420px] rounded-lg border border-dashed border-hairline-outline bg-canvas-obsidian flex items-center justify-center transition-all duration-500 ease-out ${isCurrent
-                      ? 'translate-y-0 opacity-100 scale-100'
-                      : 'translate-y-4 opacity-75 scale-[0.99]'
-                      }`}
-                  >
+                  <div className="relative w-full aspect-video bg-canvas-obsidian border-b border-hairline-outline flex items-center justify-center overflow-hidden">
                     <span className="font-mono text-xs text-text-disabled px-6 text-center">
                       screenshot pending —{' '}
                       <span className="text-text-muted">
@@ -400,31 +483,26 @@ export const Home: React.FC = () => {
                   </div>
                 )}
 
-                <div
-                  className={`w-full lg:w-[35%] flex flex-col justify-between space-y-6 text-left transition-all duration-500 delay-75 ease-out ${isCurrent
-                    ? 'translate-y-0 opacity-100'
-                    : 'translate-y-2 opacity-80'
-                    }`}
-                >
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <span className="font-mono text-xs sm:text-sm uppercase tracking-wider text-secondary font-semibold">
+                {/* Bottom half: Card text and docs link */}
+                <div className="w-full p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-surface-container">
+                  <div className="space-y-3 max-w-2xl text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs uppercase tracking-wider text-secondary font-semibold">
                         {item.badge}
                       </span>
-                      <h3 className="font-mono text-2xl sm:text-3xl lg:text-[1.85rem] font-bold text-text-primary tracking-tight leading-snug">
-                        {item.title}
-                      </h3>
                     </div>
-
-                    <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-mono max-w-sm lg:max-w-[34ch] text-pretty">
+                    <h3 className="font-mono text-xl sm:text-2xl lg:text-3xl font-bold text-text-primary tracking-tight">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-mono text-pretty">
                       {item.desc}
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <div className="shrink-0 flex items-center pt-2 sm:pt-0">
                     <Link
                       to={`/docs/${item.docId}${item.sectionId ? `#${item.sectionId}` : ''}`}
-                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded bg-surface-elevated border border-hairline-outline hover:border-secondary hover:text-text-primary text-secondary font-mono text-xs transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-surface-elevated border border-hairline-outline hover:border-secondary hover:text-text-primary text-secondary font-mono text-xs font-medium transition-colors cursor-pointer"
                     >
                       <span>Read docs</span>
                       <ArrowRight className="w-3.5 h-3.5" />
